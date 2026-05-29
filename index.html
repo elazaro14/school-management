@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ShuleSys Portal & TT-PRO Ultimate Engine</title>
-    <!-- Stable Tailwind CSS Stylesheet -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Production-ready React and ReactDOM Core Engines -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <style>
@@ -30,7 +28,6 @@
         </div>
     </div>
 
-    <!-- Diagnostic Script Catch-Block -->
     <script type="text/javascript">
         window.addEventListener('error', function(e) {
             var rootEl = document.getElementById('root');
@@ -45,7 +42,6 @@
         });
     </script>
 
-    <!-- React Application Logic Engine Script Container -->
     <script type="text/javascript">
         const e = React.createElement;
         const useState = React.useState;
@@ -62,7 +58,7 @@
                         e('button', {
                             key: v,
                             onClick: () => props.setView(v),
-                            className: `hover:text-white transition capitalize cursor-pointer ${props.currentView === v || ['manage-teachers', 'manage-students', 'timetable', 'settings'].includes(props.currentView) && v === 'admin' ? 'text-white font-black underline underline-offset-4' : 'text-slate-300'}`
+                            className: `hover:text-white transition capitalize cursor-pointer ${props.currentView === v || ['manage-teachers', 'manage-students', 'timetable', 'settings', 'grading'].includes(props.currentView) && v === 'admin' ? 'text-white font-black underline underline-offset-4' : 'text-slate-300'}`
                         }, v === 'teacher' ? `Teacher Workspace (${props.activeTeacher.initials})` : v)
                     )
                 )
@@ -459,7 +455,8 @@
             const getGradeMetric = (avg) => {
                 if (avg >= props.settings.gradeA) return { letter: "A", color: "text-green-600 font-bold" };
                 if (avg >= props.settings.gradeB) return { letter: "B", color: "text-blue-600 font-bold" };
-                if (avg >= props.settings.gradeC) return { letter: "C", color: "text-amber-600 font-bold" };
+                if (avg >= props.settings.gradeC) return { letter: "C", color: "text-indigo-600 font-bold" };
+                if (avg >= props.settings.gradeD) return { letter: "D", color: "text-amber-600 font-bold" };
                 return { letter: "F", color: "text-red-600 font-bold" };
             };
 
@@ -557,14 +554,20 @@
             const [gradeA, setGradeA] = useState(props.settings.gradeA);
             const [gradeB, setGradeB] = useState(props.settings.gradeB);
             const [gradeC, setGradeC] = useState(props.settings.gradeC);
+            const [gradeD, setGradeD] = useState(props.settings.gradeD || 40);
 
             const handleSaveSettings = (event) => {
                 event.preventDefault();
+                if (Number(gradeA) <= Number(gradeB) || Number(gradeB) <= Number(gradeC) || Number(gradeC) <= Number(gradeD)) {
+                    alert("Validation Error: Grade thresholds must be cascading sequentially (A > B > C > D).");
+                    return;
+                }
                 props.setSettings({
                     schoolName: schoolName.toUpperCase(),
                     gradeA: Number(gradeA),
                     gradeB: Number(gradeB),
-                    gradeC: Number(gradeC)
+                    gradeC: Number(gradeC),
+                    gradeD: Number(gradeD)
                 });
                 alert("Global configurations saved successfully!");
             };
@@ -604,7 +607,11 @@
                             e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Minimum Grade C Score'),
                             e('input', { type: 'number', min: 0, max: 100, value: gradeC, onChange: (ev) => setGradeC(ev.target.value), className: 'w-full text-xs p-2 border border-slate-200 rounded outline-none focus:border-blue-500 font-bold' })
                         ),
-                        e('p', { className: 'text-[10px] text-slate-400 mt-1 italic' }, 'Scores below C boundary are designated Fail (F).'),
+                        e('div', null,
+                            e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Minimum Grade D Score'),
+                            e('input', { type: 'number', min: 0, max: 100, value: gradeD, onChange: (ev) => setGradeD(ev.target.value), className: 'w-full text-xs p-2 border border-slate-200 rounded outline-none focus:border-blue-500 font-bold' })
+                        ),
+                        e('p', { className: 'text-[10px] text-slate-400 mt-1 italic' }, 'Scores below D boundary are designated Fail (F).'),
                         e('button', { type: 'submit', className: 'w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 rounded mt-2 cursor-pointer shadow-sm' }, 'Save Configuration Settings')
                     )
                 )
@@ -627,7 +634,8 @@
                 schoolName: "SHULESYS PORTAL SYSTEM",
                 gradeA: 80,
                 gradeB: 70,
-                gradeC: 50
+                gradeC: 50,
+                gradeD: 40
             });
             const [teachers, setTeachers] = useState([
                 { id: 1, name: "MWAALIMU KIPIMO", initials: "KP", phone: "0763112233", specialization: "GEOGRAPHY", targetClasses: ["F1", "F2"], targetStreams: ["A", "C", "F"] },
@@ -640,7 +648,7 @@
                 { id: 2, name: "ALPHA MARY", class: "F1", stream: "B", t1: 62, t2: 65, t3: 58, t4: 70 },
                 { id: 3, name: "BARAKA JUMA", class: "F2", stream: "C", t1: 89, t2: 91, t3: 84, t4: 95 },
                 { id: 4, name: "KASSIM SAID", class: "F1", stream: "D", t1: 55, t2: 60, t3: 62, t4: 58 },
-                { id: 5, name: "SOPHIA OMAR", class: "F2", stream: "E", t1: 74, text: 80, t3: 79, t4: 83 },
+                { id: 5, name: "SOPHIA OMAR", class: "F2", stream: "E", t1: 45, t2: 48, t3: 42, t4: 46 },
                 { id: 6, name: "LUCAS MEMA", class: "F3", stream: "F", t1: 90, t2: 88, t3: 92, t4: 94 }
             ]);
 
