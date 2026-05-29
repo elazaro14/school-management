@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ShuleSys Portal & TT-PRO Ultimate Engine</title>
+    <!-- Stable Tailwind CSS Stylesheet -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Production-ready React and ReactDOM Core Engines -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <style>
@@ -28,6 +30,7 @@
         </div>
     </div>
 
+    <!-- Diagnostic Script Catch-Block -->
     <script type="text/javascript">
         window.addEventListener('error', function(e) {
             var rootEl = document.getElementById('root');
@@ -42,6 +45,7 @@
         });
     </script>
 
+    <!-- React Application Logic Engine Script Container -->
     <script type="text/javascript">
         const e = React.createElement;
         const useState = React.useState;
@@ -77,7 +81,6 @@
             );
         }
 
-        // Admin, Teacher Management, Student Management, Blueprints, Calendar, Attendance modules remain structurally sound
         function AdminDashboard(props) {
             return e('div', { className: 'p-6 max-w-7xl mx-auto' },
                 e('h2', { className: 'text-lg font-bold text-slate-800 mb-5' }, 'Control Panel Overview'),
@@ -229,13 +232,14 @@
             const [fullName, setFullName] = useState('');
             const [selectedClass, setSelectedClass] = useState('F1');
             const [selectedStream, setSelectedStream] = useState('A');
+            const [selectedGender, setSelectedGender] = useState('F');
             const [searchQuery, setSearchQuery] = useState('');
             const [filterClass, setFilterClass] = useState('ALL');
             const [filterStream, setFilterStream] = useState('ALL');
 
             const handleDownloadTemplate = () => {
-                const headers = "Full Name,Class (F1-F4),Stream (A-F)\n";
-                const sampleRows = ["JOHN LUKAS,F1,A", "REHEMA JUMA,F2,B", "AMANI ALLY,F3,C"].join("\n");
+                const headers = "Full Name,Class (F1-F4),Stream (A-F),Gender (M/F)\n";
+                const sampleRows = ["JOHN LUKAS,F1,A,M", "REHEMA JUMA,F2,B,F", "AMANI ALLY,F3,C,M"].join("\n");
                 const blob = new Blob([headers + sampleRows], { type: 'text/csv;charset=utf-8;' });
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement("a");
@@ -258,13 +262,14 @@
                     let skippedCount = 0; let successCount = 0;
                     for (let i = 1; i < lines.length; i++) {
                         const line = lines[i].trim(); if (!line) continue;
-                        const columns = line.split(','); if (columns.length < 3) { skippedCount++; continue; }
+                        const columns = line.split(','); if (columns.length < 4) { skippedCount++; continue; }
                         const nameParsed = columns[0].trim().toUpperCase();
                         const classParsed = columns[1].trim().toUpperCase();
                         const streamParsed = columns[2].trim().toUpperCase();
-                        if (nameParsed && AVAILABLE_CLASSES.includes(classParsed) && AVAILABLE_STREAMS.includes(streamParsed)) {
+                        const genderParsed = columns[3].trim().toUpperCase();
+                        if (nameParsed && AVAILABLE_CLASSES.includes(classParsed) && AVAILABLE_STREAMS.includes(streamParsed) && ['M', 'F'].includes(genderParsed)) {
                             loadedStudents.push({
-                                id: Date.now() + i, name: nameParsed, class: classParsed, stream: streamParsed,
+                                id: Date.now() + i, name: nameParsed, class: classParsed, stream: streamParsed, gender: genderParsed,
                                 t1: "", midterm: "", t2: "", exam: "", totalDays: 0, presentDays: 0, permittedDays: 0
                             });
                             successCount++;
@@ -272,7 +277,7 @@
                     }
                     if (loadedStudents.length > 0) {
                         props.setStudents(prev => [...prev, ...loadedStudents]);
-                        alert(`Bulk ingestion complete!\nSuccessfully enrolled: ${successCount} entries.\nSkipped/Invalid items: ${skippedCount}.`);
+                        alert(`Bulk Ingestion Complete!\nEnrolled: ${successCount} entries.\nSkipped/Invalid items: ${skippedCount}.`);
                     } else { alert("Error: No valid rows detected."); }
                     event.target.value = "";
                 };
@@ -283,7 +288,7 @@
                 event.preventDefault();
                 if (!fullName.trim()) return;
                 props.setStudents([...props.students, {
-                    id: Date.now(), name: fullName.toUpperCase(), class: selectedClass, stream: selectedStream,
+                    id: Date.now(), name: fullName.toUpperCase(), class: selectedClass, stream: selectedStream, gender: selectedGender,
                     t1: "", midterm: "", t2: "", exam: "", totalDays: 0, presentDays: 0, permittedDays: 0
                 }]);
                 setFullName('');
@@ -308,6 +313,13 @@
                                 e('div', null,
                                     e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Student Full Name'),
                                     e('input', { type: 'text', value: fullName, onChange: (ev) => setFullName(ev.target.value), placeholder: 'E.G. CHUMA KANYAMA', className: 'w-full text-xs p-2 border rounded outline-none focus:border-blue-500', required: true })
+                                ),
+                                e('div', null,
+                                    e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Gender'),
+                                    e('select', { value: selectedGender, onChange: (ev) => setSelectedGender(ev.target.value), className: 'w-full text-xs p-2 border rounded bg-white' }, 
+                                        e('option', { value: 'F' }, 'Female'),
+                                        e('option', { value: 'M' }, 'Male')
+                                    )
                                 ),
                                 e('div', null,
                                     e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Form Level'),
@@ -335,8 +347,8 @@
                         ),
                         e('div', { className: 'overflow-x-auto' },
                             e('table', { className: 'w-full text-left text-xs border-collapse' },
-                                e('thead', null, e('tr', { className: 'bg-slate-50 text-slate-600 border-b' }, e('th', { className: 'p-3 font-bold' }, 'Student Name'), e('th', { className: 'p-3 font-bold text-center' }, 'Class Room'), e('th', { className: 'p-3 font-bold text-center' }, 'Stream Block'))),
-                                e('tbody', null, filteredRoster.map(s => e('tr', { key: s.id, className: 'border-b border-slate-100' }, e('td', { className: 'p-3 font-bold text-slate-800' }, s.name), e('td', { className: 'p-3 text-center font-semibold text-blue-600' }, s.class), e('td', { className: 'p-3 text-center' }, e('span', { className: 'bg-emerald-50 text-emerald-700 px-2 py-0.5 font-bold rounded' }, `Stream ${s.stream}`)))))
+                                e('thead', null, e('tr', { className: 'bg-slate-50 text-slate-600 border-b' }, e('th', { className: 'p-3 font-bold' }, 'Student Name'), e('th', { className: 'p-3 font-bold text-center' }, 'Gender'), e('th', { className: 'p-3 font-bold text-center' }, 'Class Room'), e('th', { className: 'p-3 font-bold text-center' }, 'Stream Block'))),
+                                e('tbody', null, filteredRoster.map(s => e('tr', { key: s.id, className: 'border-b border-slate-100' }, e('td', { className: 'p-3 font-bold text-slate-800' }, s.name), e('td', { className: 'p-3 text-center font-mono font-bold' }, s.gender || 'F'), e('td', { className: 'p-3 text-center font-semibold text-blue-600' }, s.class), e('td', { className: 'p-3 text-center' }, e('span', { className: 'bg-emerald-50 text-emerald-700 px-2 py-0.5 font-bold rounded' }, `Stream ${s.stream}`)))))
                             )
                         )
                     )
@@ -475,29 +487,26 @@
             );
         }
 
-        // ==========================================
-        //  OVERHAULED GRADING ENGINE CORE COMPONENT
-        // ==========================================
+        // =======================================================
+        //  REVISED GRADING MODULE WITH ADVANCED FILTERS & SORTING
+        // =======================================================
         function GradingSystem(props) {
+            const [filterClass, setFilterClass] = useState('ALL');
+            const [filterStream, setFilterStream] = useState('ALL');
+            const [searchName, setSearchName] = useState('');
+
             const calculateCalculatedTotal = (s) => {
-                // 1. Gather all continuous assessments that contain data
                 const validContinuousScores = [];
                 if (s.t1 !== "" && s.t1 !== undefined && s.t1 !== null) validContinuousScores.push(Number(s.t1));
                 if (s.midterm !== "" && s.midterm !== undefined && s.midterm !== null) validContinuousScores.push(Number(s.midterm));
                 if (s.t2 !== "" && s.t2 !== undefined && s.t2 !== null) validContinuousScores.push(Number(s.t2));
 
-                // 2. Compute the exact average of available assessments (or fallback to 0)
                 const caAverage = validContinuousScores.length > 0 
                     ? validContinuousScores.reduce((sum, val) => sum + val, 0) / validContinuousScores.length 
                     : 0;
 
-                // 3. Capture the terminal/annual exam score
                 const finalExamScore = (s.exam !== "" && s.exam !== undefined && s.exam !== null) ? Number(s.exam) : 0;
-                
-                // 4. Mathematical Formula Execution: (Average of CA + Terminal score) / 2
-                const compositeCalculation = (caAverage + finalExamScore) / 2;
-                
-                return compositeCalculation.toFixed(1);
+                return ((caAverage + finalExamScore) / 2).toFixed(1);
             };
 
             const getGradeMetric = (totalScore) => {
@@ -508,20 +517,35 @@
                 return { letter: "F", color: "text-red-600 font-bold" };
             };
 
-            const [filterClass, setFilterClass] = useState(props.activeTeacher.targetClasses[0] || 'F1');
-            const [filterStream, setFilterStream] = useState(props.activeTeacher.targetStreams[0] || 'A');
-
-            const filteredStudents = props.students.filter(s => 
-                s.class === filterClass && 
-                s.stream === filterStream &&
-                props.activeTeacher.targetClasses.includes(s.class) &&
-                props.activeTeacher.targetStreams.includes(s.stream)
-            );
-
             const updateScore = (id, field, value) => {
                 const sanitizedValue = value === "" ? "" : Math.min(100, Math.max(0, Number(value) || 0));
                 props.setStudents(props.students.map(s => s.id === id ? Object.assign({}, s, { [field]: sanitizedValue }) : s));
             };
+
+            // Process filters and apply multi-tier sorting: Female first, Male second, followed alphabetically by name
+            const filteredAndSortedStudents = props.students
+                .filter(s => {
+                    const matchClass = filterClass === 'ALL' || s.class === filterClass;
+                    const matchStream = filterStream === 'ALL' || s.stream === filterStream;
+                    const matchName = s.name.toLowerCase().includes(searchName.toLowerCase());
+                    
+                    // Boundary check to verify teacher permissions for security metrics
+                    const isAuthorized = props.activeTeacher.targetClasses.includes(s.class) && 
+                                         props.activeTeacher.targetStreams.includes(s.stream);
+
+                    return matchClass && matchStream && matchName && isAuthorized;
+                })
+                .sort((studentX, studentY) => {
+                    const genderX = studentX.gender || 'F';
+                    const genderY = studentY.gender || 'F';
+
+                    if (genderX !== genderY) {
+                        // 'F' comes before 'M' lexicographically
+                        return genderX === 'F' ? -1 : 1;
+                    }
+                    // Secondary sorting check: alphabetical by full name strings
+                    return studentX.name.localeCompare(studentY.name);
+                });
 
             return e('div', { className: 'p-6 max-w-7xl mx-auto' },
                 e('div', { className: 'flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6' },
@@ -532,73 +556,88 @@
                     e('button', { onClick: () => props.setView('teacher'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded cursor-pointer self-end sm:self-auto' }, '← Back to Desk')
                 ),
 
-                e('div', { className: 'bg-white border border-slate-200 p-4 rounded-lg shadow-sm mb-6 flex flex-col gap-3' },
-                    e('p', { className: 'text-[10px] font-bold text-slate-400 uppercase tracking-wider' }, 'Select Active Stream Workspace to Edit:'),
-                    e('div', { className: 'flex flex-wrap gap-4' },
+                e('div', { className: 'bg-white border border-slate-200 p-4 rounded-lg shadow-sm mb-6 flex flex-col gap-4' },
+                    e('div', { className: 'grid grid-cols-1 sm:grid-cols-3 gap-4' },
                         e('div', null,
-                            e('span', { className: 'text-xs font-semibold text-slate-600 block mb-1' }, 'Form:'),
-                            e('div', { className: 'flex gap-1' },
-                                props.activeTeacher.targetClasses.map(c => e('button', {
-                                    key: c,
-                                    onClick: () => setFilterClass(c),
-                                    className: `px-3 py-1 text-xs font-bold rounded border cursor-pointer ${filterClass === c ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}`
-                                }, c))
+                            e('label', { className: 'text-[10px] font-bold text-slate-400 block mb-1 uppercase' }, 'Filter Form Level:'),
+                            e('select', { 
+                                value: filterClass, 
+                                onChange: (ev) => setFilterClass(ev.target.value),
+                                className: 'w-full text-xs p-2 border rounded bg-white font-bold text-slate-700 outline-none focus:border-blue-500'
+                            },
+                                e('option', { value: 'ALL' }, '✨ View All Authorized Forms'),
+                                props.activeTeacher.targetClasses.map(c => e('option', { key: c, value: c }, `Form ${c}`))
                             )
                         ),
                         e('div', null,
-                            e('span', { className: 'text-xs font-semibold text-slate-600 block mb-1' }, 'Stream:'),
-                            e('div', { className: 'flex flex-wrap gap-1' },
-                                props.activeTeacher.targetStreams.map(s => e('button', {
-                                    key: s,
-                                    onClick: () => setFilterStream(s),
-                                    className: `px-3 py-1 text-xs font-bold rounded border cursor-pointer ${filterStream === s ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}`
-                                }, `Stream ${s}`))
+                            e('label', { className: 'text-[10px] font-bold text-slate-400 block mb-1 uppercase' }, 'Filter Stream Block:'),
+                            e('select', { 
+                                value: filterStream, 
+                                onChange: (ev) => setFilterStream(ev.target.value),
+                                className: 'w-full text-xs p-2 border rounded bg-white font-bold text-slate-700 outline-none focus:border-blue-500'
+                            },
+                                e('option', { value: 'ALL' }, '✨ View All Authorized Streams'),
+                                props.activeTeacher.targetStreams.map(s => e('option', { key: s, value: s }, `Stream ${s}`))
                             )
+                        ),
+                        e('div', null,
+                            e('label', { className: 'text-[10px] font-bold text-slate-400 block mb-1 uppercase' }, 'Search by Student Full Name:'),
+                            e('input', { 
+                                type: 'text', 
+                                value: searchName, 
+                                onChange: (ev) => setSearchName(ev.target.value),
+                                placeholder: '🔍 Type student name to search...', 
+                                className: 'w-full text-xs p-2 border rounded outline-none text-slate-700 font-semibold focus:border-blue-500'
+                            })
                         )
                     )
                 ),
 
-                filteredStudents.length === 0 ? e('div', { className: 'bg-white border border-dashed text-center p-12 rounded-lg text-slate-400 text-sm font-medium' }, `No students matched inside your allocated container filter for ${filterClass}-${filterStream}.`) :
+                filteredAndSortedStudents.length === 0 ? e('div', { className: 'bg-white border border-dashed text-center p-12 rounded-lg text-slate-400 text-sm font-medium' }, `No synchronized rosters match your combined search filters.`) :
                 e('div', { className: 'overflow-x-auto bg-white rounded-lg border border-slate-200 shadow-sm' },
                     e('table', { className: 'w-full border-collapse text-left text-xs sm:text-sm' },
                         e('thead', null,
                             e('tr', { className: 'bg-slate-50 text-slate-600 border-b border-slate-200 text-center' },
                                 e('th', { className: 'p-4 font-bold text-left' }, 'Student Full Name'),
-                                e('th', { className: 'p-4 font-bold' }, 'Stream'),
-                                e('th', { className: 'p-4 font-bold w-20' }, 'T1'),
-                                e('th', { className: 'p-4 font-bold w-20' }, 'MIDTERM'),
-                                e('th', { className: 'p-4 font-bold w-20' }, 'T2'),
+                                e('th', { className: 'p-4 font-bold w-20' }, 'Gender'),
+                                e('th', { className: 'p-4 font-bold w-20' }, 'Class/Stream'),
+                                e('th', { className: 'p-4 font-bold w-16' }, 'T1'),
+                                e('th', { className: 'p-4 font-bold w-16' }, 'MID'),
+                                e('th', { className: 'p-4 font-bold w-16' }, 'T2'),
                                 e('th', { className: 'p-4 font-bold w-32 bg-blue-50/50 text-blue-900' }, 'TERMINAL / ANNUAL'),
                                 e('th', { className: 'p-4 font-bold w-24 bg-slate-100' }, 'FINAL SCORE'),
-                                e('th', { className: 'p-4 font-bold w-24' }, 'GRADE')
+                                e('th', { className: 'p-4 font-bold w-20' }, 'GRADE')
                             )
                         ),
                         e('tbody', null,
-                            filteredStudents.map(s => {
+                            filteredAndSortedStudents.map(s => {
                                 const grandTotal = calculateCalculatedTotal(s);
                                 const metric = getGradeMetric(parseFloat(grandTotal));
                                 return e('tr', { key: s.id, className: 'border-b border-slate-100 last:border-none hover:bg-slate-50/50 text-center' },
                                     e('td', { className: 'p-4 font-bold text-slate-700 text-left' }, s.name),
+                                    e('td', { className: 'p-4 font-mono font-bold' }, 
+                                        e('span', { className: s.gender === 'F' ? 'text-pink-600 bg-pink-50 px-2 py-0.5 rounded text-xs' : 'text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-xs' }, s.gender || 'F')
+                                    ),
                                     e('td', { className: 'p-4' }, e('span', { className: 'bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded' }, `${s.class}-${s.stream}`)),
                                     e('td', { className: 'p-4' },
                                         e('input', {
                                             type: 'number', value: s.t1, min: 0, max: 100, placeholder: "-",
                                             onChange: (ev) => updateScore(s.id, 't1', ev.target.value),
-                                            className: 'w-14 p-1 border border-slate-200 rounded text-center font-semibold focus:outline-none focus:border-blue-500'
+                                            className: 'w-12 p-1 border border-slate-200 rounded text-center font-semibold focus:outline-none focus:border-blue-500'
                                         })
                                     ),
                                     e('td', { className: 'p-4' },
                                         e('input', {
                                             type: 'number', value: s.midterm, min: 0, max: 100, placeholder: "-",
                                             onChange: (ev) => updateScore(s.id, 'midterm', ev.target.value),
-                                            className: 'w-14 p-1 border border-slate-200 rounded text-center font-semibold focus:outline-none focus:border-blue-500'
+                                            className: 'w-12 p-1 border border-slate-200 rounded text-center font-semibold focus:outline-none focus:border-blue-500'
                                         })
                                     ),
                                     e('td', { className: 'p-4' },
                                         e('input', {
                                             type: 'number', value: s.t2, min: 0, max: 100, placeholder: "-",
                                             onChange: (ev) => updateScore(s.id, 't2', ev.target.value),
-                                            className: 'w-14 p-1 border border-slate-200 rounded text-center font-semibold focus:outline-none focus:border-blue-500'
+                                            className: 'w-12 p-1 border border-slate-200 rounded text-center font-semibold focus:outline-none focus:border-blue-500'
                                         })
                                     ),
                                     e('td', { className: 'p-4 bg-blue-50/20' },
@@ -669,10 +708,14 @@
                 { id: 1, name: "MWAALIMU KIPIMO", initials: "KP", phone: "0763112233", specialization: "GEOGRAPHY", targetClasses: ["F1", "F2"], targetStreams: ["A", "C", "F"] }
             ]);
             const [activeTeacher, setActiveTeacher] = useState({ id: 1, name: "MWAALIMU KIPIMO", initials: "KP", targetClasses: ["F1", "F2"], targetStreams: ["A", "C", "F"] });
+            
+            // Seed base student database arrays with gender flags ('M' / 'F') to ensure sort compatibility.
             const [students, setStudents] = useState([
-                { id: 1, name: "ELAZARO JOHN", class: "F1", stream: "A", t1: 75, midterm: 80, t2: 85, exam: 40, totalDays: 12, presentDays: 11, permittedDays: 1 },
-                { id: 2, name: "ALPHA MARY", class: "F1", stream: "A", t1: 60, midterm: "", t2: 70, exam: 35, totalDays: 12, presentDays: 10, permittedDays: 0 },
-                { id: 3, name: "BARAKA JUMA", class: "F1", stream: "A", t1: 90, midterm: 88, t2: 92, exam: 48, totalDays: 15, presentDays: 14, permittedDays: 1 }
+                { id: 1, name: "ZAINAB ALLY", class: "F1", stream: "A", gender: "F", t1: 75, midterm: 80, t2: 85, exam: 40 },
+                { id: 2, name: "ALPHA MARY", class: "F1", stream: "A", gender: "F", t1: 60, midterm: "", t2: 70, exam: 35 },
+                { id: 3, name: "BARAKA JUMA", class: "F1", stream: "A", gender: "M", t1: 90, midterm: 88, t2: 92, exam: 48 },
+                { id: 4, name: "CHUMA ALLY", class: "F1", stream: "A", gender: "M", t1: 50, midterm: 60, t2: 55, exam: 30 },
+                { id: 5, name: "FATMA OMARY", class: "F1", stream: "C", gender: "F", t1: 85, midterm: 90, t2: 88, exam: 50 }
             ]);
             const [calendarEvents, setCalendarEvents] = useState([
                 { id: 101, date: "2026-05-12", title: "MID-TERM EXAMS", type: "EXAM" }
