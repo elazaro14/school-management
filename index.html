@@ -63,7 +63,7 @@
                         e('button', {
                             key: v,
                             onClick: () => props.setView(v),
-                            className: `hover:text-white transition capitalize cursor-pointer ${props.currentView === v || ['manage-teachers', 'manage-students', 'timetable', 'settings', 'grading', 'attendance', 'calendar'].includes(props.currentView) && v === 'admin' ? 'text-white font-black underline underline-offset-4' : 'text-slate-300'}`
+                            className: `hover:text-white transition capitalize cursor-pointer ${props.currentView === v || ['manage-teachers', 'manage-students', 'timetable', 'settings', 'grading', 'attendance', 'calendar', 'blueprints'].includes(props.currentView) && v === 'admin' ? 'text-white font-black underline underline-offset-4' : 'text-slate-300'}`
                         }, v === 'teacher' ? `Teacher Workspace (${props.activeTeacher.initials})` : v)
                     )
                 )
@@ -115,7 +115,7 @@
                 if (selectedStreams.includes(strm)) {
                     setSelectedStreams(selectedStreams.filter(s => s !== strm));
                 } else {
-                    setSelectedStreams([...selectedStreams, strm]);
+                    setSelectedStreams([...selectedStreams, srm]);
                 }
             };
 
@@ -451,9 +451,106 @@
                 ),
                 e('div', { className: 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5' },
                     e(DashboardCard, { icon: '📋', title: 'Stream Attendance', description: `Mark attendance records across assigned streams.`, onClick: () => props.setView('attendance') }),
-                    e(DashboardCard, { icon: '📚', title: 'Lesson Blueprints', description: 'Submit structural schemas to administration.', onClick: () => {} }),
+                    e(DashboardCard, { icon: '📚', title: 'Lesson Blueprints', description: 'Submit structural schemas to administration.', onClick: () => props.setView('blueprints') }),
                     e(DashboardCard, { icon: '🖋️', title: 'Enter Grades (T1-T4)', description: `Directly input marks for all your allocated streams.`, onClick: () => props.setView('grading') }),
                     e(DashboardCard, { icon: '📊', title: 'Performance Diagnostics', description: 'Analyze term pass ratios.', onClick: () => {} })
+                )
+            );
+        }
+
+        function LessonBlueprintsSystem(props) {
+            const [selectedClass, setSelectedClass] = useState(props.activeTeacher.targetClasses[0] || 'F1');
+            const [selectedStream, setSelectedStream] = useState(props.activeTeacher.targetStreams[0] || 'A');
+            const [topicTitle, setTopicTitle] = useState('');
+            const [weeksCount, setWeeksCount] = useState(1);
+            const [schemaText, setSchemaText] = useState('');
+
+            const handleAddBlueprint = (event) => {
+                event.preventDefault();
+                if (!topicTitle.trim() || !schemaText.trim()) return;
+
+                const newBlueprint = {
+                    id: Date.now(),
+                    teacherInitials: props.activeTeacher.initials,
+                    className: selectedClass,
+                    streamName: selectedStream,
+                    topic: topicTitle.toUpperCase(),
+                    durationWeeks: Number(weeksCount),
+                    description: schemaText,
+                    timestamp: new Date().toLocaleDateString()
+                };
+
+                props.setBlueprints([...props.blueprints, newBlueprint]);
+                setTopicTitle('');
+                setWeeksCount(1);
+                setSchemaText('');
+                alert("Structural schema submitted successfully to administrative clearance logs.");
+            };
+
+            const filteredBlueprints = props.blueprints.filter(b => 
+                b.teacherInitials === props.activeTeacher.initials
+            );
+
+            return e('div', { className: 'p-6 max-w-6xl mx-auto' },
+                e('div', { className: 'flex justify-between items-center mb-6' },
+                    e('div', null,
+                        e('h2', { className: 'text-lg font-bold text-slate-800' }, '📚 Lesson Blueprints Workspace'),
+                        e('p', { className: 'text-xs text-slate-500 font-medium' }, 'Draft and upload curricular timeline architectures.')
+                    ),
+                    e('button', { onClick: () => props.setView('teacher'), className: 'bg-slate-600 hover:bg-slate-700 text-white font-bold text-xs px-3 py-1.5 rounded cursor-pointer' }, '← Back to Desk')
+                ),
+                e('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-6' },
+                    e('div', { className: 'bg-white p-5 border border-slate-200 rounded-lg shadow-sm h-fit' },
+                        e('h3', { className: 'text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 border-b pb-2' }, 'Submit New Schema'),
+                        e('form', { onSubmit: handleAddBlueprint, className: 'flex flex-col gap-3' },
+                            e('div', { className: 'grid grid-cols-2 gap-2' },
+                                e('div', null,
+                                    e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Form Level'),
+                                    e('select', { value: selectedClass, onChange: (ev) => setSelectedClass(ev.target.value), className: 'w-full text-xs p-2 border border-slate-200 rounded outline-none bg-white' },
+                                        props.activeTeacher.targetClasses.map(c => e('option', { key: c, value: c }, c))
+                                    )
+                                ),
+                                e('div', null,
+                                    e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Stream Block'),
+                                    e('select', { value: selectedStream, onChange: (ev) => setSelectedStream(ev.target.value), className: 'w-full text-xs p-2 border border-slate-200 rounded outline-none bg-white' },
+                                        props.activeTeacher.targetStreams.map(s => e('option', { key: s, value: s }, `Stream ${s}`))
+                                    )
+                                )
+                            ),
+                            e('div', null,
+                                e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Core Topic Title'),
+                                e('input', { type: 'text', value: topicTitle, onChange: (ev) => setTopicTitle(ev.target.value), placeholder: 'E.G. NEWTONIAN MECHANICS', className: 'w-full text-xs p-2 border border-slate-200 rounded outline-none focus:border-blue-500', required: true })
+                            ),
+                            e('div', null,
+                                e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Duration Allocation (Weeks)'),
+                                e('input', { type: 'number', min: 1, max: 12, value: weeksCount, onChange: (ev) => setWeeksCount(ev.target.value), className: 'w-full text-xs p-2 border border-slate-200 rounded outline-none focus:border-blue-500', required: true })
+                            ),
+                            e('div', null,
+                                e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Structural Roadmap Framework Summary'),
+                                e('textarea', { rows: 4, value: schemaText, onChange: (ev) => setSchemaText(ev.target.value), placeholder: 'Outline weekly milestones, core reference texts, and planned evaluation tracking points...', className: 'w-full text-xs p-2 border border-slate-200 rounded outline-none focus:border-blue-500 resize-none', required: true })
+                            ),
+                            e('button', { type: 'submit', className: 'w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2 rounded mt-2 cursor-pointer shadow-sm' }, 'Transmit Blueprint to Admin')
+                        )
+                    ),
+                    e('div', { className: 'bg-white p-5 border border-slate-200 rounded-lg shadow-sm md:col-span-2' },
+                        e('h3', { className: 'text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 border-b pb-2' }, `Your Sent Log registries (${filteredBlueprints.length})`),
+                        filteredBlueprints.length === 0 ? e('p', { className: 'text-xs text-slate-400 font-medium italic p-4 text-center' }, 'No blueprints compiled by you inside this instance session yet.') :
+                        e('div', { className: 'flex flex-col gap-4 max-h-[500px] overflow-y-auto pr-1' },
+                            filteredBlueprints.map(b => e('div', { key: b.id, className: 'p-4 bg-slate-50 border border-slate-200 rounded-lg flex flex-col gap-2 shadow-sm' },
+                                e('div', { className: 'flex justify-between items-start border-b pb-2' },
+                                    e('div', null,
+                                        e('h4', { className: 'font-black text-slate-800 text-sm' }, b.topic),
+                                        e('p', { className: 'text-[11px] text-slate-500 font-semibold mt-0.5' }, `Target Classroom: ${b.className} - ${b.streamName}`)
+                                    ),
+                                    e('div', { className: 'text-right' },
+                                        e('span', { className: 'bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded text-[10px]' }, `${b.durationWeeks} Wks`),
+                                        e('p', { className: 'text-[10px] text-slate-400 mt-1 font-medium' }, b.timestamp)
+                                    )
+                                ),
+                                e('p', { className: 'text-xs text-slate-600 font-mono leading-relaxed bg-white p-2 border border-slate-100 rounded' }, b.description)
+                            ))
+                        )
+                    )
                 )
             );
         }
@@ -580,7 +677,7 @@
         function StreamAttendanceSystem(props) {
             const [filterClass, setFilterClass] = useState(props.activeTeacher.targetClasses[0] || 'F1');
             const [filterStream, setFilterStream] = useState(props.activeTeacher.targetStreams[0] || 'A');
-            const [attendanceDate, setAttendanceDate] = useState('2026-05-29'); // Production date tracking
+            const [attendanceDate, setAttendanceDate] = useState('2026-05-29');
             const [attendanceState, setAttendanceState] = useState({});
 
             const filteredStudents = props.students.filter(s => 
@@ -917,7 +1014,7 @@
             
             const [students, setStudents] = useState([
                 { id: 1, name: "ELAZARO JOHN", class: "F1", stream: "A", t1: 78, t2: 85, t3: 72, t4: 88, totalDays: 12, presentDays: 11, permittedDays: 1 },
-                { id: 2, name: "ALPHA MARY", class: "F1", stream: "B", t1: 62, t2: 65, text: 58, t4: 70, totalDays: 12, presentDays: 10, permittedDays: 0 },
+                { id: 2, name: "ALPHA MARY", class: "F1", stream: "B", t1: 62, t2: 65, t3: 58, t4: 70, totalDays: 12, presentDays: 10, permittedDays: 0 },
                 { id: 3, name: "BARAKA JUMA", class: "F2", stream: "C", t1: 89, t2: 91, t3: 84, t4: 95, totalDays: 15, presentDays: 14, permittedDays: 1 },
                 { id: 4, name: "KASSIM SAID", class: "F1", stream: "D", t1: 55, t2: 60, t3: 62, t4: 58, totalDays: 12, presentDays: 9, permittedDays: 2 },
                 { id: 5, name: "SOPHIA OMAR", class: "F2", stream: "E", t1: 45, t2: 48, t3: 42, t4: 46, totalDays: 15, presentDays: 11, permittedDays: 3 },
@@ -928,6 +1025,10 @@
                 { id: 101, date: "2026-05-12", title: "MID-TERM EXAMS", type: "EXAM" },
                 { id: 102, date: "2026-05-25", title: "AFRICA DAY BREAK", type: "HOLIDAY" },
                 { id: 103, date: "2026-06-05", title: "ANNUAL SPORTS FESTIVAL", type: "SPORTS" }
+            ]);
+
+            const [blueprints, setBlueprints] = useState([
+                { id: 201, teacherInitials: "KP", className: "F1", streamName: "A", topic: "INTRODUCTION TO MAP READING", durationWeeks: 3, description: "Focusing on grid references, contour lines, calculation of local scale variances, and symbols mapping.", timestamp: "2026-05-10" }
             ]);
 
             return e('div', { className: 'min-h-screen bg-slate-50 flex flex-col' },
@@ -941,6 +1042,7 @@
                     view === 'parent' && e(ParentDashboard, null),
                     view === 'grading' && e(GradingSystem, { activeTeacher: activeTeacher, setView: setView, students: students, setStudents: setStudents, settings: settings }),
                     view === 'attendance' && e(StreamAttendanceSystem, { activeTeacher: activeTeacher, setView: setView, students: students, setStudents: setStudents }),
+                    view === 'blueprints' && e(LessonBlueprintsSystem, { activeTeacher: activeTeacher, setView: setView, blueprints: blueprints, setBlueprints: setBlueprints }),
                     view === 'timetable' && e(TimetableConfig, { setView: setView }),
                     view === 'calendar' && e(AcademicCalendarSystem, { setView: setView, calendarEvents: calendarEvents, setCalendarEvents: setCalendarEvents }),
                     view === 'settings' && e(SystemSettings, { setView: setView, settings: settings, setSettings: setSettings })
