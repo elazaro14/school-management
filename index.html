@@ -235,6 +235,87 @@
             const [filterClass, setFilterClass] = useState('ALL');
             const [filterStream, setFilterStream] = useState('ALL');
 
+            // --- Template Download Engine ---
+            const handleDownloadTemplate = () => {
+                const headers = "Full Name,Class (F1-F4),Stream (A-F)\n";
+                const sampleRows = [
+                    "JOHN LUKAS,F1,A",
+                    "REHEMA JUMA,F2,B",
+                    "AMANI ALLY,F3,C"
+                ].join("\n");
+                
+                const blob = new Blob([headers + sampleRows], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.setAttribute("href", url);
+                link.setAttribute("download", "shulesys_student_template.csv");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
+            // --- Bulk Upload CSV Parser Engine ---
+            const handleBulkUploadCSV = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const text = e.target.result;
+                    const lines = text.split(/\r?\n/);
+                    if (lines.length <= 1) {
+                        alert("The file selected appears to be empty.");
+                        return;
+                    }
+
+                    const loadedStudents = [];
+                    let skippedCount = 0;
+                    let successCount = 0;
+
+                    // Parse starting from row index 1 to skip heading declarations
+                    for (let i = 1; i < lines.length; i++) {
+                        const line = lines[i].trim();
+                        if (!line) continue;
+
+                        const columns = line.split(',');
+                        if (columns.length < 3) {
+                            skippedCount++;
+                            continue;
+                        }
+
+                        const nameParsed = columns[0].trim().toUpperCase();
+                        const classParsed = columns[1].trim().toUpperCase();
+                        const streamParsed = columns[2].trim().toUpperCase();
+
+                        const isValidClass = AVAILABLE_CLASSES.includes(classParsed);
+                        const isValidStream = AVAILABLE_STREAMS.includes(streamParsed);
+
+                        if (nameParsed && isValidClass && isValidStream) {
+                            loadedStudents.push({
+                                id: Date.now() + i, // Offset variance ensures primary key separation
+                                name: nameParsed,
+                                class: classParsed,
+                                stream: streamParsed,
+                                t1: 0, t2: 0, t3: 0, t4: 0
+                            });
+                            successCount++;
+                        } else {
+                            skippedCount++;
+                        }
+                    }
+
+                    if (loadedStudents.length > 0) {
+                        props.setStudents(prev => [...prev, ...loadedStudents]);
+                        alert(`Bulk ingestion complete!\nSuccessfully enrolled: ${successCount} entries.\nSkipped/Invalid items: ${skippedCount}.`);
+                    } else {
+                        alert("Error: No valid database rows detected matching system standard formats.");
+                    }
+                    // Reset standard selector reference value
+                    event.target.value = "";
+                };
+                reader.readAsText(file);
+            };
+
             const handleEnrollStudent = (event) => {
                 event.preventDefault();
                 if (!fullName.trim()) return;
@@ -270,29 +351,51 @@
                     e('button', { onClick: () => props.setView('admin'), className: 'bg-slate-600 hover:bg-slate-700 text-white font-bold text-xs px-3 py-1.5 rounded cursor-pointer' }, '← Back to Panel')
                 ),
                 e('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-6' },
-                    // Form Layout: Left Column
-                    e('div', { className: 'bg-white p-5 border border-slate-200 rounded-lg shadow-sm h-fit' },
-                        e('h3', { className: 'text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 border-b pb-2' }, 'Enroll New Student'),
-                        e('form', { onSubmit: handleEnrollStudent, className: 'flex flex-col gap-3' },
-                            e('div', null,
-                                e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Student Full Name'),
-                                e('input', { type: 'text', value: fullName, onChange: (ev) => setFullName(ev.target.value), placeholder: 'E.G. CHUMA KANYAMA', className: 'w-full text-xs p-2 border border-slate-200 rounded outline-none focus:border-blue-500', required: true })
-                            ),
-                            e('div', null,
-                                e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Form Level'),
-                                e('select', { value: selectedClass, onChange: (ev) => setSelectedClass(ev.target.value), className: 'w-full text-xs p-2 border border-slate-200 rounded outline-none focus:border-blue-500 bg-white' },
-                                    AVAILABLE_CLASSES.map(c => e('option', { key: c, value: c }, c))
-                                )
-                            ),
-                            e('div', null,
-                                e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Assigned Stream'),
-                                e('select', { value: selectedStream, onChange: (ev) => setSelectedStream(ev.target.value), className: 'w-full text-xs p-2 border border-slate-200 rounded outline-none focus:border-blue-500 bg-white' },
-                                    AVAILABLE_STREAMS.map(s => e('option', { key: s, value: s }, `Stream ${s}`))
-                                )
-                            ),
-                            e('button', { type: 'submit', className: 'w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2 rounded mt-2 cursor-pointer' }, 'Admit Student')
+                    // Left Interaction Controls (Form & Bulk Tools)
+                    e('div', { className: 'flex flex-col gap-6 h-fit' },
+                        // Single Admission Form View Card
+                        e('div', { className: 'bg-white p-5 border border-slate-200 rounded-lg shadow-sm' },
+                            e('h3', { className: 'text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 border-b pb-2' }, 'Enroll New Student'),
+                            e('form', { onSubmit: handleEnrollStudent, className: 'flex flex-col gap-3' },
+                                e('div', null,
+                                    e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Student Full Name'),
+                                    e('input', { type: 'text', value: fullName, onChange: (ev) => setFullName(ev.target.value), placeholder: 'E.G. CHUMA KANYAMA', className: 'w-full text-xs p-2 border border-slate-200 rounded outline-none focus:border-blue-500', required: true })
+                                ),
+                                e('div', null,
+                                    e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Form Level'),
+                                    e('select', { value: selectedClass, onChange: (ev) => setSelectedClass(ev.target.value), className: 'w-full text-xs p-2 border border-slate-200 rounded outline-none focus:border-blue-500 bg-white' },
+                                        AVAILABLE_CLASSES.map(c => e('option', { key: c, value: c }, c))
+                                    )
+                                ),
+                                e('div', null,
+                                    e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Assigned Stream'),
+                                    e('select', { value: selectedStream, onChange: (ev) => setSelectedStream(ev.target.value), className: 'w-full text-xs p-2 border border-slate-200 rounded outline-none focus:border-blue-500 bg-white' },
+                                        AVAILABLE_STREAMS.map(s => e('option', { key: s, value: s }, `Stream ${s}`))
+                                    )
+                                ),
+                                e('button', { type: 'submit', className: 'w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2 rounded mt-2 cursor-pointer' }, 'Admit Student')
+                            )
+                        ),
+                        
+                        // Bulk Upload Operations Control Center Card
+                        e('div', { className: 'bg-white p-5 border border-slate-200 rounded-lg shadow-sm' },
+                            e('h3', { className: 'text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 border-b pb-2' }, 'Mass Import Tools'),
+                            e('p', { className: 'text-[11px] text-slate-500 leading-relaxed mb-4' }, 'Admit entire stream cohorts instantly. Fetch our validation template framework, fill row data, and load database files below.'),
+                            
+                            e('button', { type: 'button', onClick: handleDownloadTemplate, className: 'w-full border border-blue-200 text-blue-700 bg-blue-50/50 hover:bg-blue-50 font-bold text-xs py-2 rounded mb-3 text-center transition cursor-pointer' }, '📥 Download CSV Template'),
+                            
+                            e('div', { className: 'relative' },
+                                e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Upload Structured CSV File'),
+                                e('input', {
+                                    type: 'file',
+                                    accept: '.csv',
+                                    onChange: handleBulkUploadCSV,
+                                    className: 'w-full text-xs text-slate-500 border border-slate-200 rounded p-1 bg-slate-50/50 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-bold file:bg-slate-700 file:text-white hover:file:bg-slate-800 file:cursor-pointer'
+                                })
+                            )
                         )
                     ),
+                    
                     // Roster View Table Dashboard: Right Column
                     e('div', { className: 'bg-white p-5 border border-slate-200 rounded-lg shadow-sm md:col-span-2' },
                         e('h3', { className: 'text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 border-b pb-2' }, 'Global Enrolled Database'),
@@ -482,10 +585,9 @@
             ]);
             const [activeTeacher, setActiveTeacher] = useState({ id: 1, name: "MWAALIMU KIPIMO", initials: "KP", targetClasses: ["F1", "F2"], targetStreams: ["A", "C", "F"] });
             
-            // Shared centralized student state linked globally to grading worksheet
             const [students, setStudents] = useState([
                 { id: 1, name: "ELAZARO JOHN", class: "F1", stream: "A", t1: 78, t2: 85, t3: 72, t4: 88 },
-                { id: 2, name: "ALPHA MARY", class: "F1", stream: "B", t1: 62, t2: 65, t3: 58, t4: 70 },
+                { id: 2, name: "ALPHA MARY", class: "F1", stream: "B", t1: 62, text: 65, t3: 58, t4: 70 },
                 { id: 3, name: "BARAKA JUMA", class: "F2", stream: "C", t1: 89, t2: 91, t3: 84, t4: 95 },
                 { id: 4, name: "KASSIM SAID", class: "F1", stream: "D", t1: 55, t2: 60, t3: 62, t4: 58 },
                 { id: 5, name: "SOPHIA OMAR", class: "F2", stream: "E", t1: 74, t2: 80, t3: 79, t4: 83 },
