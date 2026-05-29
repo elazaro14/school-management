@@ -1,7 +1,7 @@
 // 1. Shared Layout Navbar Component
 function Navbar({ currentView, setView }) {
   return (
-    <nav className="flex justify-between items-center bg-[#2c3e50] text-white px-6 py-3 shadow-md">
+    <nav className="flex justify-between items-center bg-[#2c3e50] text-white px-6 py-3 shadow-md no-print">
       <h2 className="text-lg font-semibold">🏫 ShuleSys Portal System (TT-PRO Engine)</h2>
       <div className="flex gap-4 items-center text-sm">
         <button onClick={() => setView('admin')} className={`hover:text-white transition ${currentView === 'admin' ? 'text-white font-bold' : 'text-slate-200'}`}>Admin</button>
@@ -431,7 +431,32 @@ function TimetableConfig() {
 
   return (
     <div className={`p-4 ${compactMode ? 'compact-mode' : ''}`} style={{ fontSize: compactMode ? '9.5px' : '11px' }}>
-      <div className="bg-white p-5 rounded-lg shadow-md max-w-[1450px] mx-auto mb-6">
+      
+      {/* Dynamic Print CSS Overrides Injection */}
+      <style>{`
+        @media print {
+          .no-print {
+            display: none !important;
+          }
+          .print-page-break {
+            page-break-before: always !important;
+            break-before: page !important;
+            margin-top: 0 !important;
+            padding-top: 10px !important;
+          }
+          body {
+            background-color: #ffffff !important;
+            padding: 0 !important;
+          }
+          #output {
+            max-w: 100% !important;
+            width: 100% !important;
+          }
+        }
+      `}</style>
+
+      {/* Control / Settings Card Panel Configuration Wrapper */}
+      <div className="bg-white p-5 rounded-lg shadow-md max-w-[1450px] mx-auto mb-6 no-print">
         
         {/* Core Inputs Bar */}
         <div className="flex flex-wrap justify-center gap-4 mb-4 items-center">
@@ -578,26 +603,20 @@ function TimetableConfig() {
       {/* RENDER MATRIX WORKSPACE ENGINE OUTPUT */}
       <div id="output" className="max-w-[1450px] mx-auto">
         
-        {/* Render Title Print Block Header */}
-        {timetableState.length > 0 && (
-          <div className="flex items-center justify-center gap-5 mb-5 text-center border-b pb-4">
-            {logoSrc ? <img src={logoSrc} className="h-16 w-16 object-contain" alt="Logo" /> : <div className="w-16" />}
-            <div>
-              <h1 className="text-xl font-black text-slate-800 uppercase tracking-wide">{schoolName || "SCHOOL NAME"}</h1>
-              <h2 className="text-sm font-semibold text-slate-600 uppercase">
-                {currentViewMode === 'master' && `MASTER TIMETABLE - ${academicYear || "2026"}`}
-                {currentViewMode === 'stream' && `CLASS VIEW: ${selectedStream} - ${academicYear || "2026"}`}
-                {currentViewMode === 'teacher' && `TEACHER TIMETABLE VIEW: ${selectedTeacher} - ${academicYear || "2026"}`}
-                {currentViewMode === 'load' && `TEACHER LESSONS LOAD SUMMARY - ${academicYear || "2026"}`}
-              </h2>
+        {/* VIEW 1: MASTER MULTI-GRID WITH DYNAMIC PAGE BREAKS PER DAY */}
+        {timetableState.length > 0 && currentViewMode === 'master' && DAYS.map((day, dIdx) => (
+          <div key={day} className={`mb-6 overflow-x-auto bg-white p-4 rounded-lg shadow-sm border border-slate-200 ${dIdx > 0 ? 'print-page-break' : ''}`}>
+            
+            {/* Header elements repeated for professional page segmentation styling */}
+            <div className="flex items-center justify-center gap-5 mb-4 text-center border-b pb-3">
+              {logoSrc ? <img src={logoSrc} className="h-12 w-12 object-contain" alt="Logo" /> : <div className="w-12" />}
+              <div>
+                <h1 className="text-lg font-black text-slate-800 uppercase tracking-wide">{schoolName || "SCHOOL NAME"}</h1>
+                <h2 className="text-xs font-semibold text-slate-600 uppercase">MASTER TIMETABLE - {academicYear || "2026"}</h2>
+              </div>
+              <div className="w-12" />
             </div>
-            <div className="w-16" />
-          </div>
-        )}
 
-        {/* VIEW 1: MASTER MULTI-GRID */}
-        {timetableState.length > 0 && currentViewMode === 'master' && DAYS.map(day => (
-          <div key={day} className="mb-6 overflow-x-auto bg-white p-4 rounded-lg shadow-sm border border-slate-200">
             <div className="bg-[#34495e] text-white py-1.5 px-4 font-bold text-sm text-center rounded tracking-wider uppercase mb-3">{day}</div>
             <table className="w-full border-collapse border border-slate-400 table-fixed min-w-[900px]">
               <thead>
@@ -612,7 +631,7 @@ function TimetableConfig() {
                 </tr>
               </thead>
               <tbody>
-                {FORMS.map((form, fIdx) => (
+                {FORMS.map((form) => (
                   <tr key={form} style={{ height: `${rowHeight}px` }}>
                     <td className="border border-slate-400 bg-slate-50 font-bold text-center text-xs text-slate-700">{form}</td>
                     {periodsState.map((p, pIdx) => {
@@ -643,6 +662,14 @@ function TimetableConfig() {
         {/* VIEW 2: INDIVIDUAL CLASS STREAM VIEW */}
         {timetableState.length > 0 && currentViewMode === 'stream' && selectedStream && (
           <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm overflow-x-auto">
+            <div className="flex items-center justify-center gap-5 mb-4 text-center border-b pb-3">
+              {logoSrc ? <img src={logoSrc} className="h-12 w-12 object-contain" alt="Logo" /> : <div className="w-12" />}
+              <div>
+                <h1 className="text-lg font-black text-slate-800 uppercase tracking-wide">{schoolName || "SCHOOL NAME"}</h1>
+                <h2 className="text-xs font-semibold text-slate-600 uppercase">CLASS VIEW: {selectedStream} - {academicYear || "2026"}</h2>
+              </div>
+              <div className="w-12" />
+            </div>
             <table className="w-full border-collapse border border-slate-400 min-w-[800px]">
               <thead>
                 <tr className="bg-[#2c3e50] text-white">
@@ -686,6 +713,14 @@ function TimetableConfig() {
         {/* VIEW 3: TEACHER OWN TRACK VIEW */}
         {timetableState.length > 0 && currentViewMode === 'teacher' && selectedTeacher && (
           <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm overflow-x-auto">
+            <div className="flex items-center justify-center gap-5 mb-4 text-center border-b pb-3">
+              {logoSrc ? <img src={logoSrc} className="h-12 w-12 object-contain" alt="Logo" /> : <div className="w-12" />}
+              <div>
+                <h1 className="text-lg font-black text-slate-800 uppercase tracking-wide">{schoolName || "SCHOOL NAME"}</h1>
+                <h2 className="text-xs font-semibold text-slate-600 uppercase">TEACHER VIEW: {selectedTeacher} - {academicYear || "2026"}</h2>
+              </div>
+              <div className="w-12" />
+            </div>
             <table className="w-full border-collapse border border-slate-400 min-w-[800px]">
               <thead>
                 <tr className="bg-[#2c3e50] text-white">
@@ -732,6 +767,14 @@ function TimetableConfig() {
         {/* VIEW 4: TEACHERS LOAD SUMMARY TABLE */}
         {timetableState.length > 0 && currentViewMode === 'load' && (
           <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm max-w-[800px] mx-auto">
+            <div className="flex items-center justify-center gap-5 mb-4 text-center border-b pb-3">
+              {logoSrc ? <img src={logoSrc} className="h-12 w-12 object-contain" alt="Logo" /> : <div className="w-12" />}
+              <div>
+                <h1 className="text-lg font-black text-slate-800 uppercase tracking-wide">{schoolName || "SCHOOL NAME"}</h1>
+                <h2 className="text-xs font-semibold text-slate-600 uppercase">TEACHER LESSONS LOAD SUMMARY - {academicYear || "2026"}</h2>
+              </div>
+              <div className="w-12" />
+            </div>
             <table className="w-full border-collapse border border-slate-400">
               <thead>
                 <tr className="bg-slate-100 text-slate-700">
