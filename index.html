@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ShuleSys Portal & TT-PRO Ultimate Engine</title>
+    <!-- Stable Tailwind CSS Stylesheet -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Production-ready React and ReactDOM Core Engines -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <style>
@@ -28,6 +30,7 @@
         </div>
     </div>
 
+    <!-- Diagnostic Script Catch-Block -->
     <script type="text/javascript">
         window.addEventListener('error', function(e) {
             var rootEl = document.getElementById('root');
@@ -42,6 +45,7 @@
         });
     </script>
 
+    <!-- React Application Logic Engine Script Container -->
     <script type="text/javascript">
         const e = React.createElement;
         const useState = React.useState;
@@ -58,7 +62,7 @@
                         e('button', {
                             key: v,
                             onClick: () => props.setView(v),
-                            className: `hover:text-white transition capitalize cursor-pointer ${props.currentView === v || ['manage-teachers', 'manage-students', 'timetable', 'settings', 'grading'].includes(props.currentView) && v === 'admin' ? 'text-white font-black underline underline-offset-4' : 'text-slate-300'}`
+                            className: `hover:text-white transition capitalize cursor-pointer ${props.currentView === v || ['manage-teachers', 'manage-students', 'timetable', 'settings', 'grading', 'attendance'].includes(props.currentView) && v === 'admin' ? 'text-white font-black underline underline-offset-4' : 'text-slate-300'}`
                         }, v === 'teacher' ? `Teacher Workspace (${props.activeTeacher.initials})` : v)
                     )
                 )
@@ -289,7 +293,8 @@
                                 name: nameParsed,
                                 class: classParsed,
                                 stream: streamParsed,
-                                t1: 0, t2: 0, t3: 0, t4: 0
+                                t1: 0, t2: 0, t3: 0, t4: 0,
+                                totalDays: 0, presentDays: 0
                             });
                             successCount++;
                         } else {
@@ -317,7 +322,8 @@
                     name: fullName.toUpperCase(),
                     class: selectedClass,
                     stream: selectedStream,
-                    t1: 0, t2: 0, t3: 0, t4: 0
+                    t1: 0, t2: 0, t3: 0, t4: 0,
+                    totalDays: 0, presentDays: 0
                 };
 
                 props.setStudents([...props.students, newStudent]);
@@ -442,10 +448,129 @@
                     e('button', { onClick: () => props.setView('manage-teachers'), className: 'bg-white border text-xs font-bold px-3 py-1.5 rounded text-slate-700 hover:bg-slate-50 cursor-pointer shadow-sm' }, 'Change Teacher')
                 ),
                 e('div', { className: 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5' },
-                    e(DashboardCard, { icon: '📋', title: 'Stream Attendance', description: `Mark attendance records across assigned streams.`, onClick: () => {} }),
+                    e(DashboardCard, { icon: '📋', title: 'Stream Attendance', description: `Mark attendance records across assigned streams.`, onClick: () => props.setView('attendance') }),
                     e(DashboardCard, { icon: '📚', title: 'Lesson Blueprints', description: 'Submit structural schemas to administration.', onClick: () => {} }),
                     e(DashboardCard, { icon: '🖋️', title: 'Enter Grades (T1-T4)', description: `Directly input marks for all your allocated streams.`, onClick: () => props.setView('grading') }),
                     e(DashboardCard, { icon: '📊', title: 'Performance Diagnostics', description: 'Analyze term pass ratios.', onClick: () => {} })
+                )
+            );
+        }
+
+        function StreamAttendanceSystem(props) {
+            const [filterClass, setFilterClass] = useState(props.activeTeacher.targetClasses[0] || 'F1');
+            const [filterStream, setFilterStream] = useState(props.activeTeacher.targetStreams[0] || 'A');
+            const [attendanceState, setAttendanceState] = useState({});
+
+            const filteredStudents = props.students.filter(s => 
+                s.class === filterClass && 
+                s.stream === filterStream &&
+                props.activeTeacher.targetClasses.includes(s.class) &&
+                props.activeTeacher.targetStreams.includes(s.stream)
+            );
+
+            useEffect(() => {
+                const initialStatus = {};
+                filteredStudents.forEach(s => {
+                    initialStatus[s.id] = true;
+                });
+                setAttendanceState(initialStatus);
+            }, [filterClass, filterStream, props.students]);
+
+            const toggleStatus = (id) => {
+                setAttendanceState(prev => Object.assign({}, prev, { [id]: !prev[id] }));
+            };
+
+            const submitAttendance = () => {
+                const updatedStudents = props.students.map(s => {
+                    if (s.class === filterClass && s.stream === filterStream) {
+                        const isPresent = attendanceState[s.id] !== false; 
+                        return Object.assign({}, s, {
+                            totalDays: (s.totalDays || 0) + 1,
+                            presentDays: (s.presentDays || 0) + (isPresent ? 1 : 0)
+                        });
+                    }
+                    return s;
+                });
+                props.setStudents(updatedStudents);
+                alert(`Attendance registry for ${filterClass} Stream ${filterStream} has been compiled and saved successfully.`);
+            };
+
+            return e('div', { className: 'p-6 max-w-6xl mx-auto' },
+                e('div', { className: 'flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6' },
+                    e('div', null,
+                        e('h3', { className: 'text-lg font-bold text-slate-800' }, `Daily Stream Attendance Registry`),
+                        e('p', { className: 'text-xs text-slate-500 font-semibold' }, `Roll-call workstation managed by: ${props.activeTeacher.name}`)
+                    ),
+                    e('button', { onClick: () => props.setView('teacher'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded cursor-pointer self-end sm:self-auto' }, '← Back to Desk')
+                ),
+
+                e('div', { className: 'bg-white border border-slate-200 p-4 rounded-lg shadow-sm mb-6 flex flex-col gap-3' },
+                    e('p', { className: 'text-[10px] font-bold text-slate-400 uppercase tracking-wider' }, 'Select Stream Roster:'),
+                    e('div', { className: 'flex flex-wrap gap-4' },
+                        e('div', null,
+                            e('span', { className: 'text-xs font-semibold text-slate-600 block mb-1' }, 'Form:'),
+                            e('div', { className: 'flex gap-1' },
+                                props.activeTeacher.targetClasses.map(c => e('button', {
+                                    key: c,
+                                    onClick: () => setFilterClass(c),
+                                    className: `px-3 py-1 text-xs font-bold rounded border cursor-pointer ${filterClass === c ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}`
+                                }, c))
+                            )
+                        ),
+                        e('div', null,
+                            e('span', { className: 'text-xs font-semibold text-slate-600 block mb-1' }, 'Stream:'),
+                            e('div', { className: 'flex flex-wrap gap-1' },
+                                props.activeTeacher.targetStreams.map(s => e('button', {
+                                    key: s,
+                                    onClick: () => setFilterStream(s),
+                                    className: `px-3 py-1 text-xs font-bold rounded border cursor-pointer ${filterStream === s ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}`
+                                }, `Stream ${s}`))
+                            )
+                        )
+                    )
+                ),
+
+                filteredStudents.length === 0 ? e('div', { className: 'bg-white border border-dashed text-center p-12 rounded-lg text-slate-400 text-sm font-medium' }, `No students mapped inside your allocated filter criteria for ${filterClass}-${filterStream}.`) :
+                e('div', { className: 'flex flex-col gap-4' },
+                    e('div', { className: 'overflow-x-auto bg-white rounded-lg border border-slate-200 shadow-sm' },
+                        e('table', { className: 'w-full border-collapse text-left text-xs sm:text-sm' },
+                            e('thead', null,
+                                e('tr', { className: 'bg-slate-50 text-slate-600 border-b border-slate-200' },
+                                    e('th', { className: 'p-4 font-bold' }, 'Student Full Name'),
+                                    e('th', { className: 'p-4 font-bold text-center w-36' }, 'Status Check'),
+                                    e('th', { className: 'p-4 font-bold text-center w-28' }, 'Days Present'),
+                                    e('th', { className: 'p-4 font-bold text-center w-28' }, 'Total Days'),
+                                    e('th', { className: 'p-4 font-bold text-center w-28' }, 'Rate Ratio')
+                                )
+                            ),
+                            e('tbody', null,
+                                filteredStudents.map(s => {
+                                    const total = s.totalDays || 0;
+                                    const present = s.presentDays || 0;
+                                    const percentage = total > 0 ? ((present / total) * 100).toFixed(0) + '%' : '-';
+                                    const isChecked = attendanceState[s.id] !== false;
+
+                                    return e('tr', { key: s.id, className: 'border-b border-slate-100 last:border-none hover:bg-slate-50/50' },
+                                        e('td', { className: 'p-4 font-bold text-slate-700' }, s.name),
+                                        e('td', { className: 'p-4 text-center' }, 
+                                            e('button', {
+                                                type: 'button',
+                                                onClick: () => toggleStatus(s.id),
+                                                className: `px-4 py-1 text-xs font-black rounded border cursor-pointer transition w-24 ${isChecked ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-red-500 border-red-500 text-white'}`
+                                            }, isChecked ? 'PRESENT' : 'ABSENT')
+                                        ),
+                                        e('td', { className: 'p-4 text-center font-semibold text-slate-600' }, present),
+                                        e('td', { className: 'p-4 text-center font-semibold text-slate-600' }, total),
+                                        e('td', { className: 'p-4 text-center font-bold text-blue-600' }, percentage)
+                                    );
+                                })
+                            )
+                        )
+                    ),
+                    e('button', {
+                        onClick: submitAttendance,
+                        className: 'w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm py-3 rounded-lg shadow-sm transition cursor-pointer text-center'
+                    }, `💾 Submit and File Today's Attendance Summary`)
                 )
             );
         }
@@ -644,12 +769,12 @@
             const [activeTeacher, setActiveTeacher] = useState({ id: 1, name: "MWAALIMU KIPIMO", initials: "KP", targetClasses: ["F1", "F2"], targetStreams: ["A", "C", "F"] });
             
             const [students, setStudents] = useState([
-                { id: 1, name: "ELAZARO JOHN", class: "F1", stream: "A", t1: 78, t2: 85, t3: 72, t4: 88 },
-                { id: 2, name: "ALPHA MARY", class: "F1", stream: "B", t1: 62, t2: 65, t3: 58, t4: 70 },
-                { id: 3, name: "BARAKA JUMA", class: "F2", stream: "C", t1: 89, t2: 91, t3: 84, t4: 95 },
-                { id: 4, name: "KASSIM SAID", class: "F1", stream: "D", t1: 55, t2: 60, t3: 62, t4: 58 },
-                { id: 5, name: "SOPHIA OMAR", class: "F2", stream: "E", t1: 45, t2: 48, t3: 42, t4: 46 },
-                { id: 6, name: "LUCAS MEMA", class: "F3", stream: "F", t1: 90, t2: 88, t3: 92, t4: 94 }
+                { id: 1, name: "ELAZARO JOHN", class: "F1", stream: "A", t1: 78, t2: 85, t3: 72, t4: 88, totalDays: 12, presentDays: 11 },
+                { id: 2, name: "ALPHA MARY", class: "F1", stream: "B", t1: 62, t2: 65, t3: 58, t4: 70, totalDays: 12, presentDays: 10 },
+                { id: 3, name: "BARAKA JUMA", class: "F2", stream: "C", t1: 89, t2: 91, t3: 84, t4: 95, totalDays: 15, presentDays: 15 },
+                { id: 4, name: "KASSIM SAID", class: "F1", stream: "D", t1: 55, t2: 60, t3: 62, t4: 58, totalDays: 12, presentDays: 9 },
+                { id: 5, name: "SOPHIA OMAR", class: "F2", stream: "E", t1: 45, t2: 48, t3: 42, t4: 46, totalDays: 15, presentDays: 11 },
+                { id: 6, name: "LUCAS MEMA", class: "F3", stream: "F", t1: 90, t2: 88, t3: 92, t4: 94, totalDays: 10, presentDays: 10 }
             ]);
 
             return e('div', { className: 'min-h-screen bg-slate-50 flex flex-col' },
@@ -662,6 +787,7 @@
                     view === 'student' && e(StudentDashboard, null),
                     view === 'parent' && e(ParentDashboard, null),
                     view === 'grading' && e(GradingSystem, { activeTeacher: activeTeacher, setView: setView, students: students, setStudents: setStudents, settings: settings }),
+                    view === 'attendance' && e(StreamAttendanceSystem, { activeTeacher: activeTeacher, setView: setView, students: students, setStudents: setStudents }),
                     view === 'timetable' && e(TimetableConfig, { setView: setView }),
                     view === 'settings' && e(SystemSettings, { setView: setView, settings: settings, setSettings: setSettings })
                 )
