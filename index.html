@@ -3,38 +3,633 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShuleSys Portal System</title>
-    <script src="[https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4](https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4)"></script>
-    <script src="[https://unpkg.com/react@18/umd/react.development.js](https://unpkg.com/react@18/umd/react.development.js)" crossorigin></script>
-    <script src="[https://unpkg.com/react-dom@18/umd/react-dom.development.js](https://unpkg.com/react-dom@18/umd/react-dom.development.js)" crossorigin></script>
-    <script src="[https://unpkg.com/@babel/standalone/babel.min.js](https://unpkg.com/@babel/standalone/babel.min.js)"></script>
+    <title>ShuleSys Portal & TT-PRO Ultimate Engine</title>
+    <!-- Stable Tailwind CSS Stylesheet -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Production-ready React and ReactDOM Core Engines -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <style>
         @media print {
             .no-print { display: none !important; }
             .print-page-break { page-break-before: always !important; break-before: page !important; margin-top: 0 !important; padding-top: 10px !important; }
             body { background-color: #ffffff !important; padding: 0 !important; }
-            #output { max-w: 100% !important; width: 100% !important; }
+            #output { max-width: 100% !important; width: 100% !important; }
+        }
+        /* Custom pattern variations for special timetable events */
+        .mosque-strips {
+            background: repeating-linear-gradient(45deg, #fef08a, #fef08a 10px, #fefcbf 10px, #fefcbf 20px);
         }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body class="bg-slate-50 min-h-screen text-slate-800">
 
-    <div id="root"></div>
+    <!-- The DOM Target Root Element -->
+    <div id="root">
+        <!-- Temporary Fallback Loader during script initialization -->
+        <div id="fallback-loader" class="flex flex-col items-center justify-center min-h-screen p-6 text-center">
+            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
+            <p class="text-sm font-semibold text-slate-600">Initializing ShuleSys Portal Engines...</p>
+            <p class="text-xs text-slate-400 mt-2 max-w-xs">If this screen remains visible for more than 5 seconds, please check your repository configuration file.</p>
+        </div>
+    </div>
 
-    <script type="text/transform" data-plugins="transform-modules-umd" type="text/babel">
-        const { useState, useEffect } = React;
+    <!-- Diagnostic Script Catch-Block -->
+    <script type="text/javascript">
+        window.addEventListener('error', function(e) {
+            var rootEl = document.getElementById('root');
+            if (rootEl) {
+                rootEl.innerHTML = `
+                    <div class="p-6 max-w-xl mx-auto my-12 bg-white border border-red-200 rounded-lg shadow-sm">
+                        <h2 class="text-red-600 font-bold text-base mb-2">System Execution Exception Caught</h2>
+                        <p class="text-xs text-slate-600 font-mono bg-slate-50 p-3 rounded border mb-4">${e.message}</p>
+                        <p class="text-xs text-slate-500">Line: ${e.lineno} | Column: ${e.colno} | Source: ${e.filename}</p>
+                    </div>
+                `;
+            }
+        });
+    </script>
 
-        // 1. Shared Layout Navbar Component
-        function Navbar({ currentView, setView }) {
-          return (
-            <nav class="flex justify-between items-center bg-[#2c3e50] text-white px-6 py-3 shadow-md no-print">
-              <h2 class="text-lg font-semibold">🏫 ShuleSys Portal System (TT-PRO Engine)</h2>
-              <div class="flex gap-4 items-center text-sm">
-                <button onClick={() => setView('admin')} class={`hover:text-white transition cursor-pointer ${currentView === 'admin' ? 'text-white font-bold' : 'text-slate-200'}`}>Admin</button>
-                <button onClick={() => setView('teacher')} class={`hover:text-white transition cursor-pointer ${currentView === 'teacher' ? 'text-white font-bold' : 'text-slate-200'}`}>Teacher</button>
-                <button onClick={() => setView('student')} class={`hover:text-white transition cursor-pointer ${currentView === 'student' ? 'text-white font-bold' : 'text-slate-200'}`}>Student</button>
-                <button onClick={() => setView('parent')} class={`hover:text-white transition cursor-pointer ${currentView === 'parent' ? 'text-white font-bold' : 'text-slate-200'}`}>Parent</button>
-              </div>
+    <!-- React Application Logic Engine Script Container -->
+    <script type="text/javascript">
+        const e = React.createElement;
+        const useState = React.useState;
+        const useEffect = React.useEffect;
+
+        // --- CORE LOGIC COMPONENTS & VIEWS ---
+
+        function Navbar(props) {
+            return e('nav', { className: 'flex justify-between items-center bg-[#2c3e50] text-white px-6 py-3 shadow-md no-print' },
+                e('h2', { className: 'text-sm sm:text-base font-bold' }, '🏫 ShuleSys Portal System (TT-PRO Engine)'),
+                e('div', { className: 'flex gap-4 items-center text-xs' },
+                    ['admin', 'teacher', 'student', 'parent'].map(v => 
+                        e('button', {
+                            key: v,
+                            onClick: () => props.setView(v),
+                            className: `hover:text-white transition capitalize cursor-pointer ${props.currentView === v || (v === 'admin' && props.currentView === 'manage-teachers') ? 'text-white font-black underline underline-offset-4' : 'text-slate-300'}`
+                        }, v)
+                    )
+                )
+            );
+        }
+
+        function DashboardCard(props) {
+            return e('div', {
+                onClick: props.onClick,
+                className: 'bg-white border border-slate-200 rounded-lg p-5 shadow-sm cursor-pointer transition transform hover:-translate-y-0.5 hover:shadow-md hover:border-blue-300'
+            },
+                e('div', { className: 'text-2xl mb-2' }, props.icon),
+                e('h3', { className: 'text-sm font-bold text-slate-800 mb-1' }, props.title),
+                e('p', { className: 'text-xs text-slate-500 leading-relaxed' }, props.description)
+            );
+        }
+
+        function AdminDashboard(props) {
+            return e('div', { className: 'p-6 max-w-7xl mx-auto' },
+                e('h2', { className: 'text-lg font-bold text-slate-800 mb-5' }, 'Control Panel Overview'),
+                e('div', { className: 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5' },
+                    e(DashboardCard, { icon: '👨‍🏫', title: 'Manage Teachers', description: 'Add, edit, and assign teachers to core blocks.', onClick: () => props.setView('manage-teachers') }),
+                    e(DashboardCard, { icon: '🧑‍🎓', title: 'Manage Students', description: 'Enroll students and track global terminal records.', onClick: () => {} }),
+                    e(DashboardCard, { icon: '📅', title: 'TT-PRO Timetable', description: 'Configure schedules and manage double period rules.', onClick: () => props.setView('timetable') }),
+                    e(DashboardCard, { icon: '📊', title: 'System Settings', description: 'Configure system weights and constraints parameters.', onClick: () => {} })
+                )
+            );
+        }
+
+        function TeacherManagement(props) {
+            const [name, setName] = useState('');
+            const [initials, setInitials] = useState('');
+            const [phone, setPhone] = useState('');
+            const [specialization, setSpecialization] = useState('');
+
+            const handleAddTeacher = (event) => {
+                event.preventDefault();
+                if (!name.trim() || !initials.trim()) return;
+
+                const newTeacher = {
+                    id: Date.now(),
+                    name: name.toUpperCase(),
+                    initials: initials.toUpperCase().slice(0, 4),
+                    phone: phone || '-',
+                    specialization: specialization.toUpperCase() || 'GENERAL'
+                };
+
+                props.setTeachers([...props.teachers, newTeacher]);
+                setName(''); setInitials(''); setPhone(''); setSpecialization('');
+            };
+
+            return e('div', { className: 'p-6 max-w-6xl mx-auto' },
+                e('div', { className: 'flex justify-between items-center mb-6' },
+                    e('h2', { className: 'text-lg font-bold text-slate-800' }, '👨‍🏫 Teacher Registry & Allocation'),
+                    e('button', { onClick: () => props.setView('admin'), className: 'bg-slate-600 hover:bg-slate-700 text-white font-bold text-xs px-3 py-1.5 rounded cursor-pointer' }, '← Back to Panel')
+                ),
+                e('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-6' },
+                    e('div', { className: 'bg-white p-5 border border-slate-200 rounded-lg shadow-sm h-fit' },
+                        e('h3', { className: 'text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 border-b pb-2' }, 'Register New Teacher'),
+                        e('form', { onSubmit: handleAddTeacher, className: 'flex flex-col gap-3' },
+                            e('div', null,
+                                e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Full Name'),
+                                e('input', { type: 'text', value: name, onChange: (ev) => setName(ev.target.value), placeholder: 'E.G. MR. JOHN MEMA', className: 'w-full text-xs p-2 border border-slate-200 rounded outline-none focus:border-blue-500', required: true })
+                            ),
+                            e('div', null,
+                                e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Staff Initials'),
+                                e('input', { type: 'text', value: initials, onChange: (ev) => setInitials(ev.target.value), maxLength: 4, placeholder: 'E.G. JM', className: 'w-full text-xs p-2 border border-slate-200 rounded outline-none focus:border-blue-500', required: true })
+                            ),
+                            e('div', null,
+                                e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Phone Number'),
+                                e('input', { type: 'text', value: phone, onChange: (ev) => setPhone(ev.target.value), placeholder: 'E.G. 0763XXXXXX', className: 'w-full text-xs p-2 border border-slate-200 rounded outline-none focus:border-blue-500' })
+                            ),
+                            e('div', null,
+                                e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Core Subject Focus'),
+                                e('input', { type: 'text', value: specialization, onChange: (ev) => setSpecialization(ev.target.value), placeholder: 'E.G. PHYSICS, MATH', className: 'w-full text-xs p-2 border border-slate-200 rounded outline-none focus:border-blue-500' })
+                            ),
+                            e('button', { type: 'submit', className: 'w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2 rounded mt-2 cursor-pointer' }, 'Save Staff Member')
+                        )
+                    ),
+                    e('div', { className: 'bg-white p-5 border border-slate-200 rounded-lg shadow-sm md:col-span-2' },
+                        e('h3', { className: 'text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 border-b pb-2' }, `Active Staff Roster (${props.teachers.length})`),
+                        props.teachers.length === 0 ? e('div', { className: 'text-center py-12 text-slate-400 text-xs italic' }, 'No staff members registered yet.') :
+                        e('div', { className: 'overflow-x-auto' },
+                            e('table', { className: 'w-full text-left text-xs border-collapse' },
+                                e('thead', null,
+                                    e('tr', { className: 'bg-slate-50 text-slate-600 border-b border-slate-200' },
+                                        e('th', { className: 'p-3 font-bold' }, 'Initials'),
+                                        e('th', { className: 'p-3 font-bold' }, 'Full Name'),
+                                        e('th', { className: 'p-3 font-bold' }, 'Specialties'),
+                                        e('th', { className: 'p-3 font-bold' }, 'Phone Connection'),
+                                        e('th', { className: 'p-3 font-bold text-center' }, 'Action')
+                                    )
+                                ),
+                                e('tbody', null,
+                                    props.teachers.map(t => 
+                                        e('tr', { key: t.id, className: 'border-b border-slate-100 last:border-none hover:bg-slate-50/50' },
+                                            e('td', { className: 'p-3' }, e('span', { className: 'bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-black' }, t.initials)),
+                                            e('td', { className: 'p-3 font-bold text-slate-800' }, t.name),
+                                            e('td', { className: 'p-3' }, e('span', { className: 'text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded text-[10px]' }, t.specialization)),
+                                            e('td', { className: 'p-3 text-slate-500 tracking-wide' }, t.phone),
+                                            e('td', { className: 'p-3 text-center' }, 
+                                                e('button', { onClick: () => props.setTeachers(props.teachers.filter(x => x.id !== t.id)), className: 'text-red-500 hover:text-red-700 font-bold cursor-pointer' }, 'Delete')
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            );
+        }
+
+        function TeacherDashboard(props) {
+            return e('div', { className: 'p-6 max-w-7xl mx-auto' },
+                e('h2', { className: 'text-lg font-bold text-slate-800 mb-5' }, 'Teacher Workstation Dashboard'),
+                e('div', { className: 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5' },
+                    e(DashboardCard, { icon: '📋', title: 'Mark Attendance', description: 'Track daily student attendance live.', onClick: () => {} }),
+                    e(DashboardCard, { icon: '📚', title: 'Upload Lesson Plans', description: 'Submit lesson structures to administration.', onClick: () => {} }),
+                    e(DashboardCard, { icon: '🖋️', title: 'Enter Grades (T1-T4)', description: 'Input student assessment parameters directly.', onClick: () => props.setView('grading') }),
+                    e(DashboardCard, { icon: '📊', title: 'View Class Reports', description: 'Analyze diagnostic performance metrics.', onClick: () => {} })
+                )
+            );
+        }
+
+        function StudentDashboard() {
+            return e('div', { className: 'p-6 max-w-7xl mx-auto' },
+                e('h2', { className: 'text-lg font-bold text-slate-800 mb-5' }, 'My Student Desk'),
+                e('div', { className: 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5' },
+                    e(DashboardCard, { icon: '📅', title: 'View Timetable', description: 'Check structural assigned classes.', onClick: () => {} }),
+                    e(DashboardCard, { icon: '📈', title: 'Check Grades', description: 'Monitor performance charts and term scores.', onClick: () => {} }),
+                    e(DashboardCard, { icon: '📝', title: 'Submit Assignments', description: 'Upload active school assignments.', onClick: () => {} }),
+                    e(DashboardCard, { icon: '📚', title: 'Access Resources', description: 'Download class resources.', onClick: () => {} })
+                )
+            );
+        }
+
+        function ParentDashboard() {
+            return e('div', { className: 'p-6 max-w-7xl mx-auto' },
+                e('h2', { className: 'text-lg font-bold text-slate-800 mb-5' }, 'Parent Portal Desk'),
+                e('div', { className: 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5' },
+                    e(DashboardCard, { icon: '📊', title: 'Track Performance', description: 'Review continuous evaluation marks T1-T4.', onClick: () => {} }),
+                    e(DashboardCard, { icon: '✅', title: 'View Attendance', description: 'Monitor daily attendance charts.', onClick: () => {} }),
+                    e(DashboardCard, { icon: '💳', title: 'Check Fee Status', description: 'Verify payment balances.', onClick: () => {} }),
+                    e(DashboardCard, { icon: '🔔', title: 'School Alerts', description: 'Receive broadcast circular statements.', onClick: () => {} })
+                )
+            );
+        }
+
+        function GradingSystem() {
+            const [students, setStudents] = useState([
+                { id: 1, name: "ELAZARO JOHN", t1: 78, t2: 85, t3: 72, t4: 88 },
+                { id: 2, name: "ALPHA MARY", text: 62, t1: 65, t2: 58, t3: 70, t4: 64 }
+            ]);
+
+            const calculateAverage = (s) => ((s.t1 + s.t2 + s.t3 + s.t4) / 4).toFixed(1);
+            const getGradeMetric = (avg) => {
+                if (avg >= 80) return { letter: "A", color: "text-green-600 font-bold" };
+                if (avg >= 70) return { letter: "B", color: "text-blue-600 font-bold" };
+                if (avg >= 50) return { letter: "C", color: "text-amber-600 font-bold" };
+                return { letter: "F", color: "text-red-600 font-bold" };
+            };
+
+            const updateScore = (id, field, value) => {
+                setStudents(students.map(s => s.id === id ? Object.assign({}, s, { [field]: Math.min(100, Math.max(0, Number(value) || 0)) }) : s));
+            };
+
+            return e('div', { className: 'p-6 max-w-6xl mx-auto' },
+                e('h3', { className: 'text-lg font-bold text-slate-800 mb-5' }, 'Automatic Grading Manager (T1 - T4 Evaluations)'),
+                e('div', { className: 'overflow-x-auto bg-white rounded-lg border border-slate-200 shadow-sm' },
+                    e('table', { className: 'w-full border-collapse text-left text-xs sm:text-sm' },
+                        e('thead', null,
+                            e('tr', { className: 'bg-slate-50 text-slate-600 border-b border-slate-200' },
+                                e('th', { className: 'p-4 font-bold' }, 'Student Full Name'),
+                                ['T1', 'T2', 'T3', 'T4'].map(t => e('th', { key: t, className: 'p-4 font-bold text-center w-24' }, t)),
+                                e('th', { className: 'p-4 font-bold text-center w-28' }, 'Average'),
+                                e('th', { className: 'p-4 font-bold text-center w-24' }, 'Grade')
+                            )
+                        ),
+                        e('tbody', null,
+                            students.map(s => {
+                                const avg = calculateAverage(s);
+                                const metric = getGradeMetric(parseFloat(avg));
+                                return e('tr', { key: s.id, className: 'border-b border-slate-100 last:border-none hover:bg-slate-50/50' },
+                                    e('td', { className: 'p-4 font-bold text-slate-700' }, s.name),
+                                    ['t1', 't2', 't3', 't4'].map(f => 
+                                        e('td', { key: f, className: 'p-4 text-center' },
+                                            e('input', {
+                                                type: 'number',
+                                                value: s[f],
+                                                min: 0, max: 100,
+                                                onChange: (ev) => updateScore(s.id, f, ev.target.value),
+                                                className: 'w-16 p-1 border border-slate-200 rounded text-center font-semibold focus:outline-none focus:border-blue-500'
+                                            })
+                                        )
+                                    ),
+                                    e('td', { className: 'p-4 text-center font-bold text-slate-800' }, `${avg}%`),
+                                    e('td', { className: `p-4 text-center ${metric.color}` }, metric.letter)
+                                );
+                            })
+                        )
+                    )
+                )
+            );
+        }
+
+        // --- TT-PRO ADVANCED SCHEDULING TIMETABLE MODULE ---
+
+        function TimetableConfig() {
+            const [schoolName, setSchoolName] = useState(localStorage.getItem('schoolName') || 'MY HIGH SCHOOL');
+            const [academicYear, setAcademicYear] = useState(localStorage.getItem('academicYear') || '2026');
+            const [logoSrc, setLogoSrc] = useState(localStorage.getItem('logoSrc') || '');
+            const [status, setStatus] = useState('Awaiting source CSV matrix upload...');
+            const [statusColor, setStatusColor] = useState('text-slate-500');
+            
+            const [rawData, setRawData] = useState([]);
+            const [timetable, setTimetable] = useState([]);
+            const [periods, setPeriods] = useState([]);
+            const [unavail, setUnavail] = useState([]);
+            const [specialBlocks, setSpecialBlocks] = useState([
+                { day: "WEDNESDAY", start: "P8", end: "P9", text: "RELIGION / SPORTS", class: "fixed-block" },
+                { day: "FRIDAY", start: "P7", end: "P9", text: "MOSQUE ASSIGNMENT", class: "mosque-strips" }
+            ]);
+
+            const [startTime, setStartTime] = useState('08:00');
+            const [periodDuration, setPeriodDuration] = useState(40);
+            const [breakLabel, setBreakLabel] = useState('TEA BREAK');
+            const [breakAfter, setBreakAfter] = useState('P4'); // Break is placed after P4 (e.g., 10:40 AM)
+            const [breakDuration, setBreakDuration] = useState(30);
+            
+            const [hasLunch, setHasLunch] = useState('yes');
+            const [lunchLabel, setLunchLabel] = useState('LUNCH BREAK');
+            const [lunchAfter, setLunchAfter] = useState('P6');
+            const [lunchDuration, setLunchDuration] = useState(45);
+
+            const [compactMode, setCompactMode] = useState(false);
+            const [displayType, setDisplayType] = useState('both');
+            const [rowHeight, setRowHeight] = useState(44);
+
+            const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
+            const FORMS = ["F1A","F1B","F1C","F2A","F2B","F2C","F3A","F3B","F3C","F4A","F4B","F4C"];
+            const basePList = ["P1","P2","P3","P4","P5","P6","P7","P8","P9"];
+
+            useEffect(() => {
+                recalculateTimeline();
+            }, [startTime, periodDuration, breakLabel, breakAfter, breakDuration, hasLunch, lunchLabel, lunchAfter, lunchDuration]);
+
+            const togglePanelDisplay = (id) => {
+                const el = document.getElementById(id);
+                if (el) el.classList.toggle('hidden');
+            };
+
+            const recalculateTimeline = () => {
+                let [h, m] = startTime.split(':').map(Number);
+                let currentTotalMinutes = h * 60 + m;
+
+                const makeRangeString = (start, duration) => {
+                    let sh = Math.floor(start / 60).toString().padStart(2, '0');
+                    let sm = (start % 60).toString().padStart(2, '0');
+                    let eh = Math.floor((start + duration) / 60).toString().padStart(2, '0');
+                    let em = ((start + duration) % 60).toString().padStart(2, '0');
+                    return `${sh}:${sm}-${eh}:${em}`;
+                };
+
+                let computedList = [];
+                basePList.forEach(pName => {
+                    let rangeStr = makeRangeString(currentTotalMinutes, Number(periodDuration));
+                    computedList.push({ p: pName, t: rangeStr, isBreak: false, startMin: currentTotalMinutes, endMin: currentTotalMinutes + Number(periodDuration) });
+                    currentTotalMinutes += Number(periodDuration);
+
+                    if (pName === breakAfter) {
+                        let bRange = makeRangeString(currentTotalMinutes, Number(breakDuration));
+                        computedList.push({ p: "BREAK", t: bRange, isBreak: true, label: breakLabel });
+                        currentTotalMinutes += Number(breakDuration);
+                    }
+                    if (hasLunch === 'yes' && pName === lunchAfter) {
+                        let lRange = makeRangeString(currentTotalMinutes, Number(lunchDuration));
+                        computedList.push({ p: "LUNCH", t: lRange, isBreak: true, label: lunchLabel });
+                        currentTotalMinutes += Number(lunchDuration);
+                    }
+                });
+                setPeriods(computedList);
+            };
+
+            const parseCsvMatrix = (ev) => {
+                const file = ev.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const lines = e.target.result.split('\n').filter(l => l.trim());
+                        let dataArr = [];
+                        // Skip heading row
+                        for(let i = 1; i < lines.length; i++) {
+                            let tokens = lines[i].split(',').map(t => t.trim());
+                            if(tokens.length >= 4) {
+                                dataArr.push({ subject: tokens[0].toUpperCase(), teacher: tokens[1].toUpperCase(), form: tokens[3].toUpperCase() });
+                            }
+                        }
+                        setRawData(dataArr);
+                        setStatusColor('text-green-600');
+                        setStatus(`Successfully verified ${dataArr.length} structured allocation lines.`);
+                    } catch(err) {
+                        setStatusColor('text-red-600');
+                        setStatus('Failed to verify structural matrix format.');
+                    }
+                };
+                reader.readAsText(file);
+            };
+
+            const verifyPlacementConstraints = (day, pName, lesson, currentAllocations) => {
+                // Constraint 1: Check teacher collision
+                const teacherBusy = currentAllocations.some(a => a.day === day && a.period === pName && a.teacher === lesson.teacher);
+                if (teacherBusy) return false;
+
+                // Constraint 2: Check class form collision
+                const formBusy = currentAllocations.some(a => a.day === day && a.period === pName && a.form === lesson.form);
+                if (formBusy) return false;
+
+                // Constraint 3: Review manual teacher availability block
+                const isOff = unavail.some(u => u.teacher === lesson.teacher && u.day === day && u.period === pName);
+                if (isOff) return false;
+
+                // Constraint 4: Verify custom fixed special blocks
+                let isSpecial = false;
+                const nonBreaks = periods.filter(x => !x.isBreak);
+                const currentIdx = nonBreaks.findIndex(x => x.p === pName);
+                
+                specialBlocks.forEach(b => {
+                    if (b.day === day) {
+                        const sIdx = nonBreaks.findIndex(x => x.p === b.start);
+                        const eIdx = nonBreaks.findIndex(x => x.p === b.end);
+                        if (currentIdx >= sIdx && currentIdx <= eIdx) isSpecial = true;
+                    }
+                });
+
+                return !isSpecial;
+            };
+
+            const runEngineAllocation = () => {
+                let currentAllocations = [];
+                const vp = basePList;
+
+                // Group structural allocation rules
+                let mapGroup = {};
+                rawData.forEach(item => {
+                    let key = `${item.form}-${item.subject}`;
+                    if (!mapGroup[key]) mapGroup[key] = [];
+                    mapGroup[key].push(item);
+                });
+
+                // Index boundary marker for morning schedule window limit (10:40 AM)
+                const breakIndexLimit = vp.indexOf(breakAfter);
+
+                Object.values(mapGroup).forEach(lessonList => {
+                    let iterationsRemaining = lessonList.length;
+                    let targetLesson = lessonList[0];
+
+                    // Priority Phase 1: Allocate structural double periods (Must never split across a break)
+                    while (iterationsRemaining >= 2) {
+                        let placed = false;
+                        for (let attempts = 0; attempts < 500; attempts++) {
+                            let targetDay = DAYS[Math.floor(Math.random() * 5)];
+                            let idx = Math.floor(Math.random() * (vp.length - 1));
+                            
+                            let p1 = vp[idx];
+                            let p2 = vp[idx + 1];
+
+                            // Strict Core Optimization Rule: Double period sequence blocks cannot cross over break or lunch intervals
+                            if (idx === breakIndexLimit) continue;
+                            if (hasLunch === 'yes' && idx === vp.indexOf(lunchAfter)) continue;
+
+                            // Daily balance verification
+                            let existingCount = currentAllocations.filter(x => x.day === targetDay && x.form === targetLesson.form && x.subject === targetLesson.subject).length;
+
+                            if (existingCount === 0) {
+                                if (verifyPlacementConstraints(targetDay, p1, targetLesson, currentAllocations) && 
+                                    verifyPlacementConstraints(targetDay, p2, targetLesson, currentAllocations)) {
+                                    
+                                    currentAllocations.push(Object.assign({}, targetLesson, { day: targetDay, period: p1 }));
+                                    currentAllocations.push(Object.assign({}, targetLesson, { day: targetDay, period: p2 }));
+                                    iterationsRemaining -= 2;
+                                    placed = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!placed) break; // Bypass lock-ups if matrix is overly constrained
+                    }
+
+                    // Priority Phase 2: Allocate remaining single lesson items safely
+                    while (iterationsRemaining > 0) {
+                        let placedSingle = false;
+                        for (let attempts = 0; attempts < 300; attempts++) {
+                            let targetDay = DAYS[Math.floor(Math.random() * 5)];
+                            let randIdx = Math.floor(Math.random() * vp.length);
+                            let per = vp[randIdx];
+
+                            // Strict User Control Guideline: No standalone single periods or free slots allowed before 10:40 AM
+                            if (randIdx <= breakIndexLimit) continue;
+
+                            let existingCount = currentAllocations.filter(x => x.day === targetDay && x.form === targetLesson.form && x.subject === targetLesson.subject).length;
+
+                            if (existingCount === 0) {
+                                if (verifyPlacementConstraints(targetDay, per, targetLesson, currentAllocations)) {
+                                    currentAllocations.push(Object.assign({}, targetLesson, { day: targetDay, period: per }));
+                                    iterationsRemaining--;
+                                    placedSingle = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!placedSingle) iterationsRemaining--; // Safety escape parameter
+                    }
+                });
+
+                setTimetable(currentAllocations);
+                setStatusColor('text-blue-600');
+                setStatus('Engine successfully completed allocation cycles.');
+            };
+
+            const getBlockStyleClass = (day, pName) => {
+                const nonBreaks = periods.filter(x => !x.isBreak);
+                const currentIdx = nonBreaks.findIndex(x => x.p === pName);
+                let styling = null;
+
+                specialBlocks.forEach(b => {
+                    if (b.day === day) {
+                        const sIdx = nonBreaks.findIndex(x => x.p === b.start);
+                        const eIdx = nonBreaks.findIndex(x => x.p === b.end);
+                        if (currentIdx >= sIdx && currentIdx <= eIdx) {
+                            styling = b.class === 'fixed-block' ? 'bg-cyan-100 text-cyan-800 italic font-bold' : 'mosque-strips text-yellow-900 font-bold';
+                        }
+                    }
+                });
+                return styling;
+            };
+
+            const getBlockLabelText = (day, pName) => {
+                const nonBreaks = periods.filter(x => !x.isBreak);
+                const currentIdx = nonBreaks.findIndex(x => x.p === pName);
+                let labelText = '';
+
+                specialBlocks.forEach(b => {
+                    if (b.day === day) {
+                        const sIdx = nonBreaks.findIndex(x => x.p === b.start);
+                        const eIdx = nonBreaks.findIndex(x => x.p === b.end);
+                        if (currentIdx >= sIdx && currentIdx <= eIdx) labelText = b.text;
+                    }
+                });
+                return labelText;
+            };
+
+            return e('div', { className: `p-2 ${compactMode ? 'text-[10px]' : 'text-xs'}` },
+                e('div', { className: 'bg-white p-5 rounded-lg shadow-md max-w-[1450px] mx-auto mb-6 no-print' },
+                    e('div', { className: 'flex flex-wrap justify-center gap-4 mb-4 items-center' },
+                        e('input', { type: 'text', value: schoolName, placeholder: 'SCHOOL NAME TITLE', className: 'border-b-2 border-slate-700 font-bold text-center p-1 uppercase w-72 bg-transparent outline-none', onChange: (ev) => { setSchoolName(ev.target.value.toUpperCase()); localStorage.setItem('schoolName', ev.target.value.toUpperCase()); } }),
+                        e('input', { type: 'text', value: academicYear, placeholder: 'ACADEMIC YEAR', className: 'border-b-2 border-slate-700 font-bold text-center p-1 uppercase w-36 bg-transparent outline-none', onChange: (ev) => { setAcademicYear(ev.target.value.toUpperCase()); localStorage.setItem('academicYear', ev.target.value.toUpperCase()); } })
+                    ),
+                    e('div', { className: 'flex flex-wrap gap-2 justify-center mb-4' },
+                        e('input', { type: 'file', id: 'csvInputFile', accept: '.csv', className: 'hidden', onChange: parseCsvMatrix }),
+                        e('button', { onClick: () => document.getElementById('csvInputFile').click(), className: 'bg-blue-600 text-white font-bold px-3 py-2 rounded text-xs cursor-pointer' }, 'Upload Allocation CSV'),
+                        e('button', { onClick: () => togglePanelDisplay('timelineOptionsPanel'), className: 'bg-amber-500 text-slate-900 font-bold px-3 py-2 rounded text-xs cursor-pointer' }, 'Configure Timeline Parameters'),
+                        e('button', { onClick: runEngineAllocation, disabled: rawData.length === 0, className: 'bg-green-600 text-white font-bold px-4 py-2 rounded text-xs disabled:opacity-40 cursor-pointer' }, 'Generate Matrix'),
+                        e('button', { onClick: () => window.print(), className: 'bg-slate-700 text-white font-bold px-3 py-2 rounded text-xs cursor-pointer' }, 'Print View')
+                    ),
+                    e('div', { id: 'timelineOptionsPanel', className: 'bg-slate-50 border border-slate-200 p-4 rounded mb-4 hidden' },
+                        e('h4', { className: 'font-bold text-slate-700 mb-2 border-b pb-1' }, 'Timeline Calibration Metrics'),
+                        e('div', { className: 'grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs' },
+                            e('label', null, 'Start Time: ', e('input', { type: 'time', value: startTime, className: 'border p-1 rounded ml-1', onChange: (ev) => setStartTime(ev.target.value) })),
+                            e('label', null, 'Period Length (Mins): ', e('input', { type: 'number', value: periodDuration, className: 'border p-1 rounded w-16 text-center ml-1', onChange: (ev) => setPeriodDuration(ev.target.value) })),
+                            e('label', null, 'Break Intermission Position: ', 
+                                e('select', { value: breakAfter, className: 'border p-1 rounded ml-1', onChange: (ev) => setBreakAfter(ev.target.value) },
+                                    basePList.map(p => e('option', { key: p, value: p }, `After ${p}`))
+                                )
+                            )
+                        )
+                    ),
+                    e('div', { className: `text-center mt-2 font-bold ${statusColor}` }, status)
+                ),
+                e('div', { id: 'output', className: 'max-w-[1450px] mx-auto' },
+                    timetable.length > 0 && DAYS.map((day, dIdx) => 
+                        e('div', { key: day, className: `mb-8 bg-white p-4 border border-slate-200 rounded-lg shadow-sm ${dIdx > 0 ? 'print-page-break' : ''}` },
+                            e('div', { className: 'text-center mb-4' },
+                                e('h1', { className: 'text-base font-black uppercase tracking-wide text-slate-800' }, schoolName),
+                                e('h2', { className: 'text-[11px] font-bold text-slate-500 uppercase' }, `MASTER ALIGNMENT SCHEDULING INTERFACE — ${academicYear}`),
+                                e('div', { className: 'bg-slate-800 text-white font-bold text-xs py-1 px-4 mt-2 rounded tracking-widest uppercase' }, day)
+                            ),
+                            e('div', { className: 'overflow-x-auto' },
+                                e('table', { className: 'w-full border-collapse border border-slate-300 table-fixed min-w-[950px]' },
+                                    e('thead', null,
+                                        e('tr', { className: 'bg-slate-100 text-slate-700' },
+                                            e('th', { className: 'border border-slate-300 p-1.5 text-xs w-20' }, 'CLASS'),
+                                            periods.map((p, idx) => 
+                                                e('th', { key: idx, className: `border border-slate-300 p-1 text-center font-bold text-[10px] ${p.isBreak ? 'w-8 bg-slate-50' : ''}` },
+                                                    p.isBreak ? p.p : `${p.p}`,
+                                                    e('span', { className: 'block font-normal text-[9px] text-slate-500 mt-0.5' }, p.t)
+                                                )
+                                            )
+                                        )
+                                    ),
+                                    e('tbody', null,
+                                        FORMS.map(form => 
+                                            e('tr', { key: form, style: { height: `${rowHeight}px` } },
+                                                e('td', { className: 'border border-slate-300 bg-slate-50 font-bold text-center text-xs text-slate-700' }, form),
+                                                periods.map((p, pIdx) => {
+                                                    if (p.isBreak) {
+                                                        return e('td', { key: pIdx, className: 'border border-slate-300 bg-slate-100 text-[9px] font-black tracking-widest text-center text-slate-400 uppercase', style: { writingMode: 'vertical-rl' } }, p.label);
+                                                    }
+                                                    
+                                                    let customBlockStyle = getBlockStyleClass(day, p.p);
+                                                    if (customBlockStyle) {
+                                                        return e('td', { key: pIdx, className: `border border-slate-300 text-center p-1 text-[10px] ${customBlockStyle}` }, getBlockLabelText(day, p.p));
+                                                    }
+
+                                                    let match = timetable.find(x => x.day === day && x.period === p.p && x.form === form);
+                                                    return e('td', { key: pIdx, className: 'border border-slate-300 text-center p-1 font-medium text-slate-800' },
+                                                        match ? e('div', null,
+                                                            e('b', { className: 'text-slate-900 block font-bold' }, match.subject),
+                                                            displayType === 'both' && e('span', { className: 'text-[9.5px] text-slate-400 block mt-0.5' }, match.teacher)
+                                                        ) : ''
+                                                    );
+                                                })
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            );
+        }
+
+        function App() {
+            const [view, setView] = useState('admin');
+            const [teachers, setTeachers] = useState([
+                { id: 1, name: "MWAALIMU KIPIMO", initials: "KP", phone: "0763112233", specialization: "GEOGRAPHY, HISTORY" },
+                { id: 2, name: "MADAM REHEMA", initials: "RM", phone: "0754998877", specialization: "KISWAHILI, ENGLISH" }
+            ]);
+
+            return e('div', { className: 'min-h-screen bg-slate-50 flex flex-col' },
+                e(Navbar, { currentView: view, setView: setView }),
+                e('main', { className: 'flex-1' },
+                    view === 'admin' && e(AdminDashboard, { setView: setView }),
+                    view === 'manage-teachers' && e(TeacherManagement, { teachers: teachers, setTeachers: setTeachers, setView: setView }),
+                    view === 'teacher' && e(TeacherDashboard, { setView: setView }),
+                    view === 'student' && e(StudentDashboard, null),
+                    view === 'parent' && e(ParentDashboard, null),
+                    view === 'grading' && e(GradingSystem, null),
+                    view === 'timetable' && e(TimetableConfig, null)
+                )
+            );
+        }
+
+        // Initialize and Mount Application Engine to the target root block element
+        const rootElement = document.getElementById('root');
+        const appRoot = ReactDOM.createRoot(rootElement);
+        appRoot.render(e(App));
+    </script>
+</body>
+</html>              </div>
             </nav>
           );
         }
