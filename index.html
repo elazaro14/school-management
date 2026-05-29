@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ShuleSys Portal & TT-PRO Ultimate Engine</title>
+    <!-- Stable Tailwind CSS Stylesheet -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Production-ready React and ReactDOM Core Engines -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <style>
@@ -28,6 +30,7 @@
         </div>
     </div>
 
+    <!-- Diagnostic Script Catch-Block -->
     <script type="text/javascript">
         window.addEventListener('error', function(e) {
             var rootEl = document.getElementById('root');
@@ -42,6 +45,7 @@
         });
     </script>
 
+    <!-- React Application Logic Engine Script Container -->
     <script type="text/javascript">
         const e = React.createElement;
         const useState = React.useState;
@@ -461,7 +465,6 @@
             const [eventDay, setEventDay] = useState(1);
             const [eventType, setEventType] = useState('EXAM');
 
-            // Formulate days within chosen month
             const totalMonthDays = new Date(currentYear, selectedMonth + 1, 0).getDate();
             const startDayIndex = new Date(currentYear, selectedMonth, 1).getDay();
 
@@ -485,7 +488,6 @@
                 props.setCalendarEvents(props.calendarEvents.filter(ev => ev.id !== id));
             };
 
-            // Days rendering layout
             const dayCells = [];
             for (let i = 0; i < startDayIndex; i++) {
                 dayCells.push(e('div', { key: `empty-${i}`, className: 'bg-slate-50 border border-slate-100 min-h-[70px]' }));
@@ -578,6 +580,7 @@
         function StreamAttendanceSystem(props) {
             const [filterClass, setFilterClass] = useState(props.activeTeacher.targetClasses[0] || 'F1');
             const [filterStream, setFilterStream] = useState(props.activeTeacher.targetStreams[0] || 'A');
+            const [attendanceDate, setAttendanceDate] = useState('2026-05-29'); // Production date tracking
             const [attendanceState, setAttendanceState] = useState({});
 
             const filteredStudents = props.students.filter(s => 
@@ -593,7 +596,7 @@
                     initialStatus[s.id] = 'PRESENT';
                 });
                 setAttendanceState(initialStatus);
-            }, [filterClass, filterStream, props.students]);
+            }, [filterClass, filterStream, attendanceDate, props.students]);
 
             const cycleStatus = (id) => {
                 setAttendanceState(prev => {
@@ -618,7 +621,7 @@
                     return s;
                 });
                 props.setStudents(updatedStudents);
-                alert(`Attendance registry for ${filterClass} Stream ${filterStream} has been compiled and saved successfully.`);
+                alert(`Attendance registry for ${filterClass} Stream ${filterStream} on date [ ${attendanceDate} ] has been compiled and saved successfully.`);
             };
 
             return e('div', { className: 'p-6 max-w-6xl mx-auto' },
@@ -630,29 +633,40 @@
                     e('button', { onClick: () => props.setView('teacher'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded cursor-pointer self-end sm:self-auto' }, '← Back to Desk')
                 ),
 
-                e('div', { className: 'bg-white border border-slate-200 p-4 rounded-lg shadow-sm mb-6 flex flex-col gap-3' },
-                    e('p', { className: 'text-[10px] font-bold text-slate-400 uppercase tracking-wider' }, 'Select Stream Roster:'),
-                    e('div', { className: 'flex flex-wrap gap-4' },
-                        e('div', null,
-                            e('span', { className: 'text-xs font-semibold text-slate-600 block mb-1' }, 'Form:'),
-                            e('div', { className: 'flex gap-1' },
-                                props.activeTeacher.targetClasses.map(c => e('button', {
-                                    key: c,
-                                    onClick: () => setFilterClass(c),
-                                    className: `px-3 py-1 text-xs font-bold rounded border cursor-pointer ${filterClass === c ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}`
-                                }, c))
-                            )
-                        ),
-                        e('div', null,
-                            e('span', { className: 'text-xs font-semibold text-slate-600 block mb-1' }, 'Stream:'),
-                            e('div', { className: 'flex flex-wrap gap-1' },
-                                props.activeTeacher.targetStreams.map(s => e('button', {
-                                    key: s,
-                                    onClick: () => setFilterStream(s),
-                                    className: `px-3 py-1 text-xs font-bold rounded border cursor-pointer ${filterStream === s ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}`
-                                }, `Stream ${s}`))
+                e('div', { className: 'bg-white border border-slate-200 p-5 rounded-lg shadow-sm mb-6 grid grid-cols-1 md:grid-cols-3 gap-6' },
+                    e('div', { className: 'md:col-span-2 flex flex-col gap-3' },
+                        e('p', { className: 'text-[10px] font-bold text-slate-400 uppercase tracking-wider' }, 'Select Stream Roster:'),
+                        e('div', { className: 'flex flex-wrap gap-4' },
+                            e('div', null,
+                                e('span', { className: 'text-xs font-semibold text-slate-600 block mb-1' }, 'Form:'),
+                                e('div', { className: 'flex gap-1' },
+                                    props.activeTeacher.targetClasses.map(c => e('button', {
+                                        key: c,
+                                        onClick: () => setFilterClass(c),
+                                        className: `px-3 py-1 text-xs font-bold rounded border cursor-pointer ${filterClass === c ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}`
+                                    }, c))
+                                )
+                            ),
+                            e('div', null,
+                                e('span', { className: 'text-xs font-semibold text-slate-600 block mb-1' }, 'Stream:'),
+                                e('div', { className: 'flex flex-wrap gap-1' },
+                                    props.activeTeacher.targetStreams.map(s => e('button', {
+                                        key: s,
+                                        onClick: () => setFilterStream(s),
+                                        className: `px-3 py-1 text-xs font-bold rounded border cursor-pointer ${filterStream === s ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}`
+                                    }, `Stream ${s}`))
+                                )
                             )
                         )
+                    ),
+                    e('div', { className: 'border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-6 flex flex-col justify-center' },
+                        e('label', { className: 'block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider' }, '📆 Roll-Call Attendance Date'),
+                        e('input', {
+                            type: 'date',
+                            value: attendanceDate,
+                            onChange: (ev) => setAttendanceDate(ev.target.value),
+                            className: 'w-full text-xs p-2.5 font-bold border border-slate-200 rounded bg-slate-50 focus:bg-white focus:border-blue-500 outline-none'
+                        })
                     )
                 ),
 
@@ -703,7 +717,7 @@
                     e('button', {
                         onClick: submitAttendance,
                         className: 'w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm py-3 rounded-lg shadow-sm transition cursor-pointer text-center'
-                    }, `💾 Submit and File Today's Attendance Summary`)
+                    }, `💾 Submit and File Attendance Summary for ${attendanceDate}`)
                 )
             );
         }
@@ -903,11 +917,11 @@
             
             const [students, setStudents] = useState([
                 { id: 1, name: "ELAZARO JOHN", class: "F1", stream: "A", t1: 78, t2: 85, t3: 72, t4: 88, totalDays: 12, presentDays: 11, permittedDays: 1 },
-                { id: 2, name: "ALPHA MARY", class: "F1", stream: "B", t1: 62, t2: 65, t3: 58, t4: 70, totalDays: 12, presentDays: 10, permittedDays: 0 },
+                { id: 2, name: "ALPHA MARY", class: "F1", stream: "B", t1: 62, t2: 65, text: 58, t4: 70, totalDays: 12, presentDays: 10, permittedDays: 0 },
                 { id: 3, name: "BARAKA JUMA", class: "F2", stream: "C", t1: 89, t2: 91, t3: 84, t4: 95, totalDays: 15, presentDays: 14, permittedDays: 1 },
                 { id: 4, name: "KASSIM SAID", class: "F1", stream: "D", t1: 55, t2: 60, t3: 62, t4: 58, totalDays: 12, presentDays: 9, permittedDays: 2 },
                 { id: 5, name: "SOPHIA OMAR", class: "F2", stream: "E", t1: 45, t2: 48, t3: 42, t4: 46, totalDays: 15, presentDays: 11, permittedDays: 3 },
-                { id: 6, name: "LUCAS MEMA", class: "F3", stream: "F", t1: 90, text: 88, t3: 92, t4: 94, totalDays: 10, presentDays: 10, permittedDays: 0 }
+                { id: 6, name: "LUCAS MEMA", class: "F3", stream: "F", t1: 90, t2: 88, t3: 92, t4: 94, totalDays: 10, presentDays: 10, permittedDays: 0 }
             ]);
 
             const [calendarEvents, setCalendarEvents] = useState([
