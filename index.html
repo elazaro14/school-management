@@ -115,7 +115,7 @@
                 if (selectedStreams.includes(strm)) {
                     setSelectedStreams(selectedStreams.filter(s => s !== strm));
                 } else {
-                    setSelectedStreams([...selectedStreams, srm]);
+                    setSelectedStreams([...selectedStreams, strm]);
                 }
             };
 
@@ -295,7 +295,7 @@
                                 name: nameParsed,
                                 class: classParsed,
                                 stream: streamParsed,
-                                t1: 0, t2: 0, t3: 0, t4: 0,
+                                t1: "", midterm: "", t2: "", exam: "",
                                 totalDays: 0, presentDays: 0, permittedDays: 0
                             });
                             successCount++;
@@ -324,7 +324,7 @@
                     name: fullName.toUpperCase(),
                     class: selectedClass,
                     stream: selectedStream,
-                    t1: 0, t2: 0, t3: 0, t4: 0,
+                    t1: "", midterm: "", t2: "", exam: "",
                     totalDays: 0, presentDays: 0, permittedDays: 0
                 };
 
@@ -452,7 +452,7 @@
                 e('div', { className: 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5' },
                     e(DashboardCard, { icon: '📋', title: 'Stream Attendance', description: `Mark attendance records across assigned streams.`, onClick: () => props.setView('attendance') }),
                     e(DashboardCard, { icon: '📚', title: 'Lesson Blueprints', description: 'Submit structural schemas to administration.', onClick: () => props.setView('blueprints') }),
-                    e(DashboardCard, { icon: '🖋️', title: 'Enter Grades (T1-T4)', description: `Directly input marks for all your allocated streams.`, onClick: () => props.setView('grading') }),
+                    e(DashboardCard, { icon: '🖋️', title: 'Enter Grades (Term & Exams)', description: `Directly input marks for all your allocated streams.`, onClick: () => props.setView('grading') }),
                     e(DashboardCard, { icon: '📊', title: 'Performance Diagnostics', description: 'Analyze term pass ratios.', onClick: () => {} })
                 )
             );
@@ -820,12 +820,29 @@
         }
 
         function GradingSystem(props) {
-            const calculateAverage = (s) => ((s.t1 + s.t2 + s.t3 + s.t4) / 4).toFixed(1);
-            const getGradeMetric = (avg) => {
-                if (avg >= props.settings.gradeA) return { letter: "A", color: "text-green-600 font-bold" };
-                if (avg >= props.settings.gradeB) return { letter: "B", color: "text-blue-600 font-bold" };
-                if (avg >= props.settings.gradeC) return { letter: "C", color: "text-indigo-600 font-bold" };
-                if (avg >= props.settings.gradeD) return { letter: "D", color: "text-amber-600 font-bold" };
+            const calculateCalculatedTotal = (s) => {
+                // Collect any available scores out of T1, Midterm, and T2
+                const validContinuousScores = [];
+                if (s.t1 !== "" && s.t1 !== undefined) validContinuousScores.push(Number(s.t1));
+                if (s.midterm !== "" && s.midterm !== undefined) validContinuousScores.push(Number(s.midterm));
+                if (s.t2 !== "" && s.t2 !== undefined) validContinuousScores.push(Number(s.t2));
+
+                // Calculate average of available scores, fallback to 0 if none exist
+                const caAverage = validContinuousScores.length > 0 
+                    ? validContinuousScores.reduce((sum, val) => sum + val, 0) / validContinuousScores.length 
+                    : 0;
+
+                const finalExamScore = (s.exam !== "" && s.exam !== undefined) ? Number(s.exam) : 0;
+                
+                // Final Grand Total = Average of available CA assessments + Terminal/Annual Exam Score
+                return (caAverage + finalExamScore).toFixed(1);
+            };
+
+            const getGradeMetric = (totalScore) => {
+                if (totalScore >= props.settings.gradeA) return { letter: "A", color: "text-green-600 font-bold" };
+                if (totalScore >= props.settings.gradeB) return { letter: "B", color: "text-blue-600 font-bold" };
+                if (totalScore >= props.settings.gradeC) return { letter: "C", color: "text-indigo-600 font-bold" };
+                if (totalScore >= props.settings.gradeD) return { letter: "D", color: "text-amber-600 font-bold" };
                 return { letter: "F", color: "text-red-600 font-bold" };
             };
 
@@ -840,14 +857,16 @@
             );
 
             const updateScore = (id, field, value) => {
-                props.setStudents(props.students.map(s => s.id === id ? Object.assign({}, s, { [field]: Math.min(100, Math.max(0, Number(value) || 0)) }) : s));
+                // Allow empty string so users can delete/clear out an entry field safely
+                const sanitizedValue = value === "" ? "" : Math.min(100, Math.max(0, Number(value) || 0));
+                props.setStudents(props.students.map(s => s.id === id ? Object.assign({}, s, { [field]: sanitizedValue }) : s));
             };
 
-            return e('div', { className: 'p-6 max-w-6xl mx-auto' },
+            return e('div', { className: 'p-6 max-w-7xl mx-auto' },
                 e('div', { className: 'flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6' },
                     e('div', null,
-                        e('h3', { className: 'text-lg font-bold text-slate-800' }, `Continuous Assessments Worksheet (T1 - T4)`),
-                        e('p', { className: 'text-xs text-slate-500 font-semibold' }, `Logged inside multi-access workbook for: ${props.activeTeacher.name}`)
+                        e('h3', { className: 'text-lg font-bold text-slate-800' }, `Continuous Assessments & Final Examination Workspace`),
+                        e('p', { className: 'text-xs text-slate-500 font-semibold' }, `Formula Matrix: Total = Average(T1, Midterm, T2) + Terminal/Annual Exam`)
                     ),
                     e('button', { onClick: () => props.setView('teacher'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded cursor-pointer self-end sm:self-auto' }, '← Back to Desk')
                 ),
@@ -882,34 +901,54 @@
                 e('div', { className: 'overflow-x-auto bg-white rounded-lg border border-slate-200 shadow-sm' },
                     e('table', { className: 'w-full border-collapse text-left text-xs sm:text-sm' },
                         e('thead', null,
-                            e('tr', { className: 'bg-slate-50 text-slate-600 border-b border-slate-200' },
-                                e('th', { className: 'p-4 font-bold' }, 'Student Full Name'),
-                                e('th', { className: 'p-4 font-bold text-center' }, 'Stream Block'),
-                                ['T1', 'T2', 'T3', 'T4'].map(t => e('th', { key: t, className: 'p-4 font-bold text-center w-24' }, t)),
-                                e('th', { className: 'p-4 font-bold text-center w-28' }, 'Average'),
-                                e('th', { className: 'p-4 font-bold text-center w-24' }, 'Grade Mapping')
+                            e('tr', { className: 'bg-slate-50 text-slate-600 border-b border-slate-200 text-center' },
+                                e('th', { className: 'p-4 font-bold text-left' }, 'Student Full Name'),
+                                e('th', { className: 'p-4 font-bold' }, 'Stream'),
+                                e('th', { className: 'p-4 font-bold w-20' }, 'T1'),
+                                e('th', { className: 'p-4 font-bold w-20' }, 'MIDTERM'),
+                                e('th', { className: 'p-4 font-bold w-20' }, 'T2'),
+                                e('th', { className: 'p-4 font-bold w-32 bg-blue-50/50 text-blue-900' }, 'TERMINAL / ANNUAL'),
+                                e('th', { className: 'p-4 font-bold w-24 bg-slate-100' }, 'TOTAL SCORE'),
+                                e('th', { className: 'p-4 font-bold w-24' }, 'GRADE')
                             )
                         ),
                         e('tbody', null,
                             filteredStudents.map(s => {
-                                const avg = calculateAverage(s);
-                                const metric = getGradeMetric(parseFloat(avg));
-                                return e('tr', { key: s.id, className: 'border-b border-slate-100 last:border-none hover:bg-slate-50/50' },
-                                    e('td', { className: 'p-4 font-bold text-slate-700' }, s.name),
-                                    e('td', { className: 'p-4 text-center' }, e('span', { className: 'bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded' }, `${s.class}-${s.stream}`)),
-                                    ['t1', 't2', 't3', 't4'].map(f => 
-                                        e('td', { key: f, className: 'p-4 text-center' },
-                                            e('input', {
-                                                type: 'number',
-                                                value: s[f],
-                                                min: 0, max: 100,
-                                                onChange: (ev) => updateScore(s.id, f, ev.target.value),
-                                                className: 'w-16 p-1 border border-slate-200 rounded text-center font-semibold focus:outline-none focus:border-blue-500'
-                                            })
-                                        )
+                                const grandTotal = calculateCalculatedTotal(s);
+                                const metric = getGradeMetric(parseFloat(grandTotal));
+                                return e('tr', { key: s.id, className: 'border-b border-slate-100 last:border-none hover:bg-slate-50/50 text-center' },
+                                    e('td', { className: 'p-4 font-bold text-slate-700 text-left' }, s.name),
+                                    e('td', { className: 'p-4' }, e('span', { className: 'bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded' }, `${s.class}-${s.stream}`)),
+                                    e('td', { className: 'p-4' },
+                                        e('input', {
+                                            type: 'number', value: s.t1, min: 0, max: 100, placeholder: "-",
+                                            onChange: (ev) => updateScore(s.id, 't1', ev.target.value),
+                                            className: 'w-14 p-1 border border-slate-200 rounded text-center font-semibold focus:outline-none focus:border-blue-500'
+                                        })
                                     ),
-                                    e('td', { className: 'p-4 text-center font-bold text-slate-800' }, `${avg}%`),
-                                    e('td', { className: `p-4 text-center ${metric.color}` }, metric.letter)
+                                    e('td', { className: 'p-4' },
+                                        e('input', {
+                                            type: 'number', value: s.midterm, min: 0, max: 100, placeholder: "-",
+                                            onChange: (ev) => updateScore(s.id, 'midterm', ev.target.value),
+                                            className: 'w-14 p-1 border border-slate-200 rounded text-center font-semibold focus:outline-none focus:border-blue-500'
+                                        })
+                                    ),
+                                    e('td', { className: 'p-4' },
+                                        e('input', {
+                                            type: 'number', value: s.t2, min: 0, max: 100, placeholder: "-",
+                                            onChange: (ev) => updateScore(s.id, 't2', ev.target.value),
+                                            className: 'w-14 p-1 border border-slate-200 rounded text-center font-semibold focus:outline-none focus:border-blue-500'
+                                        })
+                                    ),
+                                    e('td', { className: 'p-4 bg-blue-50/20' },
+                                        e('input', {
+                                            type: 'number', value: s.exam, min: 0, max: 100, placeholder: "-",
+                                            onChange: (ev) => updateScore(s.id, 'exam', ev.target.value),
+                                            className: 'w-20 p-1 border border-blue-200 bg-blue-50/30 rounded text-center font-bold text-blue-900 focus:outline-none focus:border-blue-500'
+                                        })
+                                    ),
+                                    e('td', { className: 'p-4 font-black bg-slate-100 text-slate-800' }, `${grandTotal}`),
+                                    e('td', { className: `p-4 font-black text-sm ${metric.color}` }, metric.letter)
                                 );
                             })
                         )
@@ -1012,13 +1051,12 @@
             ]);
             const [activeTeacher, setActiveTeacher] = useState({ id: 1, name: "MWAALIMU KIPIMO", initials: "KP", targetClasses: ["F1", "F2"], targetStreams: ["A", "C", "F"] });
             
+            // Seed base student entries matching the new architectural format
             const [students, setStudents] = useState([
-                { id: 1, name: "ELAZARO JOHN", class: "F1", stream: "A", t1: 78, t2: 85, t3: 72, t4: 88, totalDays: 12, presentDays: 11, permittedDays: 1 },
-                { id: 2, name: "ALPHA MARY", class: "F1", stream: "B", t1: 62, t2: 65, t3: 58, t4: 70, totalDays: 12, presentDays: 10, permittedDays: 0 },
-                { id: 3, name: "BARAKA JUMA", class: "F2", stream: "C", t1: 89, t2: 91, t3: 84, t4: 95, totalDays: 15, presentDays: 14, permittedDays: 1 },
-                { id: 4, name: "KASSIM SAID", class: "F1", stream: "D", t1: 55, t2: 60, t3: 62, t4: 58, totalDays: 12, presentDays: 9, permittedDays: 2 },
-                { id: 5, name: "SOPHIA OMAR", class: "F2", stream: "E", t1: 45, t2: 48, t3: 42, t4: 46, totalDays: 15, presentDays: 11, permittedDays: 3 },
-                { id: 6, name: "LUCAS MEMA", class: "F3", stream: "F", t1: 90, t2: 88, t3: 92, t4: 94, totalDays: 10, presentDays: 10, permittedDays: 0 }
+                { id: 1, name: "ELAZARO JOHN", class: "F1", stream: "A", t1: 75, midterm: 80, t2: 85, exam: 40, totalDays: 12, presentDays: 11, permittedDays: 1 },
+                { id: 2, name: "ALPHA MARY", class: "F1", stream: "B", t1: 60, midterm: "", t2: 70, exam: 35, totalDays: 12, presentDays: 10, permittedDays: 0 },
+                { id: 3, name: "BARAKA JUMA", class: "F2", stream: "C", t1: 90, midterm: 88, t2: 92, exam: 48, totalDays: 15, presentDays: 14, permittedDays: 1 },
+                { id: 4, name: "KASSIM SAID", class: "F1", stream: "D", t1: 50, midterm: 55, t2: "", exam: 30, totalDays: 12, presentDays: 9, permittedDays: 2 }
             ]);
 
             const [calendarEvents, setCalendarEvents] = useState([
