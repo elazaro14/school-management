@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ShuleSys Portal & TT-PRO Ultimate Engine</title>
-    <!-- Stable Tailwind CSS Stylesheet -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Production-ready React and ReactDOM Core Engines -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <style>
@@ -30,7 +28,6 @@
         </div>
     </div>
 
-    <!-- Diagnostic Script Catch-Block -->
     <script type="text/javascript">
         window.addEventListener('error', function(e) {
             var rootEl = document.getElementById('root');
@@ -45,7 +42,6 @@
         });
     </script>
 
-    <!-- React Application Logic Engine Script Container -->
     <script type="text/javascript">
         const e = React.createElement;
         const useState = React.useState;
@@ -53,6 +49,7 @@
 
         const AVAILABLE_STREAMS = ['A', 'B', 'C', 'D', 'E', 'F'];
         const AVAILABLE_CLASSES = ['F1', 'F2', 'F3', 'F4'];
+        const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
         function Navbar(props) {
             return e('nav', { className: 'flex justify-between items-center bg-[#2c3e50] text-white px-6 py-3 shadow-md no-print' },
@@ -62,7 +59,7 @@
                         e('button', {
                             key: v,
                             onClick: () => props.setView(v),
-                            className: `hover:text-white transition capitalize cursor-pointer ${props.currentView === v || ['manage-teachers', 'manage-students', 'timetable', 'settings', 'grading', 'attendance'].includes(props.currentView) && v === 'admin' ? 'text-white font-black underline underline-offset-4' : 'text-slate-300'}`
+                            className: `hover:text-white transition capitalize cursor-pointer ${props.currentView === v || ['manage-teachers', 'manage-students', 'timetable', 'settings', 'grading', 'attendance', 'calendar'].includes(props.currentView) && v === 'admin' ? 'text-white font-black underline underline-offset-4' : 'text-slate-300'}`
                         }, v === 'teacher' ? `Teacher Workspace (${props.activeTeacher.initials})` : v)
                     )
                 )
@@ -87,6 +84,7 @@
                     e(DashboardCard, { icon: '👨‍🏫', title: 'Manage Teachers', description: 'Add teachers and assign multiple forms/streams (A-F).', onClick: () => props.setView('manage-teachers') }),
                     e(DashboardCard, { icon: '🧑‍🎓', title: 'Manage Students', description: 'Enroll students, assign streams, and track global terminal rosters.', onClick: () => props.setView('manage-students') }),
                     e(DashboardCard, { icon: '📅', title: 'TT-PRO Timetable', description: 'Configure schedules and manage double period rules.', onClick: () => props.setView('timetable') }),
+                    e(DashboardCard, { icon: '🗓️', title: 'Academic Calendar', description: 'Schedule and map multi-month key institutional milestones.', onClick: () => props.setView('calendar') }),
                     e(DashboardCard, { icon: '📊', title: 'System Settings', description: 'Configure system names, active streams, and grading scales.', onClick: () => props.setView('settings') })
                 )
             );
@@ -294,7 +292,7 @@
                                 class: classParsed,
                                 stream: streamParsed,
                                 t1: 0, t2: 0, t3: 0, t4: 0,
-                                totalDays: 0, presentDays: 0
+                                totalDays: 0, presentDays: 0, permittedDays: 0
                             });
                             successCount++;
                         } else {
@@ -323,7 +321,7 @@
                     class: selectedClass,
                     stream: selectedStream,
                     t1: 0, t2: 0, t3: 0, t4: 0,
-                    totalDays: 0, presentDays: 0
+                    totalDays: 0, presentDays: 0, permittedDays: 0
                 };
 
                 props.setStudents([...props.students, newStudent]);
@@ -456,6 +454,127 @@
             );
         }
 
+        function AcademicCalendarSystem(props) {
+            const currentYear = 2026;
+            const [selectedMonth, setSelectedMonth] = useState(4); // Default to May
+            const [eventText, setEventText] = useState('');
+            const [eventDay, setEventDay] = useState(1);
+            const [eventType, setEventType] = useState('EXAM');
+
+            // Formulate days within chosen month
+            const totalMonthDays = new Date(currentYear, selectedMonth + 1, 0).getDate();
+            const startDayIndex = new Date(currentYear, selectedMonth, 1).getDay();
+
+            const handleAddEvent = (event) => {
+                event.preventDefault();
+                if (!eventText.trim()) return;
+
+                const dateString = `${currentYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(eventDay).padStart(2, '0')}`;
+                const newEvent = {
+                    id: Date.now(),
+                    date: dateString,
+                    title: eventText.toUpperCase(),
+                    type: eventType
+                };
+
+                props.setCalendarEvents([...props.calendarEvents, newEvent]);
+                setEventText('');
+            };
+
+            const handleDeleteEvent = (id) => {
+                props.setCalendarEvents(props.calendarEvents.filter(ev => ev.id !== id));
+            };
+
+            // Days rendering layout
+            const dayCells = [];
+            for (let i = 0; i < startDayIndex; i++) {
+                dayCells.push(e('div', { key: `empty-${i}`, className: 'bg-slate-50 border border-slate-100 min-h-[70px]' }));
+            }
+
+            for (let day = 1; day <= totalMonthDays; day++) {
+                const currentDateStr = `${currentYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const matchedEvents = props.calendarEvents.filter(ev => ev.date === currentDateStr);
+
+                dayCells.push(
+                    e('div', { key: `day-${day}`, className: 'bg-white border border-slate-200 p-1.5 min-h-[70px] flex flex-col justify-between' },
+                        e('span', { className: 'text-xs font-bold text-slate-400' }, day),
+                        e('div', { className: 'flex flex-col gap-1 mt-1' },
+                            matchedEvents.map(ev => {
+                                let badgeColor = 'bg-blue-500 text-white';
+                                if (ev.type === 'HOLIDAY') badgeColor = 'bg-red-500 text-white';
+                                if (ev.type === 'SPORTS') badgeColor = 'bg-emerald-500 text-white';
+
+                                return e('span', { key: ev.id, className: `${badgeColor} text-[9px] font-bold p-1 rounded truncate`, title: ev.title }, ev.title);
+                            })
+                        )
+                    )
+                );
+            }
+
+            return e('div', { className: 'p-6 max-w-6xl mx-auto' },
+                e('div', { className: 'flex justify-between items-center mb-6' },
+                    e('h2', { className: 'text-lg font-bold text-slate-800' }, '🗓️ Institutional Academic Calendar Engine'),
+                    e('button', { onClick: () => props.setView('admin'), className: 'bg-slate-600 hover:bg-slate-700 text-white font-bold text-xs px-3 py-1.5 rounded cursor-pointer' }, '← Back to Panel')
+                ),
+
+                e('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-6' },
+                    e('div', { className: 'bg-white p-5 border border-slate-200 rounded-lg shadow-sm h-fit flex flex-col gap-4' },
+                        e('h3', { className: 'text-xs font-bold text-slate-700 uppercase tracking-wider border-b pb-2' }, 'Plot Milestone Event'),
+                        e('form', { onSubmit: handleAddEvent, className: 'flex flex-col gap-3' },
+                            e('div', null,
+                                e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Target Month'),
+                                e('select', { value: selectedMonth, onChange: (ev) => { setSelectedMonth(Number(ev.target.value)); setEventDay(1); }, className: 'w-full text-xs p-2 border border-slate-200 rounded outline-none bg-white' },
+                                    MONTHS.map((m, idx) => e('option', { key: m, value: idx }, `${m} ${currentYear}`))
+                                )
+                            ),
+                            e('div', null,
+                                e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Target Day'),
+                                e('select', { value: eventDay, onChange: (ev) => setEventDay(Number(ev.target.value)), className: 'w-full text-xs p-2 border border-slate-200 rounded outline-none bg-white' },
+                                    Array.from({ length: totalMonthDays }, (_, i) => i + 1).map(d => e('option', { key: d, value: d }, d))
+                                )
+                            ),
+                            e('div', null,
+                                e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Milestone Category'),
+                                e('select', { value: eventType, onChange: (ev) => setEventType(ev.target.value), className: 'w-full text-xs p-2 border border-slate-200 rounded outline-none bg-white' },
+                                    e('option', { value: 'EXAM' }, 'Examination Term'),
+                                    e('option', { value: 'HOLIDAY' }, 'Public Holiday / Break'),
+                                    e('option', { value: 'SPORTS' }, 'Sports / Extracurricular')
+                                )
+                            ),
+                            e('div', null,
+                                e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Event Designation Description'),
+                                e('input', { type: 'text', value: eventText, onChange: (ev) => setEventText(ev.target.value), placeholder: 'E.G. MID-TERM PHYSICS EXAM', className: 'w-full text-xs p-2 border border-slate-200 rounded outline-none focus:border-blue-500', required: true })
+                            ),
+                            e('button', { type: 'submit', className: 'w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2 rounded mt-2 cursor-pointer' }, 'Schedule Milestone')
+                        ),
+
+                        e('h4', { className: 'text-[11px] font-bold text-slate-600 uppercase tracking-wide mt-2 border-b pb-1' }, 'Scheduled Registry Listings'),
+                        e('div', { className: 'flex flex-col gap-2 max-h-52 overflow-y-auto' },
+                            props.calendarEvents.length === 0 ? e('p', { className: 'text-[11px] text-slate-400 italic' }, 'No academic milestones configured.') :
+                            props.calendarEvents.map(ev => e('div', { key: ev.id, className: 'flex justify-between items-center p-2 bg-slate-50 border rounded text-xs' },
+                                e('div', null,
+                                    e('p', { className: 'font-bold text-slate-700 text-[11px]' }, ev.title),
+                                    e('p', { className: 'text-[10px] text-slate-400' }, `${ev.date} [${ev.type}]`)
+                                ),
+                                e('button', { onClick: () => handleDeleteEvent(ev.id), className: 'text-red-500 hover:text-red-700 font-bold ml-2 cursor-pointer' }, '✕')
+                            ))
+                        )
+                    ),
+
+                    e('div', { className: 'bg-white p-5 border border-slate-200 rounded-lg shadow-sm md:col-span-2' },
+                        e('div', { className: 'flex justify-between items-center mb-4 border-b pb-2' },
+                            e('h3', { className: 'text-sm font-black text-slate-800 uppercase' }, `${MONTHS[selectedMonth]} Grid Roadmap`),
+                            e('span', { className: 'text-xs text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded' }, currentYear)
+                        ),
+                        e('div', { className: 'grid grid-cols-7 text-center text-xs font-bold text-slate-500 mb-2' },
+                            ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(dayTitle => e('div', { key: dayTitle, className: 'py-1' }, dayTitle))
+                        ),
+                        e('div', { className: 'grid grid-cols-7 gap-1 bg-slate-100 p-1 rounded border' }, dayCells)
+                    )
+                )
+            );
+        }
+
         function StreamAttendanceSystem(props) {
             const [filterClass, setFilterClass] = useState(props.activeTeacher.targetClasses[0] || 'F1');
             const [filterStream, setFilterStream] = useState(props.activeTeacher.targetStreams[0] || 'A');
@@ -471,22 +590,29 @@
             useEffect(() => {
                 const initialStatus = {};
                 filteredStudents.forEach(s => {
-                    initialStatus[s.id] = true;
+                    initialStatus[s.id] = 'PRESENT';
                 });
                 setAttendanceState(initialStatus);
             }, [filterClass, filterStream, props.students]);
 
-            const toggleStatus = (id) => {
-                setAttendanceState(prev => Object.assign({}, prev, { [id]: !prev[id] }));
+            const cycleStatus = (id) => {
+                setAttendanceState(prev => {
+                    const current = prev[id] || 'PRESENT';
+                    let nextStatus = 'PRESENT';
+                    if (current === 'PRESENT') nextStatus = 'ABSENT';
+                    else if (current === 'ABSENT') nextStatus = 'PERMITTED';
+                    return Object.assign({}, prev, { [id]: nextStatus });
+                });
             };
 
             const submitAttendance = () => {
                 const updatedStudents = props.students.map(s => {
                     if (s.class === filterClass && s.stream === filterStream) {
-                        const isPresent = attendanceState[s.id] !== false; 
+                        const currentStatus = attendanceState[s.id] || 'PRESENT';
                         return Object.assign({}, s, {
                             totalDays: (s.totalDays || 0) + 1,
-                            presentDays: (s.presentDays || 0) + (isPresent ? 1 : 0)
+                            presentDays: (s.presentDays || 0) + (currentStatus === 'PRESENT' ? 1 : 0),
+                            permittedDays: (s.permittedDays || 0) + (currentStatus === 'PERMITTED' ? 1 : 0)
                         });
                     }
                     return s;
@@ -537,29 +663,36 @@
                             e('thead', null,
                                 e('tr', { className: 'bg-slate-50 text-slate-600 border-b border-slate-200' },
                                     e('th', { className: 'p-4 font-bold' }, 'Student Full Name'),
-                                    e('th', { className: 'p-4 font-bold text-center w-36' }, 'Status Check'),
-                                    e('th', { className: 'p-4 font-bold text-center w-28' }, 'Days Present'),
-                                    e('th', { className: 'p-4 font-bold text-center w-28' }, 'Total Days'),
-                                    e('th', { className: 'p-4 font-bold text-center w-28' }, 'Rate Ratio')
+                                    e('th', { className: 'p-4 font-bold text-center w-40' }, 'Status Check (Click to Cycle)'),
+                                    e('th', { className: 'p-4 font-bold text-center w-24' }, 'Present'),
+                                    e('th', { className: 'p-4 font-bold text-center w-24' }, 'Permitted'),
+                                    e('th', { className: 'p-4 font-bold text-center w-24' }, 'Total Days'),
+                                    e('th', { className: 'p-4 font-bold text-center w-24' }, 'Rate Ratio')
                                 )
                             ),
                             e('tbody', null,
                                 filteredStudents.map(s => {
                                     const total = s.totalDays || 0;
                                     const present = s.presentDays || 0;
+                                    const permitted = s.permittedDays || 0;
                                     const percentage = total > 0 ? ((present / total) * 100).toFixed(0) + '%' : '-';
-                                    const isChecked = attendanceState[s.id] !== false;
+                                    const status = attendanceState[s.id] || 'PRESENT';
+
+                                    let btnStyle = 'bg-emerald-500 border-emerald-500 text-white';
+                                    if (status === 'ABSENT') btnStyle = 'bg-red-500 border-red-500 text-white';
+                                    if (status === 'PERMITTED') btnStyle = 'bg-amber-500 border-amber-500 text-white';
 
                                     return e('tr', { key: s.id, className: 'border-b border-slate-100 last:border-none hover:bg-slate-50/50' },
                                         e('td', { className: 'p-4 font-bold text-slate-700' }, s.name),
                                         e('td', { className: 'p-4 text-center' }, 
                                             e('button', {
                                                 type: 'button',
-                                                onClick: () => toggleStatus(s.id),
-                                                className: `px-4 py-1 text-xs font-black rounded border cursor-pointer transition w-24 ${isChecked ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-red-500 border-red-500 text-white'}`
-                                            }, isChecked ? 'PRESENT' : 'ABSENT')
+                                                onClick: () => cycleStatus(s.id),
+                                                className: `px-2 py-1 text-xs font-black rounded border cursor-pointer transition w-28 text-center tracking-wide ${btnStyle}`
+                                            }, status)
                                         ),
                                         e('td', { className: 'p-4 text-center font-semibold text-slate-600' }, present),
+                                        e('td', { className: 'p-4 text-center font-semibold text-amber-600' }, permitted),
                                         e('td', { className: 'p-4 text-center font-semibold text-slate-600' }, total),
                                         e('td', { className: 'p-4 text-center font-bold text-blue-600' }, percentage)
                                     );
@@ -769,12 +902,18 @@
             const [activeTeacher, setActiveTeacher] = useState({ id: 1, name: "MWAALIMU KIPIMO", initials: "KP", targetClasses: ["F1", "F2"], targetStreams: ["A", "C", "F"] });
             
             const [students, setStudents] = useState([
-                { id: 1, name: "ELAZARO JOHN", class: "F1", stream: "A", t1: 78, t2: 85, t3: 72, t4: 88, totalDays: 12, presentDays: 11 },
-                { id: 2, name: "ALPHA MARY", class: "F1", stream: "B", t1: 62, t2: 65, t3: 58, t4: 70, totalDays: 12, presentDays: 10 },
-                { id: 3, name: "BARAKA JUMA", class: "F2", stream: "C", t1: 89, t2: 91, t3: 84, t4: 95, totalDays: 15, presentDays: 15 },
-                { id: 4, name: "KASSIM SAID", class: "F1", stream: "D", t1: 55, t2: 60, t3: 62, t4: 58, totalDays: 12, presentDays: 9 },
-                { id: 5, name: "SOPHIA OMAR", class: "F2", stream: "E", t1: 45, t2: 48, t3: 42, t4: 46, totalDays: 15, presentDays: 11 },
-                { id: 6, name: "LUCAS MEMA", class: "F3", stream: "F", t1: 90, t2: 88, t3: 92, t4: 94, totalDays: 10, presentDays: 10 }
+                { id: 1, name: "ELAZARO JOHN", class: "F1", stream: "A", t1: 78, t2: 85, t3: 72, t4: 88, totalDays: 12, presentDays: 11, permittedDays: 1 },
+                { id: 2, name: "ALPHA MARY", class: "F1", stream: "B", t1: 62, t2: 65, t3: 58, t4: 70, totalDays: 12, presentDays: 10, permittedDays: 0 },
+                { id: 3, name: "BARAKA JUMA", class: "F2", stream: "C", t1: 89, t2: 91, t3: 84, t4: 95, totalDays: 15, presentDays: 14, permittedDays: 1 },
+                { id: 4, name: "KASSIM SAID", class: "F1", stream: "D", t1: 55, t2: 60, t3: 62, t4: 58, totalDays: 12, presentDays: 9, permittedDays: 2 },
+                { id: 5, name: "SOPHIA OMAR", class: "F2", stream: "E", t1: 45, t2: 48, t3: 42, t4: 46, totalDays: 15, presentDays: 11, permittedDays: 3 },
+                { id: 6, name: "LUCAS MEMA", class: "F3", stream: "F", t1: 90, text: 88, t3: 92, t4: 94, totalDays: 10, presentDays: 10, permittedDays: 0 }
+            ]);
+
+            const [calendarEvents, setCalendarEvents] = useState([
+                { id: 101, date: "2026-05-12", title: "MID-TERM EXAMS", type: "EXAM" },
+                { id: 102, date: "2026-05-25", title: "AFRICA DAY BREAK", type: "HOLIDAY" },
+                { id: 103, date: "2026-06-05", title: "ANNUAL SPORTS FESTIVAL", type: "SPORTS" }
             ]);
 
             return e('div', { className: 'min-h-screen bg-slate-50 flex flex-col' },
@@ -789,6 +928,7 @@
                     view === 'grading' && e(GradingSystem, { activeTeacher: activeTeacher, setView: setView, students: students, setStudents: setStudents, settings: settings }),
                     view === 'attendance' && e(StreamAttendanceSystem, { activeTeacher: activeTeacher, setView: setView, students: students, setStudents: setStudents }),
                     view === 'timetable' && e(TimetableConfig, { setView: setView }),
+                    view === 'calendar' && e(AcademicCalendarSystem, { setView: setView, calendarEvents: calendarEvents, setCalendarEvents: setCalendarEvents }),
                     view === 'settings' && e(SystemSettings, { setView: setView, settings: settings, setSettings: setSettings })
                 )
             );
