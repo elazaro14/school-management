@@ -63,7 +63,7 @@
                         e('button', {
                             key: v,
                             onClick: () => props.setView(v),
-                            className: `hover:text-white transition capitalize cursor-pointer ${props.currentView === v || ['manage-teachers', 'manage-students', 'timetable', 'settings', 'grading', 'attendance', 'calendar', 'blueprints'].includes(props.currentView) && v === 'admin' ? 'text-white font-black underline underline-offset-4' : 'text-slate-300'}`
+                            className: `hover:text-white transition capitalize cursor-pointer ${props.currentView === v || ['manage-teachers', 'manage-students', 'timetable', 'settings', 'grading', 'attendance', 'calendar', 'blueprints', 'diagnostics'].includes(props.currentView) && v === 'admin' ? 'text-white font-black underline underline-offset-4' : 'text-slate-300'}`
                         }, v === 'teacher' ? `Teacher Workspace (${props.activeTeacher.initials})` : v)
                     )
                 )
@@ -370,7 +370,8 @@
                     e(DashboardCard, { icon: '📋', title: 'Stream Attendance', description: 'Mark attendance records across assigned streams.', onClick: () => props.setView('attendance') }),
                     e(DashboardCard, { icon: '📚', title: 'Lesson Blueprints', description: 'Submit structural schemas to administration.', onClick: () => props.setView('blueprints') }),
                     e(DashboardCard, { icon: '🖋️', title: 'Enter Grades (Term & Exams)', description: 'Directly input marks for all your allocated streams.', onClick: () => props.setView('grading') }),
-                    e(DashboardCard, { icon: '📊', title: 'Performance Diagnostics', description: 'Analyze term pass ratios.', onClick: () => {} })
+                    // Integrated active action router linking directly to the new Diagnostics UI component
+                    e(DashboardCard, { icon: '📊', title: 'Performance Diagnostics', description: 'Analyze term pass ratios.', onClick: () => props.setView('diagnostics') })
                 )
             );
         }
@@ -487,9 +488,6 @@
             );
         }
 
-        // =======================================================
-        //  REVISED GRADING MODULE WITH ADVANCED FILTERS & SORTING
-        // =======================================================
         function GradingSystem(props) {
             const [filterClass, setFilterClass] = useState('ALL');
             const [filterStream, setFilterStream] = useState('ALL');
@@ -522,14 +520,11 @@
                 props.setStudents(props.students.map(s => s.id === id ? Object.assign({}, s, { [field]: sanitizedValue }) : s));
             };
 
-            // Process filters and apply multi-tier sorting: Female first, Male second, followed alphabetically by name
             const filteredAndSortedStudents = props.students
                 .filter(s => {
                     const matchClass = filterClass === 'ALL' || s.class === filterClass;
                     const matchStream = filterStream === 'ALL' || s.stream === filterStream;
                     const matchName = s.name.toLowerCase().includes(searchName.toLowerCase());
-                    
-                    // Boundary check to verify teacher permissions for security metrics
                     const isAuthorized = props.activeTeacher.targetClasses.includes(s.class) && 
                                          props.activeTeacher.targetStreams.includes(s.stream);
 
@@ -540,10 +535,8 @@
                     const genderY = studentY.gender || 'F';
 
                     if (genderX !== genderY) {
-                        // 'F' comes before 'M' lexicographically
                         return genderX === 'F' ? -1 : 1;
                     }
-                    // Secondary sorting check: alphabetical by full name strings
                     return studentX.name.localeCompare(studentY.name);
                 });
 
@@ -657,6 +650,143 @@
             );
         }
 
+        // ==========================================================
+        //  NEW INTERACTIVE PERFORMANCE DIAGNOSTICS DASHBOARD MODULE
+        // ==========================================================
+        function PerformanceDiagnostics(props) {
+            const [filterClass, setFilterClass] = useState('ALL');
+            const [filterStream, setFilterStream] = useState('ALL');
+
+            const calculateScore = (s) => {
+                const parts = [];
+                if (s.t1 !== "" && s.t1 !== undefined) parts.push(Number(s.t1));
+                if (s.midterm !== "" && s.midterm !== undefined) parts.push(Number(s.midterm));
+                if (s.t2 !== "" && s.t2 !== undefined) parts.push(Number(s.t2));
+                const caAvg = parts.length > 0 ? parts.reduce((a, b) => a + b, 0) / parts.length : 0;
+                const examVal = s.exam !== "" && s.exam !== undefined ? Number(s.exam) : 0;
+                return (caAvg + examVal) / 2;
+            };
+
+            const targetStudents = props.students.filter(s => {
+                const matchClass = filterClass === 'ALL' || s.class === filterClass;
+                const matchStream = filterStream === 'ALL' || s.stream === filterStream;
+                const isAuthorized = props.activeTeacher.targetClasses.includes(s.class) && 
+                                     props.activeTeacher.targetStreams.includes(s.stream);
+                return matchClass && matchStream && isAuthorized;
+            });
+
+            const totalCount = targetStudents.length;
+            let passCount = 0; let failCount = 0; let combinedScoresSum = 0;
+            let femalePass = 0; let femaleFail = 0; let malePass = 0; let maleFail = 0;
+
+            targetStudents.forEach(st => {
+                const finalMark = calculateScore(st);
+                combinedScoresSum += finalMark;
+                const isPassing = finalMark >= props.settings.gradeD;
+
+                if (isPassing) {
+                    passCount++;
+                    if (st.gender === 'M') malePass++; else femalePass++;
+                } else {
+                    failCount++;
+                    if (st.gender === 'M') maleFail++; else femaleFail++;
+                }
+            });
+
+            const averageScore = totalCount > 0 ? (combinedScoresSum / totalCount).toFixed(1) : "0.0";
+            const globalPassRatio = totalCount > 0 ? Math.round((passCount / totalCount) * 100) : 0;
+            const femaleTotal = femalePass + femaleFail;
+            const maleTotal = malePass + maleFail;
+            const femalePassRatio = femaleTotal > 0 ? Math.round((femalePass / femaleTotal) * 100) : 0;
+            const malePassRatio = maleTotal > 0 ? Math.round((malePass / maleTotal) * 100) : 0;
+
+            return e('div', { className: 'p-6 max-w-6xl mx-auto' },
+                e('div', { className: 'flex justify-between items-center mb-6' },
+                    e('div', null,
+                        e('h2', { className: 'text-lg font-black text-slate-800' }, '📊 Performance Diagnostics Studio'),
+                        e('p', { className: 'text-xs text-slate-500' }, 'Analyze interactive metric models and terminal pass parameters.')
+                    ),
+                    e('button', { onClick: () => props.setView('teacher'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded cursor-pointer' }, '← Back to Desk')
+                ),
+
+                e('div', { className: 'bg-white border border-slate-200 p-4 rounded-lg shadow-sm mb-6 flex flex-col sm:flex-row gap-4' },
+                    e('div', { className: 'flex-1' },
+                        e('label', { className: 'text-[10px] font-bold text-slate-400 block mb-1 uppercase' }, 'Scope Form Level:'),
+                        e('select', { value: filterClass, onChange: (ev) => setFilterClass(ev.target.value), className: 'w-full text-xs p-2 border rounded bg-white font-bold' },
+                            e('option', { value: 'ALL' }, 'All Allocated Forms'),
+                            props.activeTeacher.targetClasses.map(c => e('option', { key: c, value: c }, `Form ${c}`))
+                        )
+                    ),
+                    e('div', { className: 'flex-1' },
+                        e('label', { className: 'text-[10px] font-bold text-slate-400 block mb-1 uppercase' }, 'Scope Stream Block:'),
+                        e('select', { value: filterStream, onChange: (ev) => setFilterStream(ev.target.value), className: 'w-full text-xs p-2 border rounded bg-white font-bold' },
+                            e('option', { value: 'ALL' }, 'All Allocated Streams'),
+                            props.activeTeacher.targetStreams.map(s => e('option', { key: s, value: s }, `Stream ${s}`))
+                        )
+                    )
+                ),
+
+                e('div', { className: 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 mb-6' },
+                    e('div', { className: 'bg-white border rounded-xl p-5 shadow-sm' },
+                        e('div', { className: 'text-xs font-bold text-slate-400 uppercase tracking-wider' }, 'Assessed Students'),
+                        e('div', { className: 'text-2xl font-black text-slate-800 mt-1' }, totalCount),
+                        e('div', { className: 'text-[10px] text-slate-400 mt-1' }, `Active segment population`)
+                    ),
+                    e('div', { className: 'bg-white border rounded-xl p-5 shadow-sm' },
+                        e('div', { className: 'text-xs font-bold text-slate-400 uppercase tracking-wider' }, 'Average Final Score'),
+                        e('div', { className: 'text-2xl font-black text-blue-600 mt-1' }, `${averageScore}%`),
+                        e('div', { className: 'text-[10px] text-slate-400 mt-1' }, `Mean score metric sum`)
+                    ),
+                    e('div', { className: 'bg-white border rounded-xl p-5 shadow-sm' },
+                        e('div', { className: 'text-xs font-bold text-slate-400 uppercase tracking-wider' }, 'Segment Pass Ratio'),
+                        e('div', { className: 'text-2xl font-black text-emerald-600 mt-1' }, `${globalPassRatio}%`),
+                        e('div', { className: 'text-[10px] text-slate-400 mt-1' }, `${passCount} clear / ${failCount} exceptions`)
+                    ),
+                    e('div', { className: 'bg-white border rounded-xl p-5 shadow-sm' },
+                        e('div', { className: 'text-xs font-bold text-slate-400 uppercase tracking-wider' }, 'Passing Threshold'),
+                        e('div', { className: 'text-2xl font-black text-amber-600 mt-1' }, `>= ${props.settings.gradeD}%`),
+                        e('div', { className: 'text-[10px] text-slate-400 mt-1' }, `Configured minimum Level-D bar`)
+                    )
+                ),
+
+                e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
+                    e('div', { className: 'bg-white border border-slate-200 rounded-xl p-5 shadow-sm' },
+                        e('h4', { className: 'text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 border-b pb-2' }, 'Gender Distribution Metrics'),
+                        e('div', { className: 'flex flex-col gap-4' },
+                            e('div', null,
+                                e('div', { className: 'flex justify-between text-xs font-bold mb-1' },
+                                    e('span', { className: 'text-pink-600' }, `👩 Female Students (${femalePass} / ${femaleTotal} Pass)`),
+                                    e('span', null, `${femalePassRatio}%`)
+                                ),
+                                e('div', { className: 'w-full bg-slate-100 rounded-full h-2' },
+                                    e('div', { className: 'bg-pink-500 h-2 rounded-full transition-all', style: { width: `${femalePassRatio}%` } })
+                                )
+                            ),
+                            e('div', null,
+                                e('div', { className: 'flex justify-between text-xs font-bold mb-1' },
+                                    e('span', { className: 'text-blue-600' }, `👨 Male Students (${malePass} / ${maleTotal} Pass)`),
+                                    e('span', null, `${malePassRatio}%`)
+                                ),
+                                e('div', { className: 'w-full bg-slate-100 rounded-full h-2' },
+                                    e('div', { className: 'bg-blue-500 h-2 rounded-full transition-all', style: { width: `${malePassRatio}%` } })
+                                )
+                            )
+                        )
+                    ),
+                    e('div', { className: 'bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex flex-col justify-center items-center text-center' },
+                        e('div', { className: 'text-3xl mb-1' }, globalPassRatio >= 70 ? '🎉' : globalPassRatio >= 40 ? '⚠️' : '🚨'),
+                        e('h4', { className: 'text-xs font-bold text-slate-800 uppercase' }, 'Segment Summary Insights'),
+                        e('p', { className: 'text-xs text-slate-500 mt-2 max-w-sm leading-relaxed' }, 
+                            totalCount === 0 ? "Assign students to this profile to populate demographic indices." :
+                            globalPassRatio >= 70 ? "Excellent stream performance metrics! Retain current learning velocity patterns." :
+                            globalPassRatio >= 40 ? "Average indicators tracking. Targeted modular remediation sessions recommended." :
+                            "Critical review required. Pass parameters require standard pedagogical re-alignment vectors."
+                        )
+                    )
+                )
+            );
+        }
+
         function SystemSettings(props) {
             const [schoolName, setSchoolName] = useState(props.settings.schoolName);
             const [gradeA, setGradeA] = useState(props.settings.gradeA);
@@ -702,14 +832,13 @@
         function ParentDashboard() { return e('div', { className: 'p-6 text-center text-slate-500 text-xs font-semibold' }, 'Parent Desk View Component.'); }
 
         function App() {
-            const [view, setView] = useState('grading');
+            const [view, setView] = useState('teacher');
             const [settings, setSettings] = useState({ schoolName: "SHULESYS PORTAL SYSTEM", gradeA: 80, gradeB: 70, gradeC: 50, gradeD: 40 });
             const [teachers, setTeachers] = useState([
                 { id: 1, name: "MWAALIMU KIPIMO", initials: "KP", phone: "0763112233", specialization: "GEOGRAPHY", targetClasses: ["F1", "F2"], targetStreams: ["A", "C", "F"] }
             ]);
             const [activeTeacher, setActiveTeacher] = useState({ id: 1, name: "MWAALIMU KIPIMO", initials: "KP", targetClasses: ["F1", "F2"], targetStreams: ["A", "C", "F"] });
             
-            // Seed base student database arrays with gender flags ('M' / 'F') to ensure sort compatibility.
             const [students, setStudents] = useState([
                 { id: 1, name: "ZAINAB ALLY", class: "F1", stream: "A", gender: "F", t1: 75, midterm: 80, t2: 85, exam: 40 },
                 { id: 2, name: "ALPHA MARY", class: "F1", stream: "A", gender: "F", t1: 60, midterm: "", t2: 70, exam: 35 },
@@ -738,7 +867,8 @@
                     view === 'blueprints' && e(LessonBlueprintsSystem, { activeTeacher: activeTeacher, setView: setView, blueprints: blueprints, setBlueprints: setBlueprints }),
                     view === 'timetable' && e(TimetableConfig, { setView: setView }),
                     view === 'calendar' && e(AcademicCalendarSystem, { setView: setView, calendarEvents: calendarEvents, setCalendarEvents: setCalendarEvents }),
-                    view === 'settings' && e(SystemSettings, { setView: setView, settings: settings, setSettings: setSettings })
+                    view === 'settings' && e(SystemSettings, { setView: setView, settings: settings, setSettings: setSettings }),
+                    view === 'diagnostics' && e(PerformanceDiagnostics, { activeTeacher: activeTeacher, setView: setView, students: students, settings: settings })
                 )
             );
         }
