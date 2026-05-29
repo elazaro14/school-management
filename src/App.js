@@ -1,3 +1,6 @@
+import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom/client';
+
 // 1. Shared Layout Navbar Component
 function Navbar({ currentView, setView }) {
   return (
@@ -41,10 +44,10 @@ function AdminDashboard({ setView }) {
 
 // 4. STEP 1 FEATURE: Manage Teachers Module
 function TeacherManagement({ teachers, setTeachers, setView }) {
-  const [name, setName] = React.useState('');
-  const [initials, setInitials] = React.useState('');
-  const [phone, setPhone] = React.useState('');
-  const [specialization, setSpecialization] = React.useState('');
+  const [name, setName] = useState('');
+  const [initials, setInitials] = useState('');
+  const [phone, setPhone] = useState('');
+  const [specialization, setSpecialization] = useState('');
 
   const handleAddTeacher = (e) => {
     e.preventDefault();
@@ -195,7 +198,7 @@ function ParentDashboard() {
 
 // 8. Automatic Grading Feature Workspace
 function GradingSystem() {
-  const [students, setStudents] = React.useState([
+  const [students, setStudents] = useState([
     { id: 1, name: "Elazaro John", t1: 75, t2: 82, t3: 68, t4: 90 },
     { id: 2, name: "Alpha Mary", t1: 60, t2: 55, t3: 70, t4: 65 }
   ]);
@@ -255,56 +258,56 @@ function GradingSystem() {
 
 // 9. Timetable Configurations Module (FULL MATRIX PARSING LOGIC ENGINE)
 function TimetableConfig() {
-  const [schoolName, setSchoolName] = React.useState(localStorage.getItem('schoolName') || '');
-  const [academicYear, setAcademicYear] = React.useState(localStorage.getItem('academicYear') || '');
-  const [logoSrc, setLogoSrc] = React.useState(localStorage.getItem('logoSrc') || '');
-  const [status, setStatus] = React.useState('Waiting for CSV...');
-  const [statusColor, setStatusColor] = React.useState('text-red-500');
-  const [rawDataState, setRawDataState] = React.useState([]);
-  const [timetableState, setTimetableState] = React.useState([]);
-  const [periodsState, setPeriodsState] = React.useState([]);
-  const [unavailState, setUnavailState] = React.useState([]);
-  const [specialBlocks, setSpecialBlocks] = React.useState([
+  const [schoolName, setSchoolName] = useState(localStorage.getItem('schoolName') || '');
+  const [academicYear, setAcademicYear] = useState(localStorage.getItem('academicYear') || '');
+  const [logoSrc, setLogoSrc] = useState(localStorage.getItem('logoSrc') || '');
+  const [status, setStatus] = useState('Waiting for CSV...');
+  const [statusColor, setStatusColor] = useState('text-red-500');
+  const [rawDataState, setRawDataState] = useState([]);
+  const [timetableState, setTimetableState] = useState([]);
+  const [periodsState, setPeriodsState] = useState([]);
+  const [unavailState, setUnavailState] = useState([]);
+  const [specialBlocks, setSpecialBlocks] = useState([
     { day: "WEDNESDAY", start: "P8", end: "P9", text: "RELIGION", class: "fixed-block" },
     { day: "FRIDAY", start: "P7", end: "P9", text: "", class: "mosque-strips" }
   ]);
-  const [currentViewMode, setCurrentViewMode] = React.useState('master'); // master, stream, teacher, load
-  const [selectedStream, setSelectedStream] = React.useState('');
-  const [selectedTeacher, setSelectedTeacher] = React.useState('');
+  const [currentViewMode, setCurrentViewMode] = useState('master'); // master, stream, teacher, load
+  const [selectedStream, setSelectedStream] = useState('');
+  const [selectedTeacher, setSelectedTeacher] = useState('');
 
   // Form setup inputs
-  const [startTime, setStartTime] = React.useState('08:00');
-  const [periodDuration, setPeriodDuration] = React.useState(40);
-  const [breakLabel, setBreakLabel] = React.useState('TEA BREAK');
-  const [breakAfter, setBreakAfter] = React.useState('P4');
-  const [breakDuration, setBreakDuration] = React.useState(30);
-  const [hasLunch, setHasLunch] = React.useState('yes');
-  const [lunchLabel, setLunchLabel] = React.useState('LUNCH BREAK');
-  const [lunchAfter, setLunchAfter] = React.useState('P6');
-  const [lunchDuration, setLunchDuration] = React.useState(45);
+  const [startTime, setStartTime] = useState('08:00');
+  const [periodDuration, setPeriodDuration] = useState(40);
+  const [breakLabel, setBreakLabel] = useState('TEA BREAK');
+  const [breakAfter, setBreakAfter] = useState('P4');
+  const [breakDuration, setBreakDuration] = useState(30);
+  const [hasLunch, setHasLunch] = useState('yes');
+  const [lunchLabel, setLunchLabel] = useState('LUNCH BREAK');
+  const [lunchAfter, setLunchAfter] = useState('P6');
+  const [lunchDuration, setLunchDuration] = useState(45);
 
   // Special Block Fields
-  const [spDay, setSpDay] = React.useState('MONDAY');
-  const [spStart, setSpStart] = React.useState('P1');
-  const [spEnd, setSpEnd] = React.useState('P1');
-  const [spLabel, setSpLabel] = React.useState('');
-  const [spStyle, setSpStyle] = React.useState('fixed-block');
+  const [spDay, setSpDay] = useState('MONDAY');
+  const [spStart, setSpStart] = useState('P1');
+  const [spEnd, setSpEnd] = useState('P1');
+  const [spLabel, setSpLabel] = useState('');
+  const [spStyle, setSpStyle] = useState('fixed-block');
 
   // Unavailability Fields
-  const [avTeacher, setAvTeacher] = React.useState('');
-  const [avDay, setAvDay] = React.useState('MONDAY');
-  const [avPeriod, setAvPeriod] = React.useState('P1');
+  const [avTeacher, setAvTeacher] = useState('');
+  const [avDay, setAvDay] = useState('MONDAY');
+  const [avPeriod, setAvPeriod] = useState('P1');
 
   // UI styling settings
-  const [compactMode, setCompactMode] = React.useState(false);
-  const [displayType, setDisplayType] = React.useState('both');
-  const [rowHeight, setRowHeight] = React.useState(45);
+  const [compactMode, setCompactMode] = useState(false);
+  const [displayType, setDisplayType] = useState('both');
+  const [rowHeight, setRowHeight] = useState(45);
 
   const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
   const FORMS = ["F1A","F1B","F1C","F2A","F2B","F2C","F2D","F3A","F3B","F3C","F4A","F4B"];
   const basePList = ["P1","P2","P3","P4","P5","P6","P7","P8","P9"];
 
-  React.useEffect(() => {
+  useEffect(() => {
     recalculatePeriods();
   }, [startTime, periodDuration, breakLabel, breakAfter, breakDuration, hasLunch, lunchLabel, lunchAfter, lunchDuration]);
 
@@ -743,9 +746,9 @@ function TimetableConfig() {
 }
 
 // 10. Main Application Controller Setup
-function App() {
-  const [view, setView] = React.useState('admin');
-  const [teachers, setTeachers] = React.useState([
+export default function App() {
+  const [view, setView] = useState('admin');
+  const [teachers, setTeachers] = useState([
     { id: 1, name: "MWAALIMU KIPIMO", initials: "KP", phone: "0763112233", specialization: "GEOGRAPHY, HISTORY" },
     { id: 2, name: "MADAM REHEMA", initials: "RM", phone: "0754998877", specialization: "KISWAHILI, ENGLISH" }
   ]);
@@ -763,6 +766,3 @@ function App() {
     </div>
   );
 }
-
-const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(<App />);
