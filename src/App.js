@@ -16,7 +16,7 @@ function Navbar({ currentView, setView }) {
 // 2. Reusable Dashboard Card Component
 function DashboardCard({ title, description, onClick, icon }) {
   return (
-    <div onClick={onClick} className="bg-[#f9f9f9] border border-slate-200 rounded-lg p-5 shadow-sm cursor-pointer transition transform hover:-translate-y-0.5 hover:shadow-md hover:bg-white hover:border-blue-200">
+    <div onClick={onClick} className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm cursor-pointer transition transform hover:-translate-y-0.5 hover:shadow-md hover:bg-slate-50 hover:border-blue-200">
       <div className="text-2xl mb-3">{icon}</div>
       <h3 className="text-md font-semibold text-slate-800 mb-1">{title}</h3>
       <p className="text-xs text-slate-500 leading-relaxed">{description}</p>
@@ -24,13 +24,13 @@ function DashboardCard({ title, description, onClick, icon }) {
   );
 }
 
-// 3. Admin View
+// 3. Admin View Dashboard (Linked to card components in image_d444e7.png)
 function AdminDashboard({ setView }) {
   return (
     <div className="p-6">
       <h2 className="text-xl font-bold text-slate-800 mb-5">Control Panel</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
-        <DashboardCard icon="👨‍🏫" title="Manage Teachers" description="Add, edit, and assign teachers." onClick={() => {}} />
+        <DashboardCard icon="👨‍🏫" title="Manage Teachers" description="Add, edit, and assign teachers." onClick={() => setView('manage-teachers')} />
         <DashboardCard icon="🧑‍🎓" title="Manage Students" description="Enroll students and track records." onClick={() => {}} />
         <DashboardCard icon="📅" title="TT-PRO Timetable" description="Configure schedules and manage double period sequences." onClick={() => setView('timetable')} />
         <DashboardCard icon="📊" title="System Settings" description="Configure preferences and systems weights." onClick={() => {}} />
@@ -39,7 +39,116 @@ function AdminDashboard({ setView }) {
   );
 }
 
-// 4. Teacher View
+// 4. STEP 1 FEATURE: Manage Teachers Module
+function TeacherManagement({ teachers, setTeachers, setView }) {
+  const [name, setName] = React.useState('');
+  const [initials, setInitials] = React.useState('');
+  const [phone, setPhone] = React.useState('');
+  const [specialization, setSpecialization] = React.useState('');
+
+  const handleAddTeacher = (e) => {
+    e.preventDefault();
+    if (!name.trim() || !initials.trim()) return;
+
+    const newTeacher = {
+      id: Date.now(),
+      name: name.toUpperCase(),
+      initials: initials.toUpperCase(),
+      phone: phone || '-',
+      specialization: specialization.toUpperCase() || 'GENERAL'
+    };
+
+    setTeachers([...teachers, newTeacher]);
+    setName('');
+    setInitials('');
+    setPhone('');
+    setSpecialization('');
+  };
+
+  const handleRemoveTeacher = (id) => {
+    setTeachers(teachers.filter(t => t.id !== id));
+  };
+
+  return (
+    <div className="p-6 max-w-6xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold text-slate-800">👨‍🏫 Teacher Registry & Allocation</h2>
+        <button onClick={() => setView('admin')} className="bg-slate-600 hover:bg-slate-700 text-white font-bold text-xs px-3 py-1.5 rounded">
+          ← Back to Panel
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Registration Form Box */}
+        <div className="bg-white p-5 border border-slate-200 rounded-lg shadow-sm h-fit">
+          <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4 border-b pb-2">Register New Teacher</h3>
+          <form onSubmit={handleAddTeacher} className="flex flex-col gap-3">
+            <div>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">Full Name</label>
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. MR. JOHN MEMA" className="w-full text-xs p-2 border border-slate-200 rounded outline-none focus:border-blue-500" required />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">Staff Initials (Max 4 chars)</label>
+              <input type="text" value={initials} onChange={(e) => setInitials(e.target.value)} maxLength={4} placeholder="e.g. JM" className="w-full text-xs p-2 border border-slate-200 rounded outline-none focus:border-blue-500" required />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">Phone Number (Optional)</label>
+              <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 0763XXXXXX" className="w-full text-xs p-2 border border-slate-200 rounded outline-none focus:border-blue-500" />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">Core Subject Focus</label>
+              <input type="text" value={specialization} onChange={(e) => setSpecialization(e.target.value)} placeholder="e.g. PHYSICS, MATH" className="w-full text-xs p-2 border border-slate-200 rounded outline-none focus:border-blue-500" />
+            </div>
+            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2 rounded mt-2 transition">
+              Save Staff Member
+            </button>
+          </form>
+        </div>
+
+        {/* Registered Staff Registry List */}
+        <div className="bg-white p-5 border border-slate-200 rounded-lg shadow-sm md:col-span-2">
+          <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4 border-b pb-2">Active Staff Roster ({teachers.length})</h3>
+          {teachers.length === 0 ? (
+            <div className="text-center py-12 text-slate-400 text-xs italic">
+              No staff members registered yet. Use the control panel form to compile your directory.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-600 border-b border-slate-200">
+                    <th className="p-3 font-bold">Initials</th>
+                    <th className="p-3 font-bold">Full Name</th>
+                    <th className="p-3 font-bold">Specialties</th>
+                    <th className="p-3 font-bold">Phone Connection</th>
+                    <th className="p-3 font-bold text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {teachers.map(t => (
+                    <tr key={t.id} className="border-b border-slate-100 last:border-none hover:bg-slate-50/50">
+                      <td className="p-3"><span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-black">{t.initials}</span></td>
+                      <td className="p-3 font-bold text-slate-800">{t.name}</td>
+                      <td className="p-3"><span className="text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded text-[10px]">{t.specialization}</span></td>
+                      <td className="p-3 text-slate-500 tracking-wide">{t.phone}</td>
+                      <td className="p-3 text-center">
+                        <button onClick={() => handleRemoveTeacher(t.id)} className="text-red-500 hover:text-red-700 font-bold px-2 py-1">
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 5. Teacher View Workstation Workspace
 function TeacherDashboard({ setView }) {
   return (
     <div className="p-6">
@@ -54,7 +163,7 @@ function TeacherDashboard({ setView }) {
   );
 }
 
-// 5. Student View
+// 6. Student View Desk Workspace
 function StudentDashboard() {
   return (
     <div className="p-6">
@@ -69,7 +178,7 @@ function StudentDashboard() {
   );
 }
 
-// 6. Parent View
+// 7. Parent Portal View Dashboard
 function ParentDashboard() {
   return (
     <div className="p-6">
@@ -84,7 +193,7 @@ function ParentDashboard() {
   );
 }
 
-// 7. Automatic Grading Feature Workspace
+// 8. Automatic Grading Feature Workspace
 function GradingSystem() {
   const [students, setStudents] = React.useState([
     { id: 1, name: "Elazaro John", t1: 75, t2: 82, t3: 68, t4: 90 },
@@ -144,7 +253,7 @@ function GradingSystem() {
   );
 }
 
-// 8. Timetable Configurations Module (FULL MATRIX PARSING LOGIC ENGINE)
+// 9. Timetable Configurations Module (FULL MATRIX PARSING LOGIC ENGINE)
 function TimetableConfig() {
   const [schoolName, setSchoolName] = React.useState(localStorage.getItem('schoolName') || '');
   const [academicYear, setAcademicYear] = React.useState(localStorage.getItem('academicYear') || '');
@@ -358,7 +467,6 @@ function TimetableConfig() {
     Object.values(grouped).forEach(lessons => {
       let rem = lessons.length;
       
-      // Step A: Double period combinations (Priority 1)
       while(rem >= 2) {
         let placed = false;
         for(let att = 0; att < 400; att++) {
@@ -378,7 +486,6 @@ function TimetableConfig() {
         if(!placed) break;
       }
       
-      // Step B: Single isolated items
       while(rem > 0) {
         let placedSingle = false;
         for(let att = 0; att < 300; att++) {
@@ -432,33 +539,16 @@ function TimetableConfig() {
   return (
     <div className={`p-4 ${compactMode ? 'compact-mode' : ''}`} style={{ fontSize: compactMode ? '9.5px' : '11px' }}>
       
-      {/* Dynamic Print CSS Overrides Injection */}
       <style>{`
         @media print {
-          .no-print {
-            display: none !important;
-          }
-          .print-page-break {
-            page-break-before: always !important;
-            break-before: page !important;
-            margin-top: 0 !important;
-            padding-top: 10px !important;
-          }
-          body {
-            background-color: #ffffff !important;
-            padding: 0 !important;
-          }
-          #output {
-            max-w: 100% !important;
-            width: 100% !important;
-          }
+          .no-print { display: none !important; }
+          .print-page-break { page-break-before: always !important; break-before: page !important; margin-top: 0 !important; padding-top: 10px !important; }
+          body { background-color: #ffffff !important; padding: 0 !important; }
+          #output { max-w: 100% !important; width: 100% !important; }
         }
       `}</style>
 
-      {/* Control / Settings Card Panel Configuration Wrapper */}
       <div className="bg-white p-5 rounded-lg shadow-md max-w-[1450px] mx-auto mb-6 no-print">
-        
-        {/* Core Inputs Bar */}
         <div className="flex flex-wrap justify-center gap-4 mb-4 items-center">
           <input type="file" id="logoUpload" accept="image/*" className="hidden" onChange={handleLogoUpload} />
           <button onClick={() => document.getElementById('logoUpload').click()} className="bg-slate-500 text-white px-3 py-1.5 rounded font-bold text-xs">Add Logo</button>
@@ -466,7 +556,6 @@ function TimetableConfig() {
           <input type="text" value={academicYear} placeholder="ACADEMIC YEAR" className="border-b-2 border-[#2c3e50] font-bold text-base text-center p-1 outline-none bg-transparent w-[200px]" onChange={(e) => { setAcademicYear(e.target.value.toUpperCase()); localStorage.setItem('academicYear', e.target.value.toUpperCase()); }} />
         </div>
 
-        {/* Action Controls Section */}
         <div className="flex flex-wrap gap-2 justify-center mb-4">
           <input type="file" id="csvFile" accept=".csv" className="hidden" onChange={handleCsvUpload} />
           <button onClick={() => document.getElementById('csvFile').click()} className="bg-blue-600 text-white px-3 py-2 rounded font-bold text-xs">Upload CSV</button>
@@ -477,7 +566,6 @@ function TimetableConfig() {
           <button onClick={() => window.print()} className="bg-slate-700 text-white px-3 py-2 rounded font-bold text-xs">Print</button>
         </div>
 
-        {/* 1. Timeline Configurations Panel */}
         <div id="configPanel" className="bg-slate-50 border border-dashed border-slate-300 p-4 rounded mb-4 hidden">
           <h4 className="font-bold text-[#2c3e50] mb-2 text-sm border-b pb-1">1. Timeline Configurations</h4>
           <div className="flex flex-wrap gap-4 items-center text-xs mb-3">
@@ -540,7 +628,6 @@ function TimetableConfig() {
           </div>
         </div>
 
-        {/* 2. Teacher Unavailability Panel */}
         <div id="availPanel" className="bg-slate-50 border border-dashed border-slate-300 p-4 rounded mb-4 hidden">
           <h4 className="font-bold text-[#2c3e50] mb-2 text-sm border-b pb-1">Teacher Unavailability (Off-Times)</h4>
           <div className="flex flex-wrap gap-3 items-center text-xs">
@@ -565,7 +652,6 @@ function TimetableConfig() {
           </div>
         </div>
 
-        {/* Render Parameters Sliders */}
         <div className="flex flex-wrap gap-4 items-center justify-center text-xs font-bold border-t pt-3 text-slate-700">
           <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={compactMode} onChange={(e) => setCompactMode(e.target.checked)} /> Compact Mode</label>
           <span>|</span>
@@ -583,7 +669,6 @@ function TimetableConfig() {
 
         <div className={`text-center mt-3 font-bold text-xs ${statusColor}`}>{status}</div>
 
-        {/* Filter View Switchers Container */}
         {timetableState.length > 0 && (
           <div className="bg-slate-100 p-3 rounded-lg text-center mt-3 flex flex-wrap gap-3 justify-center items-center">
             <button onClick={() => setCurrentViewMode('master')} className="bg-slate-700 text-white px-3 py-1 rounded text-xs font-bold">Full School View</button>
@@ -600,14 +685,9 @@ function TimetableConfig() {
         )}
       </div>
 
-      {/* RENDER MATRIX WORKSPACE ENGINE OUTPUT */}
       <div id="output" className="max-w-[1450px] mx-auto">
-        
-        {/* VIEW 1: MASTER MULTI-GRID WITH DYNAMIC PAGE BREAKS PER DAY */}
         {timetableState.length > 0 && currentViewMode === 'master' && DAYS.map((day, dIdx) => (
           <div key={day} className={`mb-6 overflow-x-auto bg-white p-4 rounded-lg shadow-sm border border-slate-200 ${dIdx > 0 ? 'print-page-break' : ''}`}>
-            
-            {/* Header elements repeated for professional page segmentation styling */}
             <div className="flex items-center justify-center gap-5 mb-4 text-center border-b pb-3">
               {logoSrc ? <img src={logoSrc} className="h-12 w-12 object-contain" alt="Logo" /> : <div className="w-12" />}
               <div>
@@ -624,8 +704,7 @@ function TimetableConfig() {
                   <th className="border border-slate-400 p-1 text-xs w-[80px]">STREAM</th>
                   {periodsState.map((p, idx) => (
                     <th key={idx} className={`border border-slate-400 p-1 text-center font-bold ${p.p === 'BREAK' || p.p === 'LUNCH' ? 'w-[30px]' : ''}`} style={{ fontSize: compactMode ? '9.5px' : '11px' }}>
-                      {p.p}
-                      <span className="block font-normal text-[9px] opacity-90">{p.t}</span>
+                      {p.p} <span className="block font-normal text-[9px] opacity-90">{p.t}</span>
                     </th>
                   ))}
                 </tr>
@@ -658,163 +737,24 @@ function TimetableConfig() {
             </table>
           </div>
         ))}
-
-        {/* VIEW 2: INDIVIDUAL CLASS STREAM VIEW */}
-        {timetableState.length > 0 && currentViewMode === 'stream' && selectedStream && (
-          <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm overflow-x-auto">
-            <div className="flex items-center justify-center gap-5 mb-4 text-center border-b pb-3">
-              {logoSrc ? <img src={logoSrc} className="h-12 w-12 object-contain" alt="Logo" /> : <div className="w-12" />}
-              <div>
-                <h1 className="text-lg font-black text-slate-800 uppercase tracking-wide">{schoolName || "SCHOOL NAME"}</h1>
-                <h2 className="text-xs font-semibold text-slate-600 uppercase">CLASS VIEW: {selectedStream} - {academicYear || "2026"}</h2>
-              </div>
-              <div className="w-12" />
-            </div>
-            <table className="w-full border-collapse border border-slate-400 min-w-[800px]">
-              <thead>
-                <tr className="bg-[#2c3e50] text-white">
-                  <th className="border border-slate-400 p-2 text-xs w-[120px]">DAY</th>
-                  {periodsState.map((p, idx) => (
-                    <th key={idx} className="border border-slate-400 p-2 text-xs text-center font-bold">
-                      {p.p} <span className="block font-normal text-[10px] opacity-80">{p.t}</span>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {DAYS.map(day => (
-                  <tr key={day} style={{ height: `${rowHeight}px` }}>
-                    <td className="border border-slate-400 bg-slate-50 font-bold p-2 text-slate-700 text-center">{day}</td>
-                    {periodsState.map((p, pIdx) => {
-                      const special = getSpecialContent(day, p.p);
-                      if (p.p === "BREAK") return <td key={pIdx} className="border border-slate-400 bg-slate-100 text-slate-500 text-xs font-bold text-center uppercase tracking-wider">{breakLabel}</td>;
-                      if (p.p === "LUNCH") return <td key={pIdx} className="border border-slate-400 bg-slate-100 text-slate-500 text-xs font-bold text-center uppercase tracking-wider">{lunchLabel}</td>;
-                      if (special) return <td key={pIdx} className={`border border-slate-400 text-center font-bold text-xs ${special.class === 'fixed-block' ? 'bg-cyan-100 text-cyan-800' : 'bg-yellow-50 text-yellow-800'}`}>{special.text}</td>;
-                      
-                      const match = timetableState.find(x => x.day === day && x.period === p.p && x.form === selectedStream);
-                      return (
-                        <td key={pIdx} className="border border-slate-400 text-center p-2">
-                          {match ? (
-                            <>
-                              <b className="text-slate-900 block text-xs">{match.subject}</b>
-                              <span className="text-[10px] text-slate-500">{match.teacher}</span>
-                            </>
-                          ) : ''}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* VIEW 3: TEACHER OWN TRACK VIEW */}
-        {timetableState.length > 0 && currentViewMode === 'teacher' && selectedTeacher && (
-          <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm overflow-x-auto">
-            <div className="flex items-center justify-center gap-5 mb-4 text-center border-b pb-3">
-              {logoSrc ? <img src={logoSrc} className="h-12 w-12 object-contain" alt="Logo" /> : <div className="w-12" />}
-              <div>
-                <h1 className="text-lg font-black text-slate-800 uppercase tracking-wide">{schoolName || "SCHOOL NAME"}</h1>
-                <h2 className="text-xs font-semibold text-slate-600 uppercase">TEACHER VIEW: {selectedTeacher} - {academicYear || "2026"}</h2>
-              </div>
-              <div className="w-12" />
-            </div>
-            <table className="w-full border-collapse border border-slate-400 min-w-[800px]">
-              <thead>
-                <tr className="bg-[#2c3e50] text-white">
-                  <th className="border border-slate-400 p-2 text-xs w-[120px]">DAY</th>
-                  {periodsState.map((p, idx) => (
-                    <th key={idx} className="border border-slate-400 p-2 text-xs text-center font-bold">
-                      {p.p} <span className="block font-normal text-[10px] opacity-80">{p.t}</span>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {DAYS.map(day => (
-                  <tr key={day} style={{ height: `${rowHeight}px` }}>
-                    <td className="border border-slate-400 bg-slate-50 font-bold p-2 text-slate-700 text-center">{day}</td>
-                    {periodsState.map((p, pIdx) => {
-                      const isOff = unavailState.some(u => u.t === selectedTeacher && u.d === day && u.p === p.p);
-                      const special = getSpecialContent(day, p.p);
-                      
-                      if (p.p === "BREAK") return <td key={pIdx} className="border border-slate-400 bg-slate-100 text-slate-500 text-xs font-bold text-center uppercase">{breakLabel}</td>;
-                      if (p.p === "LUNCH") return <td key={pIdx} className="border border-slate-400 bg-slate-100 text-slate-500 text-xs font-bold text-center uppercase">{lunchLabel}</td>;
-                      if (isOff) return <td key={pIdx} className="border border-slate-400 bg-red-100 text-red-700 font-bold text-center text-[10px] tracking-wide uppercase">OFF-TIME</td>;
-                      if (special) return <td key={pIdx} className={`border border-slate-400 text-center font-bold text-xs ${special.class === 'fixed-block' ? 'bg-cyan-100 text-cyan-800' : 'bg-yellow-50 text-yellow-800'}`}>{special.text || 'SPECIAL BLOCK'}</td>;
-                      
-                      const match = timetableState.find(x => x.day === day && x.period === p.p && x.teacher === selectedTeacher);
-                      return (
-                        <td key={pIdx} className="border border-slate-400 text-center p-2">
-                          {match ? (
-                            <>
-                              <b className="text-slate-900 block text-xs">{match.subject}</b>
-                              <span className="text-[10px] text-blue-600 font-bold">{match.form}</span>
-                            </>
-                          ) : ''}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* VIEW 4: TEACHERS LOAD SUMMARY TABLE */}
-        {timetableState.length > 0 && currentViewMode === 'load' && (
-          <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm max-w-[800px] mx-auto">
-            <div className="flex items-center justify-center gap-5 mb-4 text-center border-b pb-3">
-              {logoSrc ? <img src={logoSrc} className="h-12 w-12 object-contain" alt="Logo" /> : <div className="w-12" />}
-              <div>
-                <h1 className="text-lg font-black text-slate-800 uppercase tracking-wide">{schoolName || "SCHOOL NAME"}</h1>
-                <h2 className="text-xs font-semibold text-slate-600 uppercase">TEACHER LESSONS LOAD SUMMARY - {academicYear || "2026"}</h2>
-              </div>
-              <div className="w-12" />
-            </div>
-            <table className="w-full border-collapse border border-slate-400">
-              <thead>
-                <tr className="bg-slate-100 text-slate-700">
-                  <th className="border border-slate-400 p-2 text-left text-xs">TEACHER NAME</th>
-                  <th className="border border-slate-400 p-2 text-center text-xs w-[150px]">TOTAL PERIODS ALLOCATED</th>
-                  <th className="border border-slate-400 p-2 text-center text-xs w-[120px]">STATUS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {uniqueTeachersList.map(teacher => {
-                  const count = timetableState.filter(x => x.teacher === teacher).length;
-                  const isOverloaded = count > 30;
-                  return (
-                    <tr key={teacher} className={isOverloaded ? 'bg-red-50 text-red-600 font-bold' : ''}>
-                      <td className="border border-slate-400 p-2 text-sm font-semibold">{teacher}</td>
-                      <td className="border border-slate-400 p-2 text-center text-sm font-bold">{count}</td>
-                      <td className="border border-slate-400 p-2 text-center text-xs font-bold uppercase">
-                        {isOverloaded ? '⚠️ Overload' : '✅ Normal'}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-
       </div>
     </div>
   );
 }
 
-// Main Application Controller Setup
+// 10. Main Application Controller Setup
 function App() {
   const [view, setView] = React.useState('admin');
+  const [teachers, setTeachers] = React.useState([
+    { id: 1, name: "MWAALIMU KIPIMO", initials: "KP", phone: "0763112233", specialization: "GEOGRAPHY, HISTORY" },
+    { id: 2, name: "MADAM REHEMA", initials: "RM", phone: "0754998877", specialization: "KISWAHILI, ENGLISH" }
+  ]);
 
   return (
     <div className="min-h-screen bg-slate-50">
       <Navbar currentView={view} setView={setView} />
       {view === 'admin' && <AdminDashboard setView={setView} />}
+      {view === 'manage-teachers' && <TeacherManagement teachers={teachers} setTeachers={setTeachers} setView={setView} />}
       {view === 'teacher' && <TeacherDashboard setView={setView} />}
       {view === 'student' && <StudentDashboard />}
       {view === 'parent' && <ParentDashboard />}
@@ -824,6 +764,5 @@ function App() {
   );
 }
 
-// Mount the compiled engine directly inside index.html container root
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(<App />);
