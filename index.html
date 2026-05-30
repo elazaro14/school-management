@@ -170,6 +170,7 @@
             text-decoration: none;
             display: block;
             box-sizing: border-box;
+            margin-bottom: 5px;
         }
 
         .db-filters {
@@ -638,9 +639,31 @@
                     <label style="display: block; font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">Sajili kwa Mkupuo (CSV)</label>
                     <input type="file" id="bulk-csv-file" accept=".csv" style="font-size: 12px; margin-bottom: 8px; width:100%;">
                     <button type="button" class="btn-submit" style="background-color: #0284c7;" onclick="handleBulkUpload()">Pakia CSV faili</button>
-                    <a href="javascript:void(0)" class="btn-secondary" onclick="downloadCSVTemplate()">📥 Pakua Kiolezo cha CSV</a>
+                    <a href="javascript:void(0)" class="btn-secondary" onclick="downloadCSVTemplate()">📥 Pakua Kiolezo cha Wanafunzi</a>
                 </div>
             </div>
+
+            <!-- NEW SECTION: SCORES UPLOAD & TEMPLATE DOWNLOAD -->
+            <div class="admin-card" style="border: 2px solid var(--primary-blue);">
+                <h2>📈 Makupuo ya Alama (Scores Section)</h2>
+                <div class="form-control">
+                    <label>Chagua Kidato cha Alama</label>
+                    <select id="score-template-form">
+                        <option value="F1">Form 1 & 2</option>
+                        <option value="F3" selected>Form 3 & 4</option>
+                    </select>
+                </div>
+                <button type="button" class="btn-secondary" style="background-color: #047857;" onclick="downloadScoresTemplate()">📥 Pakua Kiolezo cha Alama</button>
+                
+                <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 10px 0;">
+                
+                <div class="form-control">
+                    <label>Pakia Faili la Alama (CSV)</label>
+                    <input type="file" id="bulk-scores-file" accept=".csv" style="font-size: 12px; margin-bottom: 8px; width:100%;">
+                    <button type="button" class="btn-submit" style="background-color: #7c3aed;" onclick="handleBulkScoresUpload()">📤 Pakia Alama Zote</button>
+                </div>
+            </div>
+
         </div>
 
         <!-- RIGHT WORKSPACE SECTION -->
@@ -707,7 +730,6 @@
     <div id="print-output-container"></div>
 
     <script>
-        // DATA ILIYOSAFISHWA: Wanafunzi wa mfano wamefutwa kabisa kutoka hapa ili uanze upya safi.
         let globalStudents = [];
 
         const subjectsF1F2 = [
@@ -732,15 +754,9 @@
         }
 
         function switchView(viewName) {
-            if(viewName === 'teachers') {
-                alert("Unaelekezwa kwenye moduli ya Walimu...");
-            } else if (viewName === 'subjects') {
-                alert("Unaelekezwa kwenye orodha ya masomo...");
-            } else if (viewName === 'students') {
-                document.getElementById('search-filter').focus();
-            } else {
-                alert("Upo kwenye moduli ya ripoti na usajili wa ki-Admin kwa sasa.");
-            }
+            if(viewName === 'teachers') alert("Unaelekezwa kwenye moduli ya Walimu...");
+            else if (viewName === 'subjects') alert("Unaelekezwa kwenye orodha ya masomo...");
+            else if (viewName === 'students') document.getElementById('search-filter').focus();
         }
 
         function init() {
@@ -768,6 +784,96 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        }
+
+        /* --- DYNAMIC SCORES TEMPLATE GENERATOR --- */
+        function downloadScoresTemplate() {
+            const chosenForm = document.getElementById('score-template-form').value;
+            const schema = (chosenForm === "F1") ? subjectsF1F2 : subjectsF3F4;
+            
+            // Generate standard dynamic header row
+            let headers = ["FullName"];
+            schema.forEach(sub => {
+                headers.push(`${sub.id}_t1`, `${sub.id}_t2`, `${sub.id}_mid`, `${sub.id}_ann`, `${sub.id}_rnk`);
+            });
+
+            let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n";
+            
+            // Add example or current students if available
+            if(globalStudents.length > 0) {
+                globalStudents.forEach(s => {
+                    if((chosenForm === "F1" && (s.form === "F1" || s.form === "F2")) || 
+                       (chosenForm === "F3" && (s.form === "F3" || s.form === "F4"))) {
+                        csvContent += s.name + ",".repeat(headers.length - 1) + "\n";
+                    }
+                });
+            } else {
+                csvContent += "JUMA HAMISI," + "".repeat(headers.length - 1) + "\n";
+            }
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `scores_template_${chosenForm}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        /* --- BULK SCORES UPLOAD LOGIC --- */
+        function handleBulkScoresUpload() {
+            const fileInput = document.getElementById('bulk-scores-file');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert("Tafadhali chagua faili la CSV la alama kwanza!");
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split("\n");
+                if(lines.length < 2) return;
+
+                const headers = lines[0].split(",").map(h => h.trim());
+                let updatedStudentsCount = 0;
+
+                for(let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    const cols = lines[i].split(",").map(c => c.trim());
+                    const studentName = cols[0].toUpperCase();
+
+                    // Find student inside local storage roster
+                    let student = globalStudents.find(s => s.name === studentName);
+                    if(student) {
+                        if(!student.marks) student.marks = {};
+                        
+                        // Parse matching values dynamically based on template mapping
+                        for(let j = 1; j < headers.length; j++) {
+                            const header = headers[j];
+                            const val = cols[j] || "";
+                            
+                            // Extract subject ID and assessment node (e.g., civ_t1 -> ID: civ, Assessment: t1)
+                            const lastUnderscore = header.lastIndexOf("_");
+                            if(lastUnderscore !== -1) {
+                                const subId = header.substring(0, lastUnderscore);
+                                const examType = header.substring(lastUnderscore + 1);
+
+                                if(!student.marks[subId]) {
+                                    student.marks[subId] = { t1: "", t2: "", mid: "", ann: "", rnk: "" };
+                                }
+                                student.marks[subId][examType] = val;
+                            }
+                        }
+                        updatedStudentsCount++;
+                    }
+                }
+
+                alert(`Alama za wanafunzi ${updatedStudentsCount} zimepakiwa na kusasishwa kwa mafanikio!`);
+                if(selectedStudentId) selectStudent(selectedStudentId);
+                generateAllReportCardsHTML();
+            };
+            reader.readAsText(file);
         }
 
         function handleBulkUpload() {
@@ -983,12 +1089,8 @@
                 if(sData.t2 !== "" && sData.t2 !== undefined) cAssessList.push(parseFloat(sData.t2) || 0);
                 if(sData.mid !== "" && sData.mid !== undefined) cAssessList.push(parseFloat(sData.mid) || 0);
 
-                if(cAssessList.length > 0) {
-                    mazoezi = cAssessList.reduce((a, b) => a + b, 0) / cAssessList.length;
-                }
-                if(sData.ann !== "" && sData.ann !== undefined) {
-                    mtihani = parseFloat(sData.ann) || 0;
-                }
+                if(cAssessList.length > 0) mazoezi = cAssessList.reduce((a, b) => a + b, 0) / cAssessList.length;
+                if(sData.ann !== "" && sData.ann !== undefined) mtihani = parseFloat(sData.ann) || 0;
 
                 if(mazoezi !== "-" && mtihani !== "-") {
                     wastani = (mazoezi + mtihani) / 2;
@@ -1025,7 +1127,6 @@
             if (subjectAverages.length > 0) {
                 let totalOfAvgs = subjectAverages.reduce((a, b) => a + b, 0);
                 lblJumla = totalOfAvgs.toFixed(1);
-
                 avgValue = totalOfAvgs / subjectAverages.length;
                 lblWastani = avgValue.toFixed(1);
 
@@ -1036,11 +1137,8 @@
                 else lblDaraja = "F";
 
                 gradePoints.sort((a, b) => a - b);
-                
                 let best7Points = [...gradePoints];
-                while (best7Points.length < 7) {
-                    best7Points.push(5);
-                }
+                while (best7Points.length < 7) best7Points.push(5);
                 let pointsSum = best7Points.slice(0, 7).reduce((a, b) => a + b, 0);
                 lblPoints = pointsSum;
 
