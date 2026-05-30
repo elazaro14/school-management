@@ -59,6 +59,11 @@
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .btn-panel:hover {
+            background-color: #334155;
         }
 
         .admin-card {
@@ -67,6 +72,7 @@
             border-radius: 8px;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin-bottom: 20px;
         }
 
         .admin-card h2 {
@@ -81,7 +87,7 @@
         }
 
         .form-control {
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         .form-control label {
@@ -89,7 +95,7 @@
             font-size: 11px;
             font-weight: bold;
             color: #64748b;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
             text-transform: uppercase;
         }
 
@@ -477,50 +483,73 @@
 </head>
 <body>
 
-    <!-- ADMINISTRATIVE DASHBOARD PANEL -->
     <div id="admin-container">
         <div class="admin-header-bar">
             <h1>🎓 Student Admission & Bulk Report Card Manager</h1>
-            <button class="btn-panel">← Back to Panel</button>
+            <button class="btn-panel" onclick="backToPanel()">← Back to Panel</button>
         </div>
 
-        <!-- LEFT SIDEBAR: NEW ADMISSION -->
-        <div class="admin-card">
-            <h2>Enroll New Student</h2>
-            <form id="enrollment-form" onsubmit="handleEnrollment(event)">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            
+            <div class="admin-card">
+                <h2>⚙️ Report Card Settings</h2>
                 <div class="form-control">
-                    <label>Student Full Name</label>
-                    <input type="text" id="stu-fullname" placeholder="E.G. CHUMA KANYAMA" required>
-                </div>
-                <div class="form-control">
-                    <label>Gender</label>
-                    <select id="stu-gender">
-                        <option value="F">Female</option>
-                        <option value="M">Male</option>
+                    <label>Muhula (Term)</label>
+                    <select id="cfg-term" onchange="updateGlobalSettings()">
+                        <option value="I">MUHULA WA I</option>
+                        <option value="II" selected>MUHULA WA II</option>
                     </select>
                 </div>
                 <div class="form-control">
-                    <label>Form Level</label>
-                    <select id="stu-form">
-                        <option value="F1">F1</option>
-                        <option value="F2">F2</option>
-                        <option value="F3" selected>F3</option>
-                        <option value="F4">F4</option>
-                    </select>
+                    <label>Mwaka (Year)</label>
+                    <input type="text" id="cfg-year" value="2026" oninput="updateGlobalSettings()">
                 </div>
                 <div class="form-control">
-                    <label>Assigned Stream</label>
-                    <select id="stu-stream">
-                        <option value="Stream A">Stream A</option>
-                        <option value="Stream B">Stream B</option>
-                        <option value="Stream C">Stream C</option>
-                    </select>
+                    <label>Shule Imefungwa</label>
+                    <input type="text" id="cfg-close-date" value="05/12/2026" oninput="updateGlobalSettings()">
                 </div>
-                <button type="submit" class="btn-submit">Admit Student</button>
-            </form>
+                <div class="form-control">
+                    <label>Itafunguliwa Tarehe</label>
+                    <input type="text" id="cfg-open-date" value="12/01/2027" oninput="updateGlobalSettings()">
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <h2>Enroll New Student</h2>
+                <form id="enrollment-form" onsubmit="handleEnrollment(event)">
+                    <div class="form-control">
+                        <label>Student Full Name</label>
+                        <input type="text" id="stu-fullname" placeholder="E.G. CHUMA KANYAMA" required>
+                    </div>
+                    <div class="form-control">
+                        <label>Gender</label>
+                        <select id="stu-gender">
+                            <option value="F">Female</option>
+                            <option value="M">Male</option>
+                        </select>
+                    </div>
+                    <div class="form-control">
+                        <label>Form Level</label>
+                        <select id="stu-form">
+                            <option value="F1">F1</option>
+                            <option value="F2">F2</option>
+                            <option value="F3" selected>F3</option>
+                            <option value="F4">F4</option>
+                        </select>
+                    </div>
+                    <div class="form-control">
+                        <label>Assigned Stream</label>
+                        <select id="stu-stream">
+                            <option value="Stream A">Stream A</option>
+                            <option value="Stream B">Stream B</option>
+                            <option value="Stream C">Stream C</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-submit">Admit Student</button>
+                </form>
+            </div>
         </div>
 
-        <!-- RIGHT WORKSPACE SECTION -->
         <div class="workspace-split">
             <div class="admin-card">
                 <h2>Global Enrolled Database</h2>
@@ -541,7 +570,6 @@
                     </select>
                 </div>
 
-                <!-- Bulk Selection Helper Bar -->
                 <div class="bulk-actions-bar">
                     <label><input type="checkbox" id="select-all-box" onchange="toggleSelectAll(this)"> Select All for Bulk Print</label>
                     <span id="selected-count-badge">Selected: 1 student(s)</span>
@@ -561,7 +589,6 @@
                 </table>
             </div>
 
-            <!-- DETAIL MARKS INTERACTIVE GRIDS -->
             <div class="admin-card">
                 <h2>Edit Term Assessments (T1, T2, Mid, Annual)</h2>
                 <div id="active-student-banner" style="font-weight: bold; color: var(--primary-blue); margin-bottom: 10px;">
@@ -569,7 +596,6 @@
                 </div>
                 <div class="marks-panel-grid" id="marks-entry-grid"></div>
                 
-                <!-- PRINT BUTTONS ENGINE SECTION -->
                 <div class="print-btn-group">
                     <button class="btn-print-action btn-single" onclick="printSingleReport()">
                         🖨️ Print Selected Single Report
@@ -582,11 +608,10 @@
         </div>
     </div>
 
-    <!-- MAIN EXPORT LIVE PREVIEW CONTAINER -->
     <div id="print-output-container"></div>
 
-    <!-- MAIN JAVASCRIPT PROGRAM DATABASE CONTROLLER -->
     <script>
+        // Data ya wanafunzi
         let globalStudents = [
             { id: 1, name: "ZAINAB ALLY", gender: "F", form: "F1", stream: "Stream A", checkedForPrint: true, marks: {
                 "his_maadili": { t1: 80, t2: 70, mid: 75, ann: 78, rnk: 1 }, "hist": { t1: 60, t2: 65, mid: 70, ann: 68, rnk: 2 },
@@ -628,10 +653,21 @@
 
         let selectedStudentId = 6;
 
+        // Kitufe cha Back to Panel kufanya kazi
+        function backToPanel() {
+            // Inarudisha kwenye dashboard yako kuu (Badilisha 'index.html' au weka faili husika kama dashboard.html)
+            window.location.href = "dashboard.html"; 
+        }
+
         function init() {
             renderRosterTable();
             buildMarksInputs();
             selectStudent(selectedStudentId);
+        }
+
+        // Kazi ya kusasisha ripoti zote mara moja pale mipangilio inapobadilishwa upande wa kushoto
+        function updateGlobalSettings() {
+            generateAllReportCardsHTML();
         }
 
         function getSubjectSchemaForStudent(form) {
@@ -859,14 +895,12 @@
                 else if (pointsSum <= 33) { lblDivision = "IV"; divValue = 4; }
                 else { lblDivision = "0"; divValue = 5; }
 
-                // LOGIC YA MAONI YA MWALIMU WA DARASA KULINGANA NA DIVISION
                 if (lblDivision === "I") maoniMwalimu = "Hongera kwa matokeo mazuri na ongeza bidii zaidi";
                 else if (lblDivision === "II") maoniMwalimu = "Vizuri ongeza bidii zaidi upate division I";
                 else if (lblDivision === "III") maoniMwalimu = "Wastani soma kwa bidii zaidi upandishe ufaulu wako";
                 else if (lblDivision === "IV") maoniMwalimu = "Matokeo dhaifu ongeza juhudi katika masomo yako";
                 else if (lblDivision === "0") maoniMwalimu = "Feli ongeza bidii katika masomo ili uweze kufaulu katika mitihani yako";
 
-                // LOGIC YA MAONI YA MKUU WA SHULE KULINGANA NA DIVISION
                 if (lblDivision === "I") maoniMkuu = "Vizuri ongeza bidii";
                 else if (lblDivision === "II") maoniMkuu = "soma kwa juhudizaidi";
                 else if (lblDivision === "III") maoniMkuu = "ongeza bidii zaidi katika masomo";
@@ -882,6 +916,12 @@
         function generateAllReportCardsHTML() {
             const container = document.getElementById('print-output-container');
             container.innerHTML = ''; 
+
+            // Kuchukua thamani kutoka kwenye mipangilio ya Panel (Settings) Upande wa Kushoto
+            const globalTerm = document.getElementById('cfg-term').value;
+            const globalYear = document.getElementById('cfg-year').value;
+            const globalCloseDate = document.getElementById('cfg-close-date').value;
+            const globalOpenDate = document.getElementById('cfg-open-date').value;
 
             let studentCalculations = {};
             globalStudents.forEach(student => {
@@ -931,8 +971,8 @@
                         <tr>
                             <td style="width: 55%;">JINA LA MWANAFUNZI: <span class="dotted-line" style="width: 70%;">${student.name}</span></td>
                             <td style="width: 15%;">KIDATO: <span class="dotted-line" style="width: 40%;">${student.form}</span></td>
-                            <td style="width: 15%;">MUHULA: <span class="dotted-line" style="width: 40%;">II</span></td>
-                            <td style="width: 15%;">MWAKA: <span class="dotted-line" style="width: 45%;">2026</span></td>
+                            <td style="width: 15%;">MUHULA: <span class="dotted-line" style="width: 40%;">${globalTerm}</span></td>
+                            <td style="width: 15%;">MWAKA: <span class="dotted-line" style="width: 45%;">${globalYear}</span></td>
                         </tr>
                     </table>
 
@@ -993,7 +1033,7 @@
                     </div>
 
                     <div class="admin-section">
-                        <div>SHULE IMEFUNGWA TAREHE: <span class="dotted-line" style="width: 100px;" contenteditable="true">05/12/2026</span>. ITAFUNGULIWA TAREHE: <span class="dotted-line" style="width: 100px;" contenteditable="true">12/01/2027</span>.</div>
+                        <div>SHULE IMEFUNGWA TAREHE: <span class="dotted-line" style="width: 100px;" contenteditable="true">${globalCloseDate}</span>. ITAFUNGULIWA TAREHE: <span class="dotted-line" style="width: 100px;" contenteditable="true">${globalOpenDate}</span>.</div>
                         <div class="signature-stamp-space" style="margin-top: 10px;">
                             <div style="width: 70%;">
                                 <div>MAONI YA MWALIMU WA DARASA: <span class="dotted-line" style="width: 60%; font-style: italic;" contenteditable="true">${res.maoniMwalimu}</span></div>
