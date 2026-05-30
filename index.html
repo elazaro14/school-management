@@ -258,7 +258,7 @@
         .btn-single { background-color: #10b981; }
         .btn-bulk { background-color: #7c3aed; }
 
-        /* --- Report Card Page View (image_baccf3.png) --- */
+        /* --- Report Card Page View --- */
         #print-output-container {
             display: block;
         }
@@ -272,7 +272,7 @@
             box-shadow: 0 0 20px rgba(0,0,0,0.15);
             box-sizing: border-box;
             position: relative;
-            page-break-after: always; /* Kila ripoti itakaa ukurasa wake peke yake */
+            page-break-after: always;
         }
 
         .report-header {
@@ -469,7 +469,6 @@
                 page-break-after: always;
                 overflow: hidden;
             }
-            /* Ficha ripoti ambazo hazijachaguliwa wakati wa kutoa bulk print */
             .report-card-page.hidden-print {
                 display: none !important;
             }
@@ -500,7 +499,7 @@
                 </div>
                 <div class="form-control">
                     <label>Form Level</label>
-                    <select id="stu-form">
+                    <select id="stu-form" onchange="updateFormContextHint()">
                         <option value="F1">F1</option>
                         <option value="F2">F2</option>
                         <option value="F3" selected>F3</option>
@@ -580,11 +579,12 @@
     <div id="print-output-container"></div>
 
     <script>
+        // Data ya majaribio: Wanafunzi wa F1 na F3
         let globalStudents = [
             { id: 1, name: "ZAINAB ALLY", gender: "F", form: "F1", stream: "Stream A", marks: {}, checkedForPrint: true },
             { id: 2, name: "ALPHA MARY", gender: "F", form: "F1", stream: "Stream A", marks: {}, checkedForPrint: true },
-            { id: 3, name: "BARAKA JUMA", gender: "M", form: "F1", stream: "Stream A", marks: {}, checkedForPrint: true },
-            { id: 4, name: "CHUMA ALLY", gender: "M", form: "F1", stream: "Stream A", marks: {}, checkedForPrint: true },
+            { id: 3, name: "BARAKA JUMA", gender: "M", form: "F2", stream: "Stream B", marks: {}, checkedForPrint: true },
+            { id: 4, name: "CHUMA ALLY", gender: "M", form: "F2", stream: "Stream A", marks: {}, checkedForPrint: true },
             { id: 5, name: "FATMA OMARY", gender: "F", form: "F1", stream: "Stream C", marks: {}, checkedForPrint: true },
             { id: 6, name: "PAULO THOMAS LOISUJAKU", gender: "M", form: "F3", stream: "Stream A", checkedForPrint: true, marks: {
                 "civ": { t1: 20, t2: 20, mid: 20, ann: 8, rnk: 107 }, 
@@ -597,11 +597,33 @@
             }}
         ];
 
-        const subjectSchema = [
-            { id: "civ", name: "CIVICS" }, { id: "hist", name: "HISTORY" }, { id: "geo", name: "GEOGRAPHY" },
-            { id: "kisw", name: "KISWAHILI" }, { id: "eng", name: "ENGLISH" }, { id: "phy", name: "PHYSICS" },
-            { id: "chem", name: "CHEMISTRY" }, { id: "bio", name: "BIOLOGY" }, { id: "math", name: "B/MATHS" },
-            { id: "nutr", name: "NUTRITION" }, { id: "lit", name: "LITERATURE" }
+        // Mfumo mpya wa Masomo kulingana na Ngazi ya darasa (F1/F2 vs F3/F4)
+        const subjectsF1F2 = [
+            { id: "his_maadili", name: "HISTORIA NA MAADILI" },
+            { id: "hist", name: "HISTORIA" },
+            { id: "geo", name: "GEOGRAPHY" },
+            { id: "kisw", name: "KISWAHILI" },
+            { id: "eng", name: "ENGLISH" },
+            { id: "phy", name: "PHYSICS" },
+            { id: "chem", name: "CHEMISTRY" },
+            { id: "bio", name: "BIOLOGY" },
+            { id: "math", name: "MATHEMATICS" },
+            { id: "bus_studies", name: "BUSINESS STUDIES" },
+            { id: "book_keeping", name: "BOOK KEEPING" }
+        ];
+
+        const subjectsF3F4 = [
+            { id: "civ", name: "CIVICS" }, 
+            { id: "hist", name: "HISTORY" }, 
+            { id: "geo", name: "GEOGRAPHY" },
+            { id: "kisw", name: "KISWAHILI" }, 
+            { id: "eng", name: "ENGLISH" }, 
+            { id: "phy", name: "PHYSICS" },
+            { id: "chem", name: "CHEMISTRY" }, 
+            { id: "bio", name: "BIOLOGY" }, 
+            { id: "math", name: "B/MATHS" },
+            { id: "nutr", name: "NUTRITION" }, 
+            { id: "lit", name: "LITERATURE" }
         ];
 
         let selectedStudentId = 6;
@@ -610,6 +632,14 @@
             renderRosterTable();
             buildMarksInputs();
             selectStudent(selectedStudentId);
+        }
+
+        // Kupata orodha sahihi ya masomo kulingana na darasa la mwanafunzi
+        function getSubjectSchemaForStudent(form) {
+            if (form === "F1" || form === "F2") {
+                return subjectsF1F2;
+            }
+            return subjectsF3F4;
         }
 
         function handleEnrollment(e) {
@@ -645,7 +675,6 @@
                 let tr = document.createElement('tr');
                 if (stu.id === selectedStudentId) tr.className = 'active-student';
                 
-                // Mstari ukibonyezwa, chagua mwanafunzi huyu kumuwekea alama zake
                 tr.onclick = (e) => {
                     if(e.target.type !== 'checkbox') selectStudent(stu.id);
                 };
@@ -684,8 +713,12 @@
             if (!student) return;
 
             document.getElementById('active-student-banner').innerText = `Selected: ${student.name} (${student.form} - ${student.stream})`;
+            
+            // Jenga upya fomu ya kuingiza alama kulingana na darasa lake
+            buildMarksInputs();
 
-            subjectSchema.forEach(sub => {
+            const currentSchema = getSubjectSchemaForStudent(student.form);
+            currentSchema.forEach(sub => {
                 const sData = student.marks[sub.id] || { t1: "-", t2: "-", mid: "-", ann: "-", rnk: "-" };
                 document.getElementById(`in-t1-${sub.id}`).value = sData.t1;
                 document.getElementById(`in-t2-${sub.id}`).value = sData.t2;
@@ -698,10 +731,19 @@
             generateAllReportCardsHTML();
         }
 
+        function updateFormContextHint() {
+            // Inasaidia kubadilisha panel pindi mtu anapochagua darasa jipya kwenye form ya kusajili
+        }
+
         function buildMarksInputs() {
+            const student = globalStudents.find(s => s.id === selectedStudentId);
+            const formLevel = student ? student.form : "F3";
+            const currentSchema = getSubjectSchemaForStudent(formLevel);
+
             const grid = document.getElementById('marks-entry-grid');
             grid.innerHTML = '';
-            subjectSchema.forEach(sub => {
+
+            currentSchema.forEach(sub => {
                 let div = document.createElement('div');
                 div.className = 'subject-block';
                 div.innerHTML = `
@@ -722,16 +764,12 @@
             });
         }
 
-        function updateTotalsInfo(totalStudents) {
-            globalStudents.forEach(stu => {
-                // unaweza kuweka logic ya kuweka idadi ya wanafunzi hapa
-            });
-        }
-
         function saveMarks(subId) {
             const student = globalStudents.find(s => s.id === selectedStudentId);
             if (!student) return;
 
+            if (!student.marks) student.marks = {};
+            
             student.marks[subId] = {
                 t1: document.getElementById(`in-t1-${subId}`).value.trim(),
                 t2: document.getElementById(`in-t2-${subId}`).value.trim(),
@@ -742,19 +780,19 @@
             generateAllReportCardsHTML();
         }
 
-        // KAZI KUBWA: Inatengeneza muundo wa Ripoti zote na kuziweka tayari kwenye HTML
         function generateAllReportCardsHTML() {
             const container = document.getElementById('print-output-container');
-            container.innerHTML = ''; // Safisha kwanza
+            container.innerHTML = ''; 
 
             globalStudents.forEach(student => {
-                // Piga mahesabu ya mwanafunzi huyu maalum
                 let tableRowsHTML = '';
                 let totalMarksSum = 0;
                 let activeSubjectsCount = 0;
                 let collectedPoints = [];
 
-                subjectSchema.forEach(sub => {
+                const currentSchema = getSubjectSchemaForStudent(student.form);
+
+                currentSchema.forEach(sub => {
                     const sData = student.marks[sub.id] || { t1: "-", t2: "-", mid: "-", ann: "-", rnk: "-" };
                     let mazoezi = "-";
                     let mtihani = "-";
@@ -804,7 +842,7 @@
                     `;
                 });
 
-                // Mahesabu ya jumla ya chini (Summary Row)
+                // Summary Row Calculations
                 let lblJumla = "-", lblWastani = "-", lblDaraja = "-", lblPoints = "-", lblDivision = "-";
                 if (activeSubjectsCount > 0) {
                     let globalAvg = totalMarksSum / activeSubjectsCount;
@@ -829,10 +867,8 @@
                     else lblDivision = "0";
                 }
 
-                // Kizazi cha ukurasa kamili wa ripoti kwa mwanafunzi huyu
                 let reportPageDiv = document.createElement('div');
                 reportPageDiv.id = `report-card-id-${student.id}`;
-                // Ukurasa huu utafichwa wakati wa print ikiwa haujachaguliwa kwenye mfumo wa bulk
                 reportPageDiv.className = `report-card-page ${student.id === selectedStudentId ? '' : 'hidden-print'}`;
                 
                 reportPageDiv.innerHTML = `
@@ -948,9 +984,7 @@
             });
         }
 
-        // CHAGUA KUCHAPISHA MWANAFUNZI MMOJA TU
         function printSingleReport() {
-            // Weka ripoti zote kuwa hidden isipokuwa ile iliyochaguliwa sasa hivi
             globalStudents.forEach(s => {
                 const el = document.getElementById(`report-card-id-${s.id}`);
                 if(el) {
@@ -961,9 +995,7 @@
             window.print();
         }
 
-        // CHAGUA KUCHAPISHA WANAFUNZI WOTE WALIOCHAGULIWA (BULK)
         function printBulkReports() {
-            // Onyesha ripoti zote ambazo zina checkbox ya true, zilizobaki zifichwe
             let anyChecked = false;
             globalStudents.forEach(s => {
                 const el = document.getElementById(`report-card-id-${s.id}`);
@@ -978,7 +1010,7 @@
             });
 
             if(!anyChecked) {
-                alert("Tafadhali chagua angalau mwanafunzi mmoja (weka vema kwenye kibox) ili kutoa Bulk Print!");
+                alert("Tafadhali chagua angalau mwanafunzi mmoja kwenye orodha kutoa Bulk Print!");
                 return;
             }
             window.print();
