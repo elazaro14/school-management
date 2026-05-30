@@ -22,7 +22,7 @@
             color: #000;
         }
 
-        /* --- CONTROL PANEL NAVIGATION BAR (NEW) --- */
+        /* --- CONTROL PANEL NAVIGATION BAR --- */
         .main-control-panel {
             background-color: #0f172a;
             padding: 10px 20px;
@@ -518,7 +518,7 @@
             margin-bottom: 15px;
         }
 
-        /* --- Print Rules: OMITS Navigation bar, Sidebar & Database --- */
+        /* --- Print Rules --- */
         @media print {
             .main-control-panel, #admin-container {
                 display: none !important;
@@ -544,7 +544,7 @@
 </head>
 <body>
 
-    <!-- MAIN CONTROL PANEL NAVIGATION BAR (Acess fields for Admin, Students, Teachers, etc.) -->
+    <!-- MAIN CONTROL PANEL NAVIGATION BAR -->
     <div class="main-control-panel">
         <div class="panel-brand">
             🏫 <span>TT-PRO MANAGEMENT SYSTEM</span>
@@ -562,7 +562,7 @@
     <div id="admin-container">
         <div class="admin-header-bar">
             <h1>📊 Student Admission & Bulk Report Card Module</h1>
-            <button class="btn-panel" onclick="backToPanel()">← Rudi Kwenye Panel</button>
+            <button class="btn-panel" style="background:#334155; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;" onclick="backToPanel()">← Rudi Kwenye Panel</button>
         </div>
 
         <!-- LEFT SIDEBAR: CONFIGURATIONS & ADMISSION -->
@@ -666,7 +666,7 @@
 
                 <div class="bulk-actions-bar">
                     <label><input type="checkbox" id="select-all-box" onchange="toggleSelectAll(this)"> Chagua Wote kwa Kuchapa</label>
-                    <span id="selected-count-badge">Waliochaguliwa: 1 student(s)</span>
+                    <span id="selected-count-badge">Waliochaguliwa: 0 student(s)</span>
                 </div>
 
                 <table class="roster-table">
@@ -687,7 +687,7 @@
             <div class="admin-card">
                 <h2>Ingiza Alama za Mitihani (T1, T2, Mid, Annual)</h2>
                 <div id="active-student-banner" style="font-weight: bold; color: var(--primary-blue); margin-bottom: 10px;">
-                    Selected: PAULO THOMAS LOISUJAKU
+                    Hakuna mwanafunzi aliyechaguliwa. Sajili au bofya jina kwenye orodha.
                 </div>
                 <div class="marks-panel-grid" id="marks-entry-grid"></div>
                 
@@ -707,31 +707,8 @@
     <div id="print-output-container"></div>
 
     <script>
-        // Data ya msingi
-        let globalStudents = [
-            { id: 1, name: "ZAINAB ALLY", gender: "F", form: "F1", stream: "Stream A", checkedForPrint: true, marks: {
-                "his_maadili": { t1: 80, t2: 70, mid: 75, ann: 78, rnk: 1 }, "hist": { t1: 60, t2: 65, mid: 70, ann: 68, rnk: 2 },
-                "geo": { t1: 50, t2: 55, mid: 45, ann: 52, rnk: 3 }, "kisw": { t1: 85, t2: 90, mid: 88, ann: 86, rnk: 1 },
-                "eng": { t1: 70, t2: 75, mid: 72, ann: 74, rnk: 2 }, "phy": { t1: 40, t2: 45, mid: 50, ann: 48, rnk: 4 },
-                "chem": { t1: 55, t2: 60, mid: 58, ann: 56, rnk: 3 }, "bio": { t1: 65, t2: 70, mid: 62, ann: 66, rnk: 2 },
-                "math": { t1: 30, t2: 35, mid: 40, ann: 38, rnk: 5 }, "bus_studies": { t1: 60, t2: 62, mid: 65, ann: 63, rnk: 3 },
-                "book_keeping": { t1: 70, t2: 68, mid: 72, ann: 71, rnk: 2 }
-            }},
-            { id: 2, name: "ALPHA MARY", gender: "F", form: "F1", stream: "Stream A", checkedForPrint: true, marks: {
-                "his_maadili": { t1: 40, t2: 42, mid: 45, ann: 43, rnk: 4 }, "hist": { t1: 30, t2: 35, mid: 32, ann: 34, rnk: 5 }
-            }},
-            { id: 3, name: "BARAKA JUMA", gender: "M", form: "F2", stream: "Stream B", marks: {}, checkedForPrint: true },
-            { id: 4, name: "CHUMA ALLY", gender: "M", form: "F2", stream: "Stream A", marks: {}, checkedForPrint: true },
-            { id: 5, name: "FATMA OMARY", gender: "F", form: "F1", stream: "Stream C", marks: {}, checkedForPrint: true },
-            { id: 6, name: "PAULO THOMAS LOISUJAKU", gender: "M", form: "F3", stream: "Stream A", checkedForPrint: true, marks: {
-                "civ": { t1: 75, t2: 80, mid: 85, ann: 78, rnk: 1 }, "hist": { t1: 70, t2: 72, mid: 68, ann: 71, rnk: 2 }, 
-                "geo": { t1: 60, t2: 65, mid: 62, ann: 64, rnk: 3 }, "kisw": { t1: 85, t2: 88, mid: 90, ann: 87, rnk: 1 }, 
-                "eng": { t1: 80, t2: 82, mid: 78, ann: 81, rnk: 2 }, "phy": { t1: 50, t2: 55, mid: 52, ann: 54, rnk: 4 },
-                "chem": { t1: 65, t2: 68, mid: 62, ann: 66, rnk: 3 }, "bio": { t1: 70, t2: 75, mid: 72, ann: 73, rnk: 2 }, 
-                "math": { t1: 45, t2: 50, mid: 48, ann: 49, rnk: 5 }, "nutr": { t1: 60, t2: 62, mid: 58, ann: 61, rnk: 4 }, 
-                "lit": { t1: 70, t2: 72, mid: 74, ann: 73, rnk: 3 }
-            }}
-        ];
+        // DATA ILIYOSAFISHWA: Wanafunzi wa mfano wamefutwa kabisa kutoka hapa ili uanze upya safi.
+        let globalStudents = [];
 
         const subjectsF1F2 = [
             { id: "his_maadili", name: "HISTORIA NA MAADILI" }, { id: "hist", name: "HISTORIA" }, { id: "geo", name: "GEOGRAPHY" },
@@ -747,20 +724,16 @@
             { id: "nutr", name: "NUTRITION" }, { id: "lit", name: "LITERATURE" }
         ];
 
-        let selectedStudentId = 6;
+        let selectedStudentId = null;
         let uploadedLogoBase64 = "";
 
-        // Njia ya kurudi kwenye index ya mfumo wako mkuu ili kuzuia kosa la 404
         function backToPanel() {
             window.location.href = "index.html"; 
         }
 
-        // Kazi ya kuswitch kurasa mbalimbali kutoka kwenye Control Panel Navigation Bar ya Juu
         function switchView(viewName) {
-            // Hapa unaweza kuelekeza kwenda kwenye kurasa zako halisi za mfumo wako
             if(viewName === 'teachers') {
-                alert("Unaelekezwa kwenye moduli ya Walimu/Timetable Teacher slips...");
-                // window.location.href = "teachers.html"; (Ondoa maoni ukiweka faili hili)
+                alert("Unaelekezwa kwenye moduli ya Walimu...");
             } else if (viewName === 'subjects') {
                 alert("Unaelekezwa kwenye orodha ya masomo...");
             } else if (viewName === 'students') {
@@ -773,7 +746,6 @@
         function init() {
             renderRosterTable();
             buildMarksInputs();
-            selectStudent(selectedStudentId);
         }
 
         function handleLogoUpload(input) {
@@ -826,12 +798,14 @@
                                 name, gender, form, stream,
                                 marks: {}, checkedForPrint: true
                             });
+                            if (addedCount === 0) selectedStudentId = Date.now() + i;
                             addedCount++;
                         }
                     }
                 }
                 alert(`Wanafunzi ${addedCount} wameongezwa kwa mkupuo wa CSV!`);
                 renderRosterTable();
+                if(selectedStudentId) selectStudent(selectedStudentId);
                 generateAllReportCardsHTML();
             };
             reader.readAsText(file);
@@ -868,6 +842,12 @@
             tbody.innerHTML = '';
             let checkedCount = 0;
 
+            if (globalStudents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#64748b; padding:20px;">Hakuna mwanafunzi aliyesajiliwa kwa sasa.</td></tr>';
+                document.getElementById('selected-count-badge').innerText = `Waliochaguliwa: 0 student(s)`;
+                return;
+            }
+
             globalStudents.forEach(stu => {
                 if (search && !stu.name.toLowerCase().includes(search)) return;
                 if (fFilter !== 'All' && stu.form !== fFilter) return;
@@ -894,13 +874,13 @@
                 tbody.appendChild(tr);
             });
 
-            document.getElementById('selected-count-badge').innerText = `Selected: ${checkedCount} student(s)`;
+            document.getElementById('selected-count-badge').innerText = `Waliochaguliwa: ${checkedCount} student(s)`;
         }
 
         function toggleStudentCheck(id, isChecked) {
             const student = globalStudents.find(s => s.id === id);
             if(student) student.checkedForPrint = isChecked;
-            document.getElementById('selected-count-badge').innerText = `Selected: ${globalStudents.filter(s=>s.checkedForPrint).length} student(s)`;
+            document.getElementById('selected-count-badge').innerText = `Waliochaguliwa: ${globalStudents.filter(s=>s.checkedForPrint).length} student(s)`;
             generateAllReportCardsHTML();
         }
 
@@ -934,11 +914,16 @@
 
         function buildMarksInputs() {
             const student = globalStudents.find(s => s.id === selectedStudentId);
-            const formLevel = student ? student.form : "F3";
-            const currentSchema = getSubjectSchemaForStudent(formLevel);
-
             const grid = document.getElementById('marks-entry-grid');
             grid.innerHTML = '';
+
+            if(!student) {
+                grid.innerHTML = '<div style="color:#64748b; font-size:13px; grid-column:1/-1;">Bofya jina la mwanafunzi kwenye orodha ili kuingiza alama zake hapa.</div>';
+                return;
+            }
+
+            const formLevel = student.form;
+            const currentSchema = getSubjectSchemaForStudent(formLevel);
 
             currentSchema.forEach(sub => {
                 let div = document.createElement('div');
@@ -1086,6 +1071,8 @@
         function generateAllReportCardsHTML() {
             const container = document.getElementById('print-output-container');
             container.innerHTML = ''; 
+
+            if(globalStudents.length === 0) return;
 
             const globalTerm = document.getElementById('cfg-term').value;
             const globalYear = document.getElementById('cfg-year').value;
@@ -1242,6 +1229,10 @@
         }
 
         function printSingleReport() {
+            if(!selectedStudentId) {
+                alert("Tafadhali mchague mwanafunzi mmoja kwanza.");
+                return;
+            }
             globalStudents.forEach(s => {
                 const el = document.getElementById(`report-card-id-${s.id}`);
                 if(el) {
@@ -1267,7 +1258,7 @@
             });
 
             if(!anyChecked) {
-                alert("Tafadhali chagua angalau mwanafunzi mmoja!");
+                alert("Tafadhali chagua angalau mwanafunzi mmoja kwenye orodha (Roster) kwanza!");
                 return;
             }
             window.print();
