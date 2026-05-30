@@ -499,7 +499,7 @@
                 </div>
                 <div class="form-control">
                     <label>Form Level</label>
-                    <select id="stu-form" onchange="updateFormContextHint()">
+                    <select id="stu-form">
                         <option value="F1">F1</option>
                         <option value="F2">F2</option>
                         <option value="F3" selected>F3</option>
@@ -579,51 +579,44 @@
     <div id="print-output-container"></div>
 
     <script>
-        // Data ya majaribio: Wanafunzi wa F1 na F3
+        // Data ya majaribio yaliyowekewa baadhi ya alama ili uone matokeo (F1 na F3)
         let globalStudents = [
-            { id: 1, name: "ZAINAB ALLY", gender: "F", form: "F1", stream: "Stream A", marks: {}, checkedForPrint: true },
-            { id: 2, name: "ALPHA MARY", gender: "F", form: "F1", stream: "Stream A", marks: {}, checkedForPrint: true },
+            { id: 1, name: "ZAINAB ALLY", gender: "F", form: "F1", stream: "Stream A", checkedForPrint: true, marks: {
+                "his_maadili": { t1: 80, t2: 70, mid: 75, ann: 78, rnk: 1 }, "hist": { t1: 60, t2: 65, mid: 70, ann: 68, rnk: 2 },
+                "geo": { t1: 50, t2: 55, mid: 45, ann: 52, rnk: 3 }, "kisw": { t1: 85, t2: 90, mid: 88, ann: 86, rnk: 1 },
+                "eng": { t1: 70, t2: 75, mid: 72, ann: 74, rnk: 2 }, "phy": { t1: 40, t2: 45, mid: 50, ann: 48, rnk: 4 },
+                "chem": { t1: 55, t2: 60, mid: 58, ann: 56, rnk: 3 }, "bio": { t1: 65, t2: 70, mid: 62, ann: 66, rnk: 2 },
+                "math": { t1: 30, t2: 35, mid: 40, ann: 38, rnk: 5 }, "bus_studies": { t1: 60, t2: 62, mid: 65, ann: 63, rnk: 3 },
+                "book_keeping": { t1: 70, t2: 68, mid: 72, ann: 71, rnk: 2 }
+            }},
+            { id: 2, name: "ALPHA MARY", gender: "F", form: "F1", stream: "Stream A", checkedForPrint: true, marks: {
+                "his_maadili": { t1: 40, t2: 42, mid: 45, ann: 43, rnk: 4 }, "hist": { t1: 30, t2: 35, mid: 32, ann: 34, rnk: 5 }
+            }},
             { id: 3, name: "BARAKA JUMA", gender: "M", form: "F2", stream: "Stream B", marks: {}, checkedForPrint: true },
             { id: 4, name: "CHUMA ALLY", gender: "M", form: "F2", stream: "Stream A", marks: {}, checkedForPrint: true },
             { id: 5, name: "FATMA OMARY", gender: "F", form: "F1", stream: "Stream C", marks: {}, checkedForPrint: true },
             { id: 6, name: "PAULO THOMAS LOISUJAKU", gender: "M", form: "F3", stream: "Stream A", checkedForPrint: true, marks: {
-                "civ": { t1: 20, t2: 20, mid: 20, ann: 8, rnk: 107 }, 
-                "hist": { t1: 30, t2: 30, mid: 30, ann: 24, rnk: 98 }, 
-                "geo": { t1: 12, t2: 12, mid: 12, ann: 16, rnk: 117 },
-                "kisw": { t1: 0, t2: 0, mid: 0, ann: 45, rnk: 132 }, 
-                "eng": { t1: 20, t2: 20, mid: 20, ann: 33, rnk: 115 }, 
-                "bio": { t1: 6, t2: 6, mid: 6, ann: 3, rnk: 145 },
-                "math": { t1: 7, t2: 7, mid: 7, ann: 0, rnk: 125 }
+                "civ": { t1: 75, t2: 80, mid: 85, ann: 78, rnk: 1 }, "hist": { t1: 70, t2: 72, mid: 68, ann: 71, rnk: 2 }, 
+                "geo": { t1: 60, t2: 65, mid: 62, ann: 64, rnk: 3 }, "kisw": { t1: 85, t2: 88, mid: 90, ann: 87, rnk: 1 }, 
+                "eng": { t1: 80, t2: 82, mid: 78, ann: 81, rnk: 2 }, "phy": { t1: 50, t2: 55, mid: 52, ann: 54, rnk: 4 },
+                "chem": { t1: 65, t2: 68, mid: 62, ann: 66, rnk: 3 }, "bio": { t1: 70, t2: 75, mid: 72, ann: 73, rnk: 2 }, 
+                "math": { t1: 45, t2: 50, mid: 48, ann: 49, rnk: 5 }, "nutr": { t1: 60, t2: 62, mid: 58, ann: 61, rnk: 4 }, 
+                "lit": { t1: 70, t2: 72, mid: 74, ann: 73, rnk: 3 }
             }}
         ];
 
-        // Mfumo mpya wa Masomo kulingana na Ngazi ya darasa (F1/F2 vs F3/F4)
         const subjectsF1F2 = [
-            { id: "his_maadili", name: "HISTORIA NA MAADILI" },
-            { id: "hist", name: "HISTORIA" },
-            { id: "geo", name: "GEOGRAPHY" },
-            { id: "kisw", name: "KISWAHILI" },
-            { id: "eng", name: "ENGLISH" },
-            { id: "phy", name: "PHYSICS" },
-            { id: "chem", name: "CHEMISTRY" },
-            { id: "bio", name: "BIOLOGY" },
-            { id: "math", name: "MATHEMATICS" },
-            { id: "bus_studies", name: "BUSINESS STUDIES" },
-            { id: "book_keeping", name: "BOOK KEEPING" }
+            { id: "his_maadili", name: "HISTORIA NA MAADILI" }, { id: "hist", name: "HISTORIA" }, { id: "geo", name: "GEOGRAPHY" },
+            { id: "kisw", name: "KISWAHILI" }, { id: "eng", name: "ENGLISH" }, { id: "phy", name: "PHYSICS" },
+            { id: "chem", name: "CHEMISTRY" }, { id: "bio", name: "BIOLOGY" }, { id: "math", name: "MATHEMATICS" },
+            { id: "bus_studies", name: "BUSINESS STUDIES" }, { id: "book_keeping", name: "BOOK KEEPING" }
         ];
 
         const subjectsF3F4 = [
-            { id: "civ", name: "CIVICS" }, 
-            { id: "hist", name: "HISTORY" }, 
-            { id: "geo", name: "GEOGRAPHY" },
-            { id: "kisw", name: "KISWAHILI" }, 
-            { id: "eng", name: "ENGLISH" }, 
-            { id: "phy", name: "PHYSICS" },
-            { id: "chem", name: "CHEMISTRY" }, 
-            { id: "bio", name: "BIOLOGY" }, 
-            { id: "math", name: "B/MATHS" },
-            { id: "nutr", name: "NUTRITION" }, 
-            { id: "lit", name: "LITERATURE" }
+            { id: "civ", name: "CIVICS" }, { id: "hist", name: "HISTORY" }, { id: "geo", name: "GEOGRAPHY" },
+            { id: "kisw", name: "KISWAHILI" }, { id: "eng", name: "ENGLISH" }, { id: "phy", name: "PHYSICS" },
+            { id: "chem", name: "CHEMISTRY" }, { id: "bio", name: "BIOLOGY" }, { id: "math", name: "B/MATHS" },
+            { id: "nutr", name: "NUTRITION" }, { id: "lit", name: "LITERATURE" }
         ];
 
         let selectedStudentId = 6;
@@ -634,12 +627,8 @@
             selectStudent(selectedStudentId);
         }
 
-        // Kupata orodha sahihi ya masomo kulingana na darasa la mwanafunzi
         function getSubjectSchemaForStudent(form) {
-            if (form === "F1" || form === "F2") {
-                return subjectsF1F2;
-            }
-            return subjectsF3F4;
+            return (form === "F1" || form === "F2") ? subjectsF1F2 : subjectsF3F4;
         }
 
         function handleEnrollment(e) {
@@ -713,13 +702,11 @@
             if (!student) return;
 
             document.getElementById('active-student-banner').innerText = `Selected: ${student.name} (${student.form} - ${student.stream})`;
-            
-            // Jenga upya fomu ya kuingiza alama kulingana na darasa lake
             buildMarksInputs();
 
             const currentSchema = getSubjectSchemaForStudent(student.form);
             currentSchema.forEach(sub => {
-                const sData = student.marks[sub.id] || { t1: "-", t2: "-", mid: "-", ann: "-", rnk: "-" };
+                const sData = student.marks[sub.id] || { t1: "", t2: "", mid: "", ann: "", rnk: "" };
                 document.getElementById(`in-t1-${sub.id}`).value = sData.t1;
                 document.getElementById(`in-t2-${sub.id}`).value = sData.t2;
                 document.getElementById(`in-mid-${sub.id}`).value = sData.mid;
@@ -729,10 +716,6 @@
 
             renderRosterTable();
             generateAllReportCardsHTML();
-        }
-
-        function updateFormContextHint() {
-            // Inasaidia kubadilisha panel pindi mtu anapochagua darasa jipya kwenye form ya kusajili
         }
 
         function buildMarksInputs() {
@@ -780,92 +763,150 @@
             generateAllReportCardsHTML();
         }
 
+        // --- NEW CENTRALIZED COMPUTATION ENGINE FOR RANKING & GRADES ---
+        function computeStudentPerformance(student) {
+            const currentSchema = getSubjectSchemaForStudent(student.form);
+            let subjectAverages = [];
+            let gradePoints = [];
+            let tableRowsHTML = '';
+
+            currentSchema.forEach(sub => {
+                const sData = student.marks[sub.id] || { t1: "", t2: "", mid: "", ann: "", rnk: "" };
+                let mazoezi = "-";
+                let mtihani = "-";
+                let jumla = "-";
+                let wastani = "-";
+                let daraja = "-";
+                let maoni = "-";
+                let pts = 5; // Default kama amefeli au hajafanya
+
+                let cAssessList = [];
+                if(sData.t1 !== "" && sData.t1 !== undefined) cAssessList.push(parseFloat(sData.t1) || 0);
+                if(sData.t2 !== "" && sData.t2 !== undefined) cAssessList.push(parseFloat(sData.t2) || 0);
+                if(sData.mid !== "" && sData.mid !== undefined) cAssessList.push(parseFloat(sData.mid) || 0);
+
+                if(cAssessList.length > 0) {
+                    mazoezi = cAssessList.reduce((a, b) => a + b, 0) / cAssessList.length;
+                }
+                if(sData.ann !== "" && sData.ann !== undefined) {
+                    mtihani = parseFloat(sData.ann) || 0;
+                }
+
+                // Tafuta wastani wa somo husika: (Mazoezi + Mtihani wa Mwaka) / 2
+                if(mazoezi !== "-" && mtihani !== "-") {
+                    wastani = (mazoezi + mtihani) / 2;
+                    jumla = mazoezi + mtihani; // Kwa ajili ya kuonyesha jumla ghafi kama ipo
+
+                    // Kupata Daraja (Grade) kutoka kwenye Wastani wa somo
+                    if (wastani >= 75) { daraja = "A"; maoni = "VIZURI SANA"; pts = 1; }
+                    else if (wastani >= 65) { daraja = "B"; maoni = "VIZURI"; pts = 2; }
+                    else if (wastani >= 45) { daraja = "C"; maoni = "WASTANI"; pts = 3; }
+                    else if (wastani >= 30) { daraja = "D"; maoni = "INARIDHISHA"; pts = 4; }
+                    else { daraja = "F"; maoni = "FELI"; pts = 5; }
+
+                    subjectAverages.push(wastani);
+                    gradePoints.push(pts);
+                }
+
+                tableRowsHTML += `
+                    <tr>
+                        <td class="subject-name">${sub.name}</td>
+                        <td>${mazoezi !== "-" ? Math.round(mazoezi) : "-"}</td>
+                        <td>${mtihani !== "-" ? Math.round(mtihani) : "-"}</td>
+                        <td>${jumla !== "-" ? Math.round(jumla) : "-"}</td>
+                        <td>${wastani !== "-" ? wastani.toFixed(1) : "-"}</td>
+                        <td style="font-weight:bold;">${daraja}</td>
+                        <td>${sData.rnk || "-"}</td>
+                        <td>${maoni}</td>
+                        <td><span style="font-size:9px;color:#888;">Sign</span></td>
+                    </tr>
+                `;
+            });
+
+            // Mahesabu makuu ya Summary
+            let lblJumla = "-", lblWastani = "-", lblDaraja = "-", lblPoints = "-", lblDivision = "-", divValue = 5;
+            let avgValue = 0;
+
+            if (subjectAverages.length > 0) {
+                // 1. JUMLA = Total of subjects average
+                let totalOfAvgs = subjectAverages.reduce((a, b) => a + b, 0);
+                lblJumla = totalOfAvgs.toFixed(1);
+
+                // 2. WASTANI = Average of total of subjects average
+                avgValue = totalOfAvgs / subjectAverages.length;
+                lblWastani = avgValue.toFixed(1);
+
+                // 3. DARAJA = Grade of average
+                if (avgValue >= 75) lblDaraja = "A";
+                else if (avgValue >= 65) lblDaraja = "B";
+                else if (avgValue >= 45) lblDaraja = "C";
+                else if (avgValue >= 30) lblDaraja = "D";
+                else lblDaraja = "F";
+
+                // 4. POINTS = Total of any lowest 7 subject grade (A=1, B=2, C=3, D=4, F=5)
+                // Tunapanga pointi kutoka ndogo kwenda kubwa ili kuchukua masomo 7 bora yaliyofanya vizuri zaidi
+                gradePoints.sort((a, b) => a - b);
+                
+                // Ikiwa mwanafunzi amefanya chini ya masomo 7, tunajaza yaliyobaki kwa pointi za F (5)
+                let best7Points = [...gradePoints];
+                while (best7Points.length < 7) {
+                    best7Points.push(5);
+                }
+                let pointsSum = best7Points.slice(0, 7).reduce((a, b) => a + b, 0);
+                lblPoints = pointsSum;
+
+                // 5. DIVISION = sum of points (I<=17, II<=21, III<=24, IV<=33, 0>=34)
+                if (pointsSum >= 7 && pointsSum <= 17) { lblDivision = "I"; divValue = 1; }
+                else if (pointsSum <= 21) { lblDivision = "II"; divValue = 2; }
+                else if (pointsSum <= 24) { lblDivision = "III"; divValue = 3; }
+                else if (pointsSum <= 33) { lblDivision = "IV"; divValue = 4; }
+                else { lblDivision = "0"; divValue = 5; }
+            }
+
+            return {
+                tableRowsHTML, lblJumla, lblWastani, lblDaraja, lblPoints, lblDivision,
+                divValue, pointsValue: parseFloat(lblPoints) || 99, avgValue
+            };
+        }
+
         function generateAllReportCardsHTML() {
             const container = document.getElementById('print-output-container');
             container.innerHTML = ''; 
 
+            // Piga mahesabu ya kila mwanafunzi kwanza ili kuweza kuwapa RANK (Nafasi) sahihi kulingana na Division na Points
+            let studentCalculations = {};
             globalStudents.forEach(student => {
-                let tableRowsHTML = '';
-                let totalMarksSum = 0;
-                let activeSubjectsCount = 0;
-                let collectedPoints = [];
+                studentCalculations[student.id] = computeStudentPerformance(student);
+            });
 
-                const currentSchema = getSubjectSchemaForStudent(student.form);
+            // Tengeneza Ranking kwa kila darasa (Form)
+            let formsList = ["F1", "F2", "F3", "F4"];
+            let ranksDb = {}; // itatunza nafasi ya kila mwanafunzi mfano: { studentId: rank }
 
-                currentSchema.forEach(sub => {
-                    const sData = student.marks[sub.id] || { t1: "-", t2: "-", mid: "-", ann: "-", rnk: "-" };
-                    let mazoezi = "-";
-                    let mtihani = "-";
-                    let jumla = "-";
-                    let wastani = "-";
-                    let daraja = "-";
-                    let maoni = "-";
-
-                    let cAssessList = [];
-                    if(sData.t1 !== "-" && sData.t1 !== "") cAssessList.push(parseFloat(sData.t1) || 0);
-                    if(sData.t2 !== "-" && sData.t2 !== "") cAssessList.push(parseFloat(sData.t2) || 0);
-                    if(sData.mid !== "-" && sData.mid !== "") cAssessList.push(parseFloat(sData.mid) || 0);
-
-                    if(cAssessList.length > 0) {
-                        mazoezi = Math.round(cAssessList.reduce((a, b) => a + b, 0) / cAssessList.length);
-                    }
-                    if(sData.ann !== "-" && sData.ann !== "") {
-                        mtihani = parseFloat(sData.ann) || 0;
-                    }
-
-                    if(mazoezi !== "-" && mtihani !== "-") {
-                        jumla = mazoezi + mtihani;
-                        wastani = jumla / 2;
-
-                        if (jumla >= 75) { daraja = "A"; maoni = "VIZURI SANA"; collectedPoints.push(1); }
-                        else if (jumla >= 65) { daraja = "B"; maoni = "VIZURI"; collectedPoints.push(2); }
-                        else if (jumla >= 45) { daraja = "C"; maoni = "WASTANI"; collectedPoints.push(3); }
-                        else if (jumla >= 30) { daraja = "D"; maoni = "INARIDHISHA"; collectedPoints.push(4); }
-                        else { daraja = "F"; maoni = "FELI"; collectedPoints.push(5); }
-
-                        totalMarksSum += jumla;
-                        activeSubjectsCount++;
-                    }
-
-                    tableRowsHTML += `
-                        <tr>
-                            <td class="subject-name">${sub.name}</td>
-                            <td>${mazoezi}</td>
-                            <td>${mtihani}</td>
-                            <td>${jumla}</td>
-                            <td>${wastani}</td>
-                            <td>${daraja}</td>
-                            <td>${sData.rnk}</td>
-                            <td>${maoni}</td>
-                            <td><span style="font-size:9px;color:#888;">Sign</span></td>
-                        </tr>
-                    `;
+            formsList.forEach(currentForm => {
+                // Sefa wanafunzi waliopo darasa hili na wenye matokeo halali
+                let formStudents = globalStudents.filter(s => s.form === currentForm && studentCalculations[s.id].lblWastani !== "-");
+                
+                // Panga kwa vigezo vya Kitaaluma: Division kwanza (1 ikiwa juu), Points (ndogo ikiwa juu), Wastani (Mkubwa ikiwa juu)
+                formStudents.sort((a, b) => {
+                    let resA = studentCalculations[a.id];
+                    let resB = studentCalculations[b.id];
+                    if (resA.divValue !== resB.divValue) return resA.divValue - resB.divValue;
+                    if (resA.pointsValue !== resB.pointsValue) return resA.pointsValue - resB.pointsValue;
+                    return resB.avgValue - resA.avgValue;
                 });
 
-                // Summary Row Calculations
-                let lblJumla = "-", lblWastani = "-", lblDaraja = "-", lblPoints = "-", lblDivision = "-";
-                if (activeSubjectsCount > 0) {
-                    let globalAvg = totalMarksSum / activeSubjectsCount;
-                    lblJumla = Math.round(totalMarksSum);
-                    lblWastani = globalAvg.toFixed(1);
-                    
-                    let doubleAvg = globalAvg * 2;
-                    if (doubleAvg >= 75) lblDaraja = "A";
-                    else if (doubleAvg >= 65) lblDaraja = "B";
-                    else if (doubleAvg >= 45) lblDaraja = "C";
-                    else if (doubleAvg >= 30) lblDaraja = "D";
-                    else lblDaraja = "F";
+                // Patia namba ya nafasi (Rank)
+                formStudents.forEach((stu, index) => {
+                    ranksDb[stu.id] = index + 1;
+                });
+            });
 
-                    collectedPoints.sort((a,b) => a-b);
-                    let pointsSum = collectedPoints.slice(0, 7).reduce((a, b) => a + b, 0);
-                    lblPoints = pointsSum;
-
-                    if (pointsSum >= 7 && pointsSum <= 17) lblDivision = "I";
-                    else if (pointsSum <= 21) lblDivision = "II";
-                    else if (pointsSum <= 25) lblDivision = "III";
-                    else if (pointsSum <= 34) lblDivision = "IV";
-                    else lblDivision = "0";
-                }
+            // Sasa jenga muundo wa kurasa za ripoti (HTML Pages)
+            globalStudents.forEach(student => {
+                const res = studentCalculations[student.id];
+                const totalInClass = globalStudents.filter(s => s.form === student.form).length;
+                const currentRank = ranksDb[student.id] || "-";
 
                 let reportPageDiv = document.createElement('div');
                 reportPageDiv.id = `report-card-id-${student.id}`;
@@ -887,7 +928,7 @@
                             <td style="width: 55%;">JINA LA MWANAFUNZI: <span class="dotted-line" style="width: 70%;">${student.name}</span></td>
                             <td style="width: 15%;">KIDATO: <span class="dotted-line" style="width: 40%;">${student.form}</span></td>
                             <td style="width: 15%;">MUHULA: <span class="dotted-line" style="width: 40%;">II</span></td>
-                            <td style="width: 15%;">MWAKA: <span class="dotted-line" style="width: 45%;">2025</span></td>
+                            <td style="width: 15%;">MWAKA: <span class="dotted-line" style="width: 45%;">2026</span></td>
                         </tr>
                     </table>
 
@@ -905,19 +946,19 @@
                                 <th style="width: 10%;">SAINI</th>
                             </tr>
                         </thead>
-                        <tbody>${tableRowsHTML}</tbody>
+                        <tbody>${res.tableRowsHTML}</tbody>
                     </table>
 
                     <div class="summary-row">
-                        <div>JUMLA: <span class="dotted-line" style="width: 45px; text-align: center;">${lblJumla}</span></div>
-                        <div>WASTANI: <span class="dotted-line" style="width: 45px; text-align: center;">${lblWastani}</span></div>
-                        <div>DARAJA: <span class="dotted-line" style="width: 35px; text-align: center;">${lblDaraja}</span></div>
-                        <div>POINTS: <span class="dotted-line" style="width: 35px; text-align: center;">${lblPoints}</span></div>
-                        <div>DIVISION: <span class="dotted-line" style="width: 50px; text-align: center;">${lblDivision}</span></div>
+                        <div>JUMLA: <span class="dotted-line" style="width: 65px; text-align: center;">${res.lblJumla}</span></div>
+                        <div>WASTANI: <span class="dotted-line" style="width: 55px; text-align: center;">${res.lblWastani}</span></div>
+                        <div>DARAJA: <span class="dotted-line" style="width: 35px; text-align: center;">${res.lblDaraja}</span></div>
+                        <div>POINTS: <span class="dotted-line" style="width: 35px; text-align: center;">${res.lblPoints}</span></div>
+                        <div>DIVISION: <span class="dotted-line" style="width: 50px; text-align: center;">${res.lblDivision}</span></div>
                     </div>
                     
                     <div class="summary-row" style="margin-top: 5px; margin-bottom: 20px;">
-                        <div style="width: 100%;">AMEKUWA WA: <span class="dotted-line" style="width: 50px; text-align: center;">135</span> KATI YA: <span class="dotted-line" style="width: 50px; text-align: center;">152</span></div>
+                        <div style="width: 100%;">AMEKUWA WA: <span class="dotted-line" style="width: 50px; text-align: center;">${currentRank}</span> KATI YA: <span class="dotted-line" style="width: 50px; text-align: center;">${totalInClass}</span></div>
                     </div>
 
                     <div class="behavior-section">
@@ -948,17 +989,17 @@
                     </div>
 
                     <div class="admin-section">
-                        <div>SHULE IMEFUNGWA TAREHE: <span class="dotted-line" style="width: 100px;" contenteditable="true">05/12/2025</span>. ITAFUNGULIWA TAREHE: <span class="dotted-line" style="width: 100px;" contenteditable="true">13/01/2026</span>.</div>
+                        <div>SHULE IMEFUNGWA TAREHE: <span class="dotted-line" style="width: 100px;" contenteditable="true">05/12/2026</span>. ITAFUNGULIWA TAREHE: <span class="dotted-line" style="width: 100px;" contenteditable="true">12/01/2027</span>.</div>
                         <div class="signature-stamp-space" style="margin-top: 10px;">
                             <div style="width: 70%;">
                                 <div>MAONI YA MWALIMU WA DARASA: <span class="dotted-line" style="width: 60%; font-style: italic;" contenteditable="true">Weka juhudi zaidi</span></div>
                                 <div style="margin-top: 5px;">SAINI YA MWALIMU WA DARASA: <span class="dotted-line" style="width: 40%;">......................................</span></div>
-                                <div>MAONI YA MKUU WA SHULE: <span class="dotted-line" style="width: 63%; font-style: italic;" contenteditable="true">Asome kwa bidii zaidi</span></div>
+                                <div>MAONI YA MKUU WA SHULE: <span class="dotted-line" style="width: 63%; font-style: italic;" contenteditable="true">Kaza buti, unaweza zaidi</span></div>
                                 <div style="margin-top: 5px;">SAINI YA MKUU WA SHULE: <span class="dotted-line" style="width: 40%;">......................................</span></div>
                             </div>
                             <div class="stamp-box">
                                 <span>OLMOTI SECONDARY</span>
-                                <span style="border-top:1px solid #00f; border-bottom:1px solid #00f; font-size:8px; padding:1px;">DATE: 10/12/2025</span>
+                                <span style="border-top:1px solid #00f; border-bottom:1px solid #00f; font-size:8px; padding:1px;">DATE: 10/12/2026</span>
                                 <span>P.O.BOX 8249</span>
                             </div>
                         </div>
