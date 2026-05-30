@@ -24,7 +24,7 @@
         /* --- Admin Layout Container (Hidden on Print) --- */
         #admin-container {
             display: grid;
-            grid-template-columns: 320px 1fr;
+            grid-template-columns: 340px 1fr;
             gap: 20px;
             padding: 20px;
             max-width: 1600px;
@@ -118,6 +118,23 @@
             font-weight: bold;
             cursor: pointer;
             font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .btn-secondary {
+            width: 100%;
+            background-color: #64748b;
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 6px;
+            font-weight: normal;
+            cursor: pointer;
+            font-size: 12px;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+            box-sizing: border-box;
         }
 
         .db-filters {
@@ -184,7 +201,6 @@
             font-weight: bold;
         }
 
-        /* --- Input Fields Styles --- */
         .marks-panel-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -285,14 +301,15 @@
             text-align: center;
             position: relative;
             margin-bottom: 15px;
+            min-height: 90px;
         }
 
         .logo-placeholder {
             position: absolute;
             left: 0;
             top: 0;
-            width: 80px;
-            height: 80px;
+            width: 90px;
+            height: 90px;
             border: 1px dashed #666;
             display: flex;
             align-items: center;
@@ -302,17 +319,26 @@
             text-align: center;
         }
 
+        .logo-img {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 90px;
+            height: 90px;
+            object-fit: contain;
+        }
+
         .header-title {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
-            line-height: 1.4;
+            line-height: 1.3;
             margin: 0;
             text-transform: uppercase;
         }
 
         .report-title {
-            margin-top: 15px;
-            font-size: 14px;
+            margin-top: 12px;
+            font-size: 13px;
             font-weight: bold;
             text-decoration: underline;
             text-transform: uppercase;
@@ -345,7 +371,7 @@
 
         table.data-table th, table.data-table td {
             border: 1px solid var(--border-color);
-            padding: 5px;
+            padding: 6px 4px;
             text-align: center;
             text-transform: uppercase;
         }
@@ -457,7 +483,7 @@
             margin-bottom: 15px;
         }
 
-        /* --- Print Rules --- */
+        /* --- Print Rules: OMITS Admin Dashboard & Enrolled Roster --- */
         @media print {
             #admin-container {
                 display: none !important;
@@ -483,16 +509,24 @@
 </head>
 <body>
 
+    <!-- ADMINISTRATIVE DASHBOARD PANEL -->
     <div id="admin-container">
         <div class="admin-header-bar">
             <h1>🎓 Student Admission & Bulk Report Card Manager</h1>
+            <!-- Kitufe kilichoelekezwa upya kuzuia 404 kwenye Github Pages -->
             <button class="btn-panel" onclick="backToPanel()">← Back to Panel</button>
         </div>
 
+        <!-- LEFT SIDEBAR: CONFIGURATIONS & ADMISSION -->
         <div style="display: flex; flex-direction: column; gap: 10px;">
             
+            <!-- GLOBAL REPORT SETTINGS PANEL -->
             <div class="admin-card">
                 <h2>⚙️ Report Card Settings</h2>
+                <div class="form-control">
+                    <label>Upload School Logo</label>
+                    <input type="file" id="cfg-logo" accept="image/*" onchange="handleLogoUpload(this)">
+                </div>
                 <div class="form-control">
                     <label>Muhula (Term)</label>
                     <select id="cfg-term" onchange="updateGlobalSettings()">
@@ -514,8 +548,9 @@
                 </div>
             </div>
 
+            <!-- ENROLLMENT CARD WITH BULK UPLOAD -->
             <div class="admin-card">
-                <h2>Enroll New Student</h2>
+                <h2>Student Admission</h2>
                 <form id="enrollment-form" onsubmit="handleEnrollment(event)">
                     <div class="form-control">
                         <label>Student Full Name</label>
@@ -545,11 +580,22 @@
                             <option value="Stream C">Stream C</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn-submit">Admit Student</button>
+                    <button type="submit" class="btn-submit">Admit Single Student</button>
                 </form>
+                
+                <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 15px 0;">
+                
+                <!-- BULK ADMISSION CONTROLS -->
+                <div>
+                    <label style="display: block; font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">Bulk CSV Admission</label>
+                    <input type="file" id="bulk-csv-file" accept=".csv" style="font-size: 12px; margin-bottom: 8px; width:100%;">
+                    <button type="button" class="btn-submit" style="background-color: #0284c7;" onclick="handleBulkUpload()">Upload Bulk CSV</button>
+                    <a href="javascript:void(0)" class="btn-secondary" onclick="downloadCSVTemplate()">📥 Download CSV Template</a>
+                </div>
             </div>
         </div>
 
+        <!-- RIGHT WORKSPACE SECTION -->
         <div class="workspace-split">
             <div class="admin-card">
                 <h2>Global Enrolled Database</h2>
@@ -589,6 +635,7 @@
                 </table>
             </div>
 
+            <!-- DETAIL MARKS INTERACTIVE GRIDS -->
             <div class="admin-card">
                 <h2>Edit Term Assessments (T1, T2, Mid, Annual)</h2>
                 <div id="active-student-banner" style="font-weight: bold; color: var(--primary-blue); margin-bottom: 10px;">
@@ -608,10 +655,11 @@
         </div>
     </div>
 
+    <!-- MAIN EXPORT LIVE PREVIEW CONTAINER -->
     <div id="print-output-container"></div>
 
     <script>
-        // Data ya wanafunzi
+        // Data ya msingi
         let globalStudents = [
             { id: 1, name: "ZAINAB ALLY", gender: "F", form: "F1", stream: "Stream A", checkedForPrint: true, marks: {
                 "his_maadili": { t1: 80, t2: 70, mid: 75, ann: 78, rnk: 1 }, "hist": { t1: 60, t2: 65, mid: 70, ann: 68, rnk: 2 },
@@ -652,11 +700,11 @@
         ];
 
         let selectedStudentId = 6;
+        let uploadedLogoBase64 = "";
 
-        // Kitufe cha Back to Panel kufanya kazi
         function backToPanel() {
-            // Inarudisha kwenye dashboard yako kuu (Badilisha 'index.html' au weka faili husika kama dashboard.html)
-            window.location.href = "dashboard.html"; 
+            // Imebadilishwa kwenda main index/dashboard yako halisi kuzuia 404 error
+            window.location.href = "index.html"; 
         }
 
         function init() {
@@ -665,7 +713,67 @@
             selectStudent(selectedStudentId);
         }
 
-        // Kazi ya kusasisha ripoti zote mara moja pale mipangilio inapobadilishwa upande wa kushoto
+        function handleLogoUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedLogoBase64 = e.target.result;
+                    generateAllReportCardsHTML();
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function downloadCSVTemplate() {
+            const csvContent = "data:text/csv;charset=utf-8,FullName,Gender,Form,Stream\nJOHN DOE,M,F1,Stream A\nANNA SMITH,F,F3,Stream B";
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "student_admission_template.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function handleBulkUpload() {
+            const fileInput = document.getElementById('bulk-csv-file');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert("Tafadhali chagua faili la CSV kwanza!");
+                return;
+            }
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split("\n");
+                let addedCount = 0;
+                
+                for(let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    const cols = lines[i].split(",");
+                    if (cols.length >= 4) {
+                        const name = cols[0].trim().toUpperCase();
+                        const gender = cols[1].trim().toUpperCase();
+                        const form = cols[2].trim().toUpperCase();
+                        const stream = cols[3].trim();
+                        
+                        if(name) {
+                            globalStudents.push({
+                                id: Date.now() + i,
+                                name, gender, form, stream,
+                                marks: {}, checkedForPrint: true
+                            });
+                            addedCount++;
+                        }
+                    }
+                }
+                alert(`Usajili wa Misa: Wanafunzi ${addedCount} wameongezwa kwa mafanikio!`);
+                renderRosterTable();
+                generateAllReportCardsHTML();
+            };
+            reader.readAsText(file);
+        }
+
         function updateGlobalSettings() {
             generateAllReportCardsHTML();
         }
@@ -848,6 +956,7 @@
                     gradePoints.push(pts);
                 }
 
+                // OMITTED Saini Column from Table Row cells
                 tableRowsHTML += `
                     <tr>
                         <td class="subject-name">${sub.name}</td>
@@ -858,7 +967,6 @@
                         <td style="font-weight:bold;">${daraja}</td>
                         <td>${sData.rnk || "-"}</td>
                         <td>${maoni}</td>
-                        <td><span style="font-size:9px;color:#888;">Sign</span></td>
                     </tr>
                 `;
             });
@@ -917,7 +1025,6 @@
             const container = document.getElementById('print-output-container');
             container.innerHTML = ''; 
 
-            // Kuchukua thamani kutoka kwenye mipangilio ya Panel (Settings) Upande wa Kushoto
             const globalTerm = document.getElementById('cfg-term').value;
             const globalYear = document.getElementById('cfg-year').value;
             const globalCloseDate = document.getElementById('cfg-close-date').value;
@@ -956,9 +1063,15 @@
                 reportPageDiv.id = `report-card-id-${student.id}`;
                 reportPageDiv.className = `report-card-page ${student.id === selectedStudentId ? '' : 'hidden-print'}`;
                 
+                // logic ya kuweka ama uploaded image au placeholder ya maandishi
+                let logoSectionHTML = uploadedLogoBase64 ? 
+                    `<img src="${uploadedLogoBase64}" class="logo-img" alt="Logo">` : 
+                    `<div class="logo-placeholder">NEMBO YA SHULE</div>`;
+
+                // OMITTED Saini Column header from Data Table
                 reportPageDiv.innerHTML = `
                     <div class="report-header">
-                        <div class="logo-placeholder">NEMBO YA SHULE</div>
+                        ${logoSectionHTML}
                         <p class="header-title">OFISI YA RAIS</p>
                         <p class="header-title">TAWALA ZA MIKOA NA SERIKALI ZA MITAA</p>
                         <p class="header-title">HALMASHAURI YA JIJI LA ARUSHA</p>
@@ -979,15 +1092,14 @@
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th style="width: 25%;">SOMO</th>
+                                <th style="width: 30%;">SOMO</th>
                                 <th style="width: 11%;">MAZOEZI</th>
                                 <th style="width: 11%;">MTIHANI</th>
                                 <th style="width: 11%;">JUMLA</th>
                                 <th style="width: 11%;">WASTANI</th>
                                 <th style="width: 10%;">DARAJA</th>
                                 <th style="width: 10%;">NAFASI</th>
-                                <th style="width: 21%;">MAONI YA MWALIMU</th>
-                                <th style="width: 10%;">SAINI</th>
+                                <th style="width: 26%;">MAONI YA MWALIMU</th>
                             </tr>
                         </thead>
                         <tbody>${res.tableRowsHTML}</tbody>
