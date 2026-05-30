@@ -11,6 +11,7 @@
             --border-color: #000;
             --bg-light: #f8fafc;
             --panel-bg: #ffffff;
+            --accent-green: #10b981;
         }
 
         body {
@@ -19,6 +20,55 @@
             padding: 0;
             background-color: #e2e8f0;
             color: #000;
+        }
+
+        /* --- CONTROL PANEL NAVIGATION BAR (NEW) --- */
+        .main-control-panel {
+            background-color: #0f172a;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--primary-blue);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        .panel-brand {
+            color: #fff;
+            font-weight: bold;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-links {
+            display: flex;
+            gap: 12px;
+        }
+
+        .panel-btn {
+            background-color: #334155;
+            color: #f8fafc;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .panel-btn:hover {
+            background-color: var(--primary-blue);
+            color: white;
+        }
+
+        .panel-btn.active {
+            background-color: var(--primary-blue);
+            font-weight: bold;
+            box-shadow: 0 0 8px rgba(37, 99, 235, 0.5);
         }
 
         /* --- Admin Layout Container (Hidden on Print) --- */
@@ -45,25 +95,10 @@
 
         .admin-header-bar h1 {
             margin: 0;
-            font-size: 20px;
+            font-size: 18px;
             display: flex;
             align-items: center;
             gap: 10px;
-        }
-
-        .btn-panel {
-            background-color: #475569;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.2s;
-        }
-
-        .btn-panel:hover {
-            background-color: #334155;
         }
 
         .admin-card {
@@ -483,9 +518,9 @@
             margin-bottom: 15px;
         }
 
-        /* --- Print Rules: OMITS Admin Dashboard & Enrolled Roster --- */
+        /* --- Print Rules: OMITS Navigation bar, Sidebar & Database --- */
         @media print {
-            #admin-container {
+            .main-control-panel, #admin-container {
                 display: none !important;
             }
             body {
@@ -509,12 +544,25 @@
 </head>
 <body>
 
-    <!-- ADMINISTRATIVE DASHBOARD PANEL -->
+    <!-- MAIN CONTROL PANEL NAVIGATION BAR (Acess fields for Admin, Students, Teachers, etc.) -->
+    <div class="main-control-panel">
+        <div class="panel-brand">
+            🏫 <span>TT-PRO MANAGEMENT SYSTEM</span>
+        </div>
+        <div class="panel-links">
+            <a href="index.html" class="panel-btn">🎛️ Dashboard Kuu</a>
+            <a href="#admin-section" class="panel-btn active" onclick="switchView('admin')">👑 Admin Panel</a>
+            <a href="#students-section" class="panel-btn" onclick="switchView('students')">🧑‍🎓 Wanafunzi (Roster)</a>
+            <a href="#teachers-section" class="panel-btn" onclick="switchView('teachers')">👩‍🏫 Walimu</a>
+            <a href="#subjects-section" class="panel-btn" onclick="switchView('subjects')">📚 Masomo</a>
+        </div>
+    </div>
+
+    <!-- ADMINISTRATIVE WORKSPACE -->
     <div id="admin-container">
         <div class="admin-header-bar">
-            <h1>🎓 Student Admission & Bulk Report Card Manager</h1>
-            <!-- Kitufe kilichoelekezwa upya kuzuia 404 kwenye Github Pages -->
-            <button class="btn-panel" onclick="backToPanel()">← Back to Panel</button>
+            <h1>📊 Student Admission & Bulk Report Card Module</h1>
+            <button class="btn-panel" onclick="backToPanel()">← Rudi Kwenye Panel</button>
         </div>
 
         <!-- LEFT SIDEBAR: CONFIGURATIONS & ADMISSION -->
@@ -522,9 +570,9 @@
             
             <!-- GLOBAL REPORT SETTINGS PANEL -->
             <div class="admin-card">
-                <h2>⚙️ Report Card Settings</h2>
+                <h2>⚙️ Mipangilio ya Ripoti</h2>
                 <div class="form-control">
-                    <label>Upload School Logo</label>
+                    <label>Pakia Nembo ya Shule (Logo)</label>
                     <input type="file" id="cfg-logo" accept="image/*" onchange="handleLogoUpload(this)">
                 </div>
                 <div class="form-control">
@@ -550,21 +598,21 @@
 
             <!-- ENROLLMENT CARD WITH BULK UPLOAD -->
             <div class="admin-card">
-                <h2>Student Admission</h2>
+                <h2>Usajili Mpya</h2>
                 <form id="enrollment-form" onsubmit="handleEnrollment(event)">
                     <div class="form-control">
-                        <label>Student Full Name</label>
-                        <input type="text" id="stu-fullname" placeholder="E.G. CHUMA KANYAMA" required>
+                        <label>Jina Kamili la Mwanafunzi</label>
+                        <input type="text" id="stu-fullname" placeholder="MFANO: CHUMA KANYAMA" required>
                     </div>
                     <div class="form-control">
-                        <label>Gender</label>
+                        <label>Jinsia</label>
                         <select id="stu-gender">
-                            <option value="F">Female</option>
-                            <option value="M">Male</option>
+                            <option value="F">Mke (Female)</option>
+                            <option value="M">Mume (Male)</option>
                         </select>
                     </div>
                     <div class="form-control">
-                        <label>Form Level</label>
+                        <label>Kidato (Form)</label>
                         <select id="stu-form">
                             <option value="F1">F1</option>
                             <option value="F2">F2</option>
@@ -573,24 +621,24 @@
                         </select>
                     </div>
                     <div class="form-control">
-                        <label>Assigned Stream</label>
+                        <label>Mkondo (Stream)</label>
                         <select id="stu-stream">
                             <option value="Stream A">Stream A</option>
                             <option value="Stream B">Stream B</option>
                             <option value="Stream C">Stream C</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn-submit">Admit Single Student</button>
+                    <button type="submit" class="btn-submit">Sajili Mwanafunzi MMOJA</button>
                 </form>
                 
                 <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 15px 0;">
                 
                 <!-- BULK ADMISSION CONTROLS -->
                 <div>
-                    <label style="display: block; font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">Bulk CSV Admission</label>
+                    <label style="display: block; font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">Sajili kwa Mkupuo (CSV)</label>
                     <input type="file" id="bulk-csv-file" accept=".csv" style="font-size: 12px; margin-bottom: 8px; width:100%;">
-                    <button type="button" class="btn-submit" style="background-color: #0284c7;" onclick="handleBulkUpload()">Upload Bulk CSV</button>
-                    <a href="javascript:void(0)" class="btn-secondary" onclick="downloadCSVTemplate()">📥 Download CSV Template</a>
+                    <button type="button" class="btn-submit" style="background-color: #0284c7;" onclick="handleBulkUpload()">Pakia CSV faili</button>
+                    <a href="javascript:void(0)" class="btn-secondary" onclick="downloadCSVTemplate()">📥 Pakua Kiolezo cha CSV</a>
                 </div>
             </div>
         </div>
@@ -598,18 +646,18 @@
         <!-- RIGHT WORKSPACE SECTION -->
         <div class="workspace-split">
             <div class="admin-card">
-                <h2>Global Enrolled Database</h2>
+                <h2>Orodha Kuu ya Wanafunzi Waliosajiliwa</h2>
                 <div class="db-filters">
-                    <input type="text" id="search-filter" placeholder="🔍 Search student name..." oninput="renderRosterTable()" style="flex: 2;">
+                    <input type="text" id="search-filter" placeholder="🔍 Tafuta jina la mwanafunzi..." oninput="renderRosterTable()" style="flex: 2;">
                     <select id="form-filter" onchange="renderRosterTable()" style="flex: 1;">
-                        <option value="All">All Forms</option>
+                        <option value="All">Vidato Vyote</option>
                         <option value="F1">F1</option>
                         <option value="F2">F2</option>
                         <option value="F3">F3</option>
                         <option value="F4">F4</option>
                     </select>
                     <select id="stream-filter" onchange="renderRosterTable()" style="flex: 1;">
-                        <option value="All">All Streams</option>
+                        <option value="All">Mikondo Vyote</option>
                         <option value="Stream A">Stream A</option>
                         <option value="Stream B">Stream B</option>
                         <option value="Stream C">Stream C</option>
@@ -617,18 +665,18 @@
                 </div>
 
                 <div class="bulk-actions-bar">
-                    <label><input type="checkbox" id="select-all-box" onchange="toggleSelectAll(this)"> Select All for Bulk Print</label>
-                    <span id="selected-count-badge">Selected: 1 student(s)</span>
+                    <label><input type="checkbox" id="select-all-box" onchange="toggleSelectAll(this)"> Chagua Wote kwa Kuchapa</label>
+                    <span id="selected-count-badge">Waliochaguliwa: 1 student(s)</span>
                 </div>
 
                 <table class="roster-table">
                     <thead>
                         <tr>
-                            <th style="width: 40px; text-align: center;">Print</th>
-                            <th>Student Name</th>
-                            <th>Gender</th>
-                            <th>Class Room</th>
-                            <th>Stream Block</th>
+                            <th style="width: 40px; text-align: center;">Chapa</th>
+                            <th>Jina la Mwanafunzi</th>
+                            <th>Jinsia</th>
+                            <th>Kidato</th>
+                            <th>Mkondo</th>
                         </tr>
                     </thead>
                     <tbody id="roster-tbody"></tbody>
@@ -637,7 +685,7 @@
 
             <!-- DETAIL MARKS INTERACTIVE GRIDS -->
             <div class="admin-card">
-                <h2>Edit Term Assessments (T1, T2, Mid, Annual)</h2>
+                <h2>Ingiza Alama za Mitihani (T1, T2, Mid, Annual)</h2>
                 <div id="active-student-banner" style="font-weight: bold; color: var(--primary-blue); margin-bottom: 10px;">
                     Selected: PAULO THOMAS LOISUJAKU
                 </div>
@@ -645,10 +693,10 @@
                 
                 <div class="print-btn-group">
                     <button class="btn-print-action btn-single" onclick="printSingleReport()">
-                        🖨️ Print Selected Single Report
+                        🖨️ Chapa Ripoti ya Huyu Mmoja
                     </button>
                     <button class="btn-print-action btn-bulk" onclick="printBulkReports()">
-                        📚 Bulk Print All Checked Reports
+                        📚 Chapa Ripoti za Wote Waliochaguliwa
                     </button>
                 </div>
             </div>
@@ -702,9 +750,24 @@
         let selectedStudentId = 6;
         let uploadedLogoBase64 = "";
 
+        // Njia ya kurudi kwenye index ya mfumo wako mkuu ili kuzuia kosa la 404
         function backToPanel() {
-            // Imebadilishwa kwenda main index/dashboard yako halisi kuzuia 404 error
             window.location.href = "index.html"; 
+        }
+
+        // Kazi ya kuswitch kurasa mbalimbali kutoka kwenye Control Panel Navigation Bar ya Juu
+        function switchView(viewName) {
+            // Hapa unaweza kuelekeza kwenda kwenye kurasa zako halisi za mfumo wako
+            if(viewName === 'teachers') {
+                alert("Unaelekezwa kwenye moduli ya Walimu/Timetable Teacher slips...");
+                // window.location.href = "teachers.html"; (Ondoa maoni ukiweka faili hili)
+            } else if (viewName === 'subjects') {
+                alert("Unaelekezwa kwenye orodha ya masomo...");
+            } else if (viewName === 'students') {
+                document.getElementById('search-filter').focus();
+            } else {
+                alert("Upo kwenye moduli ya ripoti na usajili wa ki-Admin kwa sasa.");
+            }
         }
 
         function init() {
@@ -767,7 +830,7 @@
                         }
                     }
                 }
-                alert(`Usajili wa Misa: Wanafunzi ${addedCount} wameongezwa kwa mafanikio!`);
+                alert(`Wanafunzi ${addedCount} wameongezwa kwa mkupuo wa CSV!`);
                 renderRosterTable();
                 generateAllReportCardsHTML();
             };
@@ -956,7 +1019,6 @@
                     gradePoints.push(pts);
                 }
 
-                // OMITTED Saini Column from Table Row cells
                 tableRowsHTML += `
                     <tr>
                         <td class="subject-name">${sub.name}</td>
@@ -1063,12 +1125,10 @@
                 reportPageDiv.id = `report-card-id-${student.id}`;
                 reportPageDiv.className = `report-card-page ${student.id === selectedStudentId ? '' : 'hidden-print'}`;
                 
-                // logic ya kuweka ama uploaded image au placeholder ya maandishi
                 let logoSectionHTML = uploadedLogoBase64 ? 
                     `<img src="${uploadedLogoBase64}" class="logo-img" alt="Logo">` : 
                     `<div class="logo-placeholder">NEMBO YA SHULE</div>`;
 
-                // OMITTED Saini Column header from Data Table
                 reportPageDiv.innerHTML = `
                     <div class="report-header">
                         ${logoSectionHTML}
@@ -1207,7 +1267,7 @@
             });
 
             if(!anyChecked) {
-                alert("Tafadhali chagua angalau mwanafunzi mmoja kwenye orodha kutoa Bulk Print!");
+                alert("Tafadhali chagua angalau mwanafunzi mmoja!");
                 return;
             }
             window.print();
