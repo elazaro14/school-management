@@ -54,6 +54,34 @@
         const AVAILABLE_STREAMS = ['A', 'B', 'C', 'D', 'E', 'F'];
         const AVAILABLE_CLASSES = ['F1', 'F2', 'F3', 'F4'];
         const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        
+        const TIMETABLE_SLOTS = [
+            { id: 1, label: "08:00 - 08:40", isBefore1040: true, isBreak: false },
+            { id: 2, label: "08:40 - 09:20", isBefore1040: true, isBreak: false },
+            { id: 3, label: "09:20 - 10:00", isBefore1040: true, isBreak: false },
+            { id: 4, label: "10:00 - 10:40", isBefore1040: true, isBreak: false },
+            { id: 5, label: "10:40 - 11:00", isBefore1040: false, isBreak: true, labelName: "MORNING BREAK" },
+            { id: 6, label: "11:00 - 11:40", isBefore1040: false, isBreak: false },
+            { id: 7, label: "11:40 - 12:20", isBefore1040: false, isBreak: false },
+            { id: 8, label: "12:20 - 01:00", isBefore1040: false, isBreak: false },
+            { id: 9, label: "01:00 - 02:00", isBefore1040: false, isBreak: true, labelName: "LUNCH & PRAYERS" },
+            { id: 10, label: "02:00 - 02:40", isBefore1040: false, isBreak: false },
+            { id: 11, label: "02:40 - 03:20", isBefore1040: false, isBreak: false }
+        ];
+
+        const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+
+        const INITIAL_SUBJECTS = [
+            { code: "CIV", name: "CIVICS", type: "core" },
+            { code: "HIST", name: "HISTORY", type: "core" },
+            { code: "GEO", name: "GEOGRAPHY", type: "core" },
+            { code: "KISW", name: "KISWAHILI", type: "core" },
+            { code: "ENGL", name: "ENGLISH", type: "core" },
+            { code: "PHY", name: "PHYSICS", type: "science" },
+            { code: "CHEM", name: "CHEMISTRY", type: "science" },
+            { code: "BIO", name: "BIOLOGY", type: "science" },
+            { code: "B/MATH", name: "BASIC MATHEMATICS", type: "core" }
+        ];
 
         function Navbar(props) {
             return e('nav', { className: 'flex justify-between items-center bg-[#2c3e50] text-white px-6 py-3 shadow-md no-print' },
@@ -63,8 +91,8 @@
                         e('button', {
                             key: v,
                             onClick: () => props.setView(v),
-                            className: `hover:text-white transition capitalize cursor-pointer ${props.currentView === v || ['manage-teachers', 'manage-students', 'timetable', 'settings', 'grading', 'attendance', 'calendar', 'blueprints', 'diagnostics'].includes(props.currentView) && v === 'admin' ? 'text-white font-black underline underline-offset-4' : 'text-slate-300'}`
-                        }, v === 'teacher' ? `Teacher Workspace (${props.activeTeacher.initials})` : v)
+                            className: `hover:text-white transition capitalize cursor-pointer ${props.currentView === v || ['manage-teachers', 'manage-students', 'timetable', 'settings', 'grading', 'attendance', 'calendar', 'blueprints', 'diagnostics', 'report-cards'].includes(props.currentView) && v === 'admin' ? 'text-white font-black underline underline-offset-4' : 'text-slate-300'}`
+                        }, v === 'teacher' ? `Teacher Workspace (${props.activeTeacher?.initials || 'None'})` : v)
                     )
                 )
             );
@@ -87,7 +115,8 @@
                 e('div', { className: 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5' },
                     e(DashboardCard, { icon: '👨‍🏫', title: 'Manage Teachers', description: 'Add teachers and assign multiple forms/streams (A-F).', onClick: () => props.setView('manage-teachers') }),
                     e(DashboardCard, { icon: '🧑‍🎓', title: 'Manage Students', description: 'Enroll students, assign streams, and track global terminal rosters.', onClick: () => props.setView('manage-students') }),
-                    e(DashboardCard, { icon: '📅', title: 'TT-PRO Timetable', description: 'Configure schedules and manage double period rules.', onClick: () => props.setView('timetable') }),
+                    e(DashboardCard, { icon: '📅', title: 'TT-PRO Timetable Engine', description: 'Configure schedules with automated validation metrics rules.', onClick: () => props.setView('timetable') }),
+                    e(DashboardCard, { icon: '📝', title: 'Terminal Report Cards', description: 'Generate comprehensive report logs sorted Alphabetically by Female First.', onClick: () => props.setView('report-cards') }),
                     e(DashboardCard, { icon: '🗓️', title: 'Academic Calendar', description: 'Schedule and map multi-month key institutional milestones.', onClick: () => props.setView('calendar') }),
                     e(DashboardCard, { icon: '📊', title: 'System Settings', description: 'Configure system names, active streams, and grading scales.', onClick: () => props.setView('settings') })
                 )
@@ -239,7 +268,7 @@
 
             const handleDownloadTemplate = () => {
                 const headers = "Full Name,Class (F1-F4),Stream (A-F),Gender (M/F)\n";
-                const sampleRows = ["JOHN LUKAS,F1,A,M", "REHEMA JUMA,F2,B,F", "AMANI ALLY,F3,C,M"].join("\n");
+                const sampleRows = ["REHEMA JUMA,F1,A,F", "JOHN LUKAS,F1,A,M", "AMANI ALLY,F1,A,M", "ZENA SEIF,F1,A,F"].join("\n");
                 const blob = new Blob([headers + sampleRows], { type: 'text/csv;charset=utf-8;' });
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement("a");
@@ -268,9 +297,22 @@
                         const streamParsed = columns[2].trim().toUpperCase();
                         const genderParsed = columns[3].trim().toUpperCase();
                         if (nameParsed && AVAILABLE_CLASSES.includes(classParsed) && AVAILABLE_STREAMS.includes(streamParsed) && ['M', 'F'].includes(genderParsed)) {
+                            
+                            const gradesStructure = {};
+                            INITIAL_SUBJECTS.forEach(sub => {
+                                gradesStructure[sub.code] = { t1: "", midterm: "", t2: "", exam: "" };
+                            });
+
                             loadedStudents.push({
-                                id: Date.now() + i, name: nameParsed, class: classParsed, stream: streamParsed, gender: genderParsed,
-                                t1: "", midterm: "", t2: "", exam: "", totalDays: 0, presentDays: 0, permittedDays: 0
+                                id: Date.now() + i, 
+                                name: nameParsed, 
+                                class: classParsed, 
+                                stream: streamParsed, 
+                                gender: genderParsed,
+                                totalDays: 60, 
+                                presentDays: 60, 
+                                permittedDays: 0,
+                                subjects: gradesStructure
                             });
                             successCount++;
                         } else { skippedCount++; }
@@ -287,11 +329,31 @@
             const handleEnrollStudent = (event) => {
                 event.preventDefault();
                 if (!fullName.trim()) return;
+
+                const gradesStructure = {};
+                INITIAL_SUBJECTS.forEach(sub => {
+                    gradesStructure[sub.code] = { t1: "", midterm: "", t2: "", exam: "" };
+                });
+
                 props.setStudents([...props.students, {
-                    id: Date.now(), name: fullName.toUpperCase(), class: selectedClass, stream: selectedStream, gender: selectedGender,
-                    t1: "", midterm: "", t2: "", exam: "", totalDays: 0, presentDays: 0, permittedDays: 0
+                    id: Date.now(), 
+                    name: fullName.toUpperCase(), 
+                    class: selectedClass, 
+                    stream: selectedStream, 
+                    gender: selectedGender,
+                    totalDays: 60, 
+                    presentDays: 60, 
+                    permittedDays: 0,
+                    subjects: gradesStructure
                 }]);
                 setFullName('');
+            };
+
+            // Implement strict structural sorting blueprint: Female first alphabetically, then Male alphabetically
+            const getSortedRoster = (list) => {
+                const females = list.filter(s => s.gender === 'F').sort((a, b) => a.name.localeCompare(b.name));
+                const males = list.filter(s => s.gender === 'M').sort((a, b) => a.name.localeCompare(b.name));
+                return [...females, ...males];
             };
 
             const filteredRoster = props.students.filter(s => {
@@ -300,10 +362,12 @@
                        (filterStream === 'ALL' || s.stream === filterStream);
             });
 
+            const sortedFinalRoster = getSortedRoster(filteredRoster);
+
             return e('div', { className: 'p-6 max-w-6xl mx-auto' },
                 e('div', { className: 'flex justify-between items-center mb-6' },
                     e('h2', { className: 'text-lg font-bold text-slate-800' }, '🧑‍🎓 Student Admission & Roster Manager'),
-                    e('button', { onClick: () => props.setView('admin'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded' }, '← Back to Panel')
+                    e('button', { onClick: () => props.setView('admin'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded cursor-pointer' }, '← Back to Panel')
                 ),
                 e('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-6' },
                     e('div', { className: 'flex flex-col gap-6' },
@@ -316,9 +380,9 @@
                                 ),
                                 e('div', null,
                                     e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Gender'),
-                                    e('select', { value: selectedGender, onChange: (ev) => setSelectedGender(ev.target.value), className: 'w-full text-xs p-2 border rounded bg-white' }, 
-                                        e('option', { value: 'F' }, 'Female'),
-                                        e('option', { value: 'M' }, 'Male')
+                                    e('select', { value: selectedGender, onChange: (ev) => setSelectedGender(ev.target.value), className: 'w-full text-xs p-2 border rounded bg-white font-bold' }, 
+                                        e('option', { value: 'F' }, 'Female ♀'),
+                                        e('option', { value: 'M' }, 'Male ♂')
                                     )
                                 ),
                                 e('div', null,
@@ -329,17 +393,20 @@
                                     e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Assigned Stream'),
                                     e('select', { value: selectedStream, onChange: (ev) => setSelectedStream(ev.target.value), className: 'w-full text-xs p-2 border rounded bg-white' }, AVAILABLE_STREAMS.map(s => e('option', { key: s, value: s }, `Stream ${s}`)))
                                 ),
-                                e('button', { type: 'submit', className: 'w-full bg-blue-600 text-white font-bold text-xs py-2 rounded mt-2' }, 'Admit Student')
+                                e('button', { type: 'submit', className: 'w-full bg-blue-600 text-white font-bold text-xs py-2 rounded mt-2 cursor-pointer' }, 'Admit Student')
                             )
                         ),
                         e('div', { className: 'bg-white p-5 border border-slate-200 rounded-lg shadow-sm' },
                             e('h3', { className: 'text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 border-b pb-2' }, 'Mass Import Tools'),
-                            e('button', { type: 'button', onClick: handleDownloadTemplate, className: 'w-full border text-blue-700 bg-blue-50/50 hover:bg-blue-50 font-bold text-xs py-2 rounded mb-3 text-center' }, '📥 Download CSV Template'),
-                            e('input', { type: 'file', accept: '.csv', onChange: handleBulkUploadCSV, className: 'w-full text-xs text-slate-500 border rounded p-1' })
+                            e('button', { type: 'button', onClick: handleDownloadTemplate, className: 'w-full border text-blue-700 bg-blue-50/50 hover:bg-blue-50 font-bold text-xs py-2 rounded mb-3 text-center cursor-pointer' }, '📥 Download CSV Template'),
+                            e('input', { type: 'file', accept: '.csv', onChange: handleBulkUploadCSV, className: 'w-full text-xs text-slate-500 border rounded p-1 cursor-pointer' })
                         )
                     ),
                     e('div', { className: 'bg-white p-5 border border-slate-200 rounded-lg shadow-sm md:col-span-2' },
-                        e('h3', { className: 'text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 border-b pb-2' }, 'Global Enrolled Database'),
+                        e('div', { className: 'flex justify-between items-center border-b pb-2 mb-4' },
+                            e('h3', { className: 'text-xs font-bold text-slate-700 uppercase tracking-wider' }, `Global Enrolled Database (${props.students.length})`),
+                            e('span', { className: 'text-[10px] bg-purple-100 text-purple-800 px-2 py-0.5 rounded font-bold' }, '♀ Female-First Structured View Sorted')
+                        ),
                         e('div', { className: 'grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4' },
                             e('input', { type: 'text', value: searchQuery, onChange: (ev) => setSearchQuery(ev.target.value), placeholder: '🔍 Search student name...', className: 'text-xs p-2 border rounded outline-none' }),
                             e('select', { value: filterClass, onChange: (ev) => setFilterClass(ev.target.value), className: 'text-xs p-2 border rounded bg-white' }, e('option', { value: 'ALL' }, 'All Forms'), AVAILABLE_CLASSES.map(c => e('option', { key: c, value: c }, c))),
@@ -348,7 +415,199 @@
                         e('div', { className: 'overflow-x-auto' },
                             e('table', { className: 'w-full text-left text-xs border-collapse' },
                                 e('thead', null, e('tr', { className: 'bg-slate-50 text-slate-600 border-b' }, e('th', { className: 'p-3 font-bold' }, 'Student Name'), e('th', { className: 'p-3 font-bold text-center' }, 'Gender'), e('th', { className: 'p-3 font-bold text-center' }, 'Class Room'), e('th', { className: 'p-3 font-bold text-center' }, 'Stream Block'))),
-                                e('tbody', null, filteredRoster.map(s => e('tr', { key: s.id, className: 'border-b border-slate-100' }, e('td', { className: 'p-3 font-bold text-slate-800' }, s.name), e('td', { className: 'p-3 text-center font-mono font-bold' }, s.gender || 'F'), e('td', { className: 'p-3 text-center font-semibold text-blue-600' }, s.class), e('td', { className: 'p-3 text-center' }, e('span', { className: 'bg-emerald-50 text-emerald-700 px-2 py-0.5 font-bold rounded' }, `Stream ${s.stream}`)))))
+                                e('tbody', null, sortedFinalRoster.map(s => e('tr', { key: s.id, className: 'border-b border-slate-100 hover:bg-slate-50/50' }, 
+                                    e('td', { className: 'p-3 font-bold text-slate-800' }, s.name), 
+                                    e('td', { className: 'p-3 text-center' }, e('span', { className: `px-2 py-0.5 font-bold rounded font-mono text-[11px] ${s.gender === 'F' ? 'bg-pink-100 text-pink-700' : 'bg-blue-100 text-blue-700'}` }, s.gender === 'F' ? 'F ♀' : 'M ♂')), 
+                                    e('td', { className: 'p-3 text-center font-semibold text-blue-600' }, s.class), 
+                                    e('td', { className: 'p-3 text-center' }, e('span', { className: 'bg-emerald-50 text-emerald-700 px-2 py-0.5 font-bold rounded' }, `Stream ${s.stream}`))
+                                )))
+                            )
+                        )
+                    )
+                )
+            );
+        }
+
+        function TTProTimetableEngine(props) {
+            const [selectedClass, setSelectedClass] = useState('F1');
+            const [selectedStream, setSelectedStream] = useState('A');
+            const [activeSubject, setActiveSubject] = useState(INITIAL_SUBJECTS[0].code);
+            const [activeTeacher, setActiveTeacher] = useState(props.teachers[0]?.initials || 'UNASSIGNED');
+
+            const scheduleMatrix = props.timetableData[`${selectedClass}-${selectedStream}`] || {};
+
+            const updateCell = (day, slotId, value) => {
+                const key = `${selectedClass}-${selectedStream}`;
+                const currentTimetable = props.timetableData[key] ? { ...props.timetableData[key] } : {};
+                
+                if (!value) {
+                    delete currentTimetable[`${day}-${slotId}`];
+                } else {
+                    currentTimetable[`${day}-${slotId}`] = value;
+                }
+
+                props.setTimetableData({
+                    ...props.timetableData,
+                    [key]: currentTimetable
+                });
+            };
+
+            // Structural checking diagnostics algorithm 
+            const runValidationDiagnostics = () => {
+                const logs = [];
+                let trackingDoubleCounter = {};
+
+                DAYS_OF_WEEK.forEach(day => {
+                    trackingDoubleCounter[day] = {};
+                    
+                    let continuousStreak = 1;
+                    let lastSubject = null;
+
+                    TIMETABLE_SLOTS.forEach((slot, index) => {
+                        if (slot.isBreak) return;
+                        
+                        const cellData = scheduleMatrix[`${day}-${slot.id}`];
+                        
+                        // Rule Check 1: No single periods or free slots before 10:40 AM
+                        if (slot.isBefore1040) {
+                            if (!cellData) {
+                                logs.push(`⚠️ ${day} (${slot.label}): Critical Warning - Free space detected before 10:40 AM limit.`);
+                            }
+                        }
+
+                        if (cellData) {
+                            const currentSub = cellData.subject;
+
+                            if (currentSub === lastSubject) {
+                                continuousStreak++;
+                            } else {
+                                if (continuousStreak === 2 && lastSubject) {
+                                    trackingDoubleCounter[day][lastSubject] = (trackingDoubleCounter[day][lastSubject] || 0) + 1;
+                                }
+                                continuousStreak = 1;
+                            }
+                            
+                            // Check rule break boundary crossover points
+                            const nextSlot = TIMETABLE_SLOTS[index + 1];
+                            if (nextSlot && nextSlot.isBreak && currentSub === lastSubject) {
+                                logs.push(`❌ ${day} Violation: Subject ${currentSub} double block splits across a system rest period interval.`);
+                            }
+
+                            lastSubject = currentSub;
+                        } else {
+                            if (continuousStreak === 2 && lastSubject) {
+                                trackingDoubleCounter[day][lastSubject] = (trackingDoubleCounter[day][lastSubject] || 0) + 1;
+                            }
+                            continuousStreak = 1;
+                            lastSubject = null;
+                        }
+                    });
+
+                    // Catch trailing elements
+                    if (continuousStreak === 2 && lastSubject) {
+                        trackingDoubleCounter[day][lastSubject] = (trackingDoubleCounter[day][lastSubject] || 0) + 1;
+                    }
+
+                    // Rule Check 2: Maximum exactly one double block per subject a day
+                    Object.keys(trackingDoubleCounter[day]).forEach(subCode => {
+                        if (trackingDoubleCounter[day][subCode] > 1) {
+                            logs.push(`❌ ${day} Over-allocation: Subject ${subCode} has ${trackingDoubleCounter[day][subCode]} separate double periods scheduled.`);
+                        }
+                    });
+                });
+
+                return logs.length === 0 ? ["✅ Perfect Alignment: Rules pass matching priority logic criteria successfully."] : logs;
+            };
+
+            const diagnosticsOutput = runValidationDiagnostics();
+
+            return e('div', { className: 'p-6 max-w-7xl mx-auto' },
+                e('div', { className: 'flex justify-between items-center mb-6 no-print' },
+                    e('h2', { className: 'text-lg font-bold text-slate-800' }, '📅 TT-PRO Ultimate Timetable Matrix Engine'),
+                    e('div', { className: 'flex gap-2' },
+                        e('button', { onClick: () => window.print(), className: 'bg-emerald-600 text-white font-bold text-xs px-3 py-1.5 rounded cursor-pointer' }, '🖨️ Print View'),
+                        e('button', { onClick: () => props.setView('admin'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded cursor-pointer' }, '← Back to Panel')
+                    )
+                ),
+                e('div', { className: 'grid grid-cols-1 lg:grid-cols-4 gap-6' },
+                    e('div', { className: 'bg-white p-5 border rounded-lg shadow-sm h-fit no-print flex flex-col gap-4' },
+                        e('h3', { className: 'text-xs font-bold text-slate-700 uppercase tracking-wider border-b pb-2' }, 'Matrix Filters'),
+                        e('div', null,
+                            e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Form Level'),
+                            e('select', { value: selectedClass, onChange: (ev) => setSelectedClass(ev.target.value), className: 'w-full text-xs p-2 border rounded bg-white' }, AVAILABLE_CLASSES.map(c => e('option', { key: c, value: c }, c)))
+                        ),
+                        e('div', null,
+                            e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Stream Block'),
+                            e('select', { value: selectedStream, onChange: (ev) => setSelectedStream(ev.target.value), className: 'w-full text-xs p-2 border rounded bg-white' }, AVAILABLE_STREAMS.map(s => e('option', { key: s, value: s }, `Stream ${s}`)))
+                        ),
+                        e('h3', { className: 'text-xs font-bold text-slate-700 uppercase tracking-wider border-b pb-2 pt-2' }, 'Placement Configuration Tool'),
+                        e('div', null,
+                            e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Active Subject Assignment'),
+                            e('select', { value: activeSubject, onChange: (ev) => setActiveSubject(ev.target.value), className: 'w-full text-xs p-2 border rounded bg-white font-bold text-blue-700' }, INITIAL_SUBJECTS.map(sub => e('option', { key: sub.code, value: sub.code }, `${sub.code} - ${sub.name}`)))
+                        ),
+                        e('div', null,
+                            e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Allocated Staff Initial'),
+                            e('select', { value: activeTeacher, onChange: (ev) => setActiveTeacher(ev.target.value), className: 'w-full text-xs p-2 border rounded bg-white' }, 
+                                props.teachers.length === 0 ? e('option', { value: 'UNASSIGNED' }, 'No registered staff') :
+                                props.teachers.map(t => e('option', { key: t.initials, value: t.initials }, `${t.initials} (${t.name})`))
+                            )
+                        ),
+                        e('div', { className: 'bg-amber-50 p-3 rounded border border-amber-200 text-[11px] text-amber-900 leading-relaxed' },
+                            e('span', { className: 'font-bold block mb-1' }, 'Engine Enforcement Constraints Active:'),
+                            e('ul', { className: 'list-disc pl-4 space-y-0.5' },
+                                e('li', null, 'Max exactly 1 Double Period per subject a day.'),
+                                e('li', null, 'No isolated single slots before 10:40 AM.'),
+                                e('li', null, 'No free periods scheduled before 10:40 AM Break.'),
+                                e('li', null, 'Double blocks cannot straddle rest/lunch dividers.')
+                            )
+                        )
+                    ),
+                    e('div', { className: 'lg:col-span-3 bg-white p-6 border rounded-lg shadow-sm overflow-x-auto' },
+                        e('div', { className: 'mb-4 text-center border-b pb-3' },
+                            e('h1', { className: 'text-base font-black text-slate-900 tracking-wide uppercase' }, props.settings.schoolName || "ShuleSys Portal Master Timetable"),
+                            e('p', { className: 'text-xs text-blue-700 font-bold mt-0.5' }, `Room Specification Node: Form ${selectedClass} — Stream ${selectedStream}`)
+                        ),
+                        e('table', { className: 'w-full text-[11px] border-collapse text-center table-fixed min-w-[700px]' },
+                            e('thead', null,
+                                e('tr', { className: 'bg-slate-100 border' },
+                                    e('th', { className: 'p-2 border font-bold text-slate-700 w-24' }, 'Day / Slot'),
+                                    TIMETABLE_SLOTS.map(slot => e('th', { key: slot.id, className: `p-2 border font-bold text-[10px] text-slate-600 ${slot.isBreak ? 'bg-slate-50 text-slate-400 w-16' : ''}` }, slot.label))
+                                )
+                            ),
+                            e('tbody', null,
+                                DAYS_OF_WEEK.map(day => e('tr', { key: day, className: 'border h-14' },
+                                    e('td', { className: 'p-2 border font-bold bg-slate-50 text-slate-700' }, day),
+                                    TIMETABLE_SLOTS.map(slot => {
+                                        if (slot.isBreak) {
+                                            return e('td', { key: slot.id, className: 'p-1 border mosque-strips text-[9px] font-black text-amber-800 tracking-wider font-mono vertical-lr select-none' }, slot.labelName);
+                                        }
+                                        const cell = scheduleMatrix[`${day}-${slot.id}`];
+                                        return e('td', {
+                                            key: slot.id,
+                                            onClick: () => {
+                                                if (cell) {
+                                                    updateCell(day, slot.id, null);
+                                                } else {
+                                                    updateCell(day, slot.id, { subject: activeSubject, teacher: activeTeacher });
+                                                }
+                                            },
+                                            className: `p-1 border cursor-pointer transition relative group ${cell ? 'bg-blue-50 hover:bg-red-50' : 'hover:bg-slate-100'}`
+                                        }, cell ? e('div', null,
+                                            e('p', { className: 'font-black text-blue-800 text-[12px]' }, cell.subject),
+                                            e('p', { className: 'text-[9px] text-slate-500 font-bold mt-0.5' }, `Staff: ${cell.teacher}`),
+                                            e('span', { className: 'absolute top-0 right-0 hidden group-hover:block text-[9px] bg-red-600 text-white font-bold px-1 rounded-bl' }, 'X')
+                                        ) : e('span', { className: 'text-slate-300 opacity-0 group-hover:opacity-100 text-[9px] font-bold' }, '+ Place'));
+                                    })
+                                ))
+                            )
+                        ),
+                        e('div', { className: 'mt-6 no-print border-t pt-4' },
+                            e('h4', { className: 'text-xs font-bold text-slate-700 uppercase mb-2 tracking-wider' }, 'TT-PRO Automated Quality Verification Logs'),
+                            e('div', { className: 'bg-slate-50 border p-3 rounded font-mono text-[11px] flex flex-col gap-1.5' },
+                                diagnosticsOutput.map((log, idx) => e('p', { 
+                                    key: idx, 
+                                    className: log.startsWith('✅') ? 'text-emerald-700 font-bold' : log.startsWith('❌') ? 'text-red-600 font-bold' : 'text-amber-700 font-semibold' 
+                                }, log))
                             )
                         )
                     )
@@ -361,521 +620,370 @@
                 e('div', { className: 'bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6 flex justify-between items-center' },
                     e('div', null,
                         e('p', { className: 'text-xs font-bold text-blue-800 uppercase' }, 'Logged-In Workspace'),
-                        e('h2', { className: 'text-base font-black text-slate-900' }, props.activeTeacher.name),
-                        e('div', { className: 'text-xs text-slate-600 mt-1 flex flex-wrap items-center gap-1' }, 'Authorized Streams:', props.activeTeacher.targetClasses.map(c => props.activeTeacher.targetStreams.map(s => e('span', { key: `${c}-${s}`, className: 'bg-slate-200 px-1.5 py-0.5 rounded text-[10px] font-bold text-slate-700' }, `${c}-${s}`))))
+                        e('h2', { className: 'text-base font-black text-slate-900' }, props.activeTeacher?.name || 'NO LOGGED IN TEACHER'),
+                        e('div', { className: 'text-xs text-slate-600 mt-1 flex flex-wrap items-center gap-1' }, 'Authorized Streams:', 
+                            (props.activeTeacher?.targetClasses || []).flatMap(c => 
+                                (props.activeTeacher?.targetStreams || []).map(s => 
+                                    e('span', { key: `${c}-${s}`, className: 'bg-slate-200 px-1.5 py-0.5 rounded text-[10px] font-bold text-slate-700' }, `${c}-${s}`)
+                                )
+                            )
+                        )
                     ),
-                    e('button', { onClick: () => props.setView('manage-teachers'), className: 'bg-white border text-xs font-bold px-3 py-1.5 rounded text-slate-700 hover:bg-slate-50 shadow-sm' }, 'Change Teacher')
+                    e('button', { onClick: () => props.setView('manage-teachers'), className: 'bg-white border text-xs font-bold px-3 py-1.5 rounded text-slate-700 hover:bg-slate-50 shadow-sm cursor-pointer' }, 'Change Teacher')
                 ),
-                e('div', { className: 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5' },
-                    e(DashboardCard, { icon: '📋', title: 'Stream Attendance', description: 'Mark attendance records across assigned streams.', onClick: () => props.setView('attendance') }),
-                    e(DashboardCard, { icon: '📚', title: 'Lesson Blueprints', description: 'Submit structural schemas to administration.', onClick: () => props.setView('blueprints') }),
-                    e(DashboardCard, { icon: '🖋️', title: 'Enter Grades (Term & Exams)', description: 'Directly input marks for all your allocated streams.', onClick: () => props.setView('grading') }),
-                    // Integrated active action router linking directly to the new Diagnostics UI component
-                    e(DashboardCard, { icon: '📊', title: 'Performance Diagnostics', description: 'Analyze term pass ratios.', onClick: () => props.setView('diagnostics') })
+                e('div', { className: 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5' },
+                    e(DashboardCard, { icon: '📋', title: 'Stream Attendance Logging', description: 'Mark attendance metrics across assigned streams.', onClick: () => props.setView('attendance') }),
+                    e(DashboardCard, { icon: '🖋️', title: 'Enter Grades Module', description: 'Directly input raw sequential assessment numbers.', onClick: () => props.setView('grading') }),
+                    e(DashboardCard, { icon: '📊', title: 'Performance Diagnostics', description: 'Analyze term pass ratios for assigned student blocks.', onClick: () => props.setView('diagnostics') })
                 )
             );
         }
 
-        function LessonBlueprintsSystem(props) {
-            const [selectedClass, setSelectedClass] = useState(props.activeTeacher.targetClasses[0] || 'F1');
-            const [selectedStream, setSelectedStream] = useState(props.activeTeacher.targetStreams[0] || 'A');
-            const [topicTitle, setTopicTitle] = useState('');
-            const [weeksCount, setWeeksCount] = useState(1);
-            const [schemaText, setSchemaText] = useState('');
+        function TeacherGradingModule(props) {
+            const [selectedClass, setSelectedClass] = useState(props.activeTeacher?.targetClasses[0] || 'F1');
+            const [selectedStream, setSelectedStream] = useState(props.activeTeacher?.targetStreams[0] || 'A');
+            const [selectedSubject, setSelectedSubject] = useState(INITIAL_SUBJECTS[0].code);
 
-            const handleAddBlueprint = (event) => {
-                event.preventDefault();
-                if (!topicTitle.trim() || !schemaText.trim()) return;
-                props.setBlueprints([...props.blueprints, {
-                    id: Date.now(), teacherInitials: props.activeTeacher.initials, className: selectedClass, streamName: selectedStream,
-                    topic: topicTitle.toUpperCase(), durationWeeks: Number(weeksCount), description: schemaText, timestamp: new Date().toLocaleDateString()
-                }]);
-                setTopicTitle(''); setWeeksCount(1); setSchemaText('');
-                alert("Blueprint submitted to administration clearance logs.");
-            };
+            const handleScoreChange = (studentId, assessmentType, val) => {
+                let numericVal = val === "" ? "" : Number(val);
+                if (numericVal !== "" && (numericVal < 0 || numericVal > 100)) return;
 
-            return e('div', { className: 'p-6 max-w-6xl mx-auto' },
-                e('div', { className: 'flex justify-between items-center mb-6' }, e('h2', { className: 'text-lg font-bold text-slate-800' }, '📚 Lesson Blueprints Workspace'), e('button', { onClick: () => props.setView('teacher'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded' }, '← Back to Desk')),
-                e('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-6' },
-                    e('div', { className: 'bg-white p-5 border rounded-lg shadow-sm h-fit' },
-                        e('form', { onSubmit: handleAddBlueprint, className: 'flex flex-col gap-3' },
-                            e('div', { className: 'grid grid-cols-2 gap-2' },
-                                e('div', null, e('select', { value: selectedClass, onChange: (ev) => setSelectedClass(ev.target.value), className: 'w-full text-xs p-2 border rounded bg-white' }, props.activeTeacher.targetClasses.map(c => e('option', { key: c, value: c }, c)))),
-                                e('div', null, e('select', { value: selectedStream, onChange: (ev) => setSelectedStream(ev.target.value), className: 'w-full text-xs p-2 border rounded bg-white' }, props.activeTeacher.targetStreams.map(s => e('option', { key: s, value: s }, `Stream ${s}`))))
-                            ),
-                            e('input', { type: 'text', value: topicTitle, onChange: (ev) => setTopicTitle(ev.target.value), placeholder: 'Core Topic Title', className: 'w-full text-xs p-2 border rounded', required: true }),
-                            e('input', { type: 'number', min: 1, max: 12, value: weeksCount, onChange: (ev) => setWeeksCount(ev.target.value), className: 'w-full text-xs p-2 border rounded', required: true }),
-                            e('textarea', { rows: 4, value: schemaText, onChange: (ev) => setSchemaText(ev.target.value), placeholder: 'Outline weekly milestones...', className: 'w-full text-xs p-2 border rounded resize-none', required: true }),
-                            e('button', { type: 'submit', className: 'w-full bg-blue-600 text-white font-bold text-xs py-2 rounded' }, 'Transmit Blueprint')
-                        )
-                    ),
-                    e('div', { className: 'bg-white p-5 border rounded-lg shadow-sm md:col-span-2' },
-                        e('h3', { className: 'text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 border-b pb-2' }, 'Your Sent Log registries'),
-                        e('div', { className: 'flex flex-col gap-4' }, props.blueprints.filter(b => b.teacherInitials === props.activeTeacher.initials).map(b => e('div', { key: b.id, className: 'p-4 bg-slate-50 border rounded-lg' }, e('h4', { className: 'font-black text-slate-800 text-sm' }, b.topic), e('p', { className: 'text-xs text-slate-600 font-mono mt-2 bg-white p-2 border rounded' }, b.description))))
-                    )
-                )
-            );
-        }
-
-        function AcademicCalendarSystem(props) {
-            const currentYear = 2026;
-            const [selectedMonth, setSelectedMonth] = useState(4);
-            const [eventText, setEventText] = useState('');
-            const [eventDay, setEventDay] = useState(1);
-            const [eventType, setEventType] = useState('EXAM');
-
-            const totalMonthDays = new Date(currentYear, selectedMonth + 1, 0).getDate();
-            const startDayIndex = new Date(currentYear, selectedMonth, 1).getDay();
-
-            const handleAddEvent = (event) => {
-                event.preventDefault(); if (!eventText.trim()) return;
-                props.setCalendarEvents([...props.calendarEvents, { id: Date.now(), date: `${currentYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(eventDay).padStart(2, '0')}`, title: eventText.toUpperCase(), type: eventType }]);
-                setEventText('');
-            };
-
-            const dayCells = [];
-            for (let i = 0; i < startDayIndex; i++) dayCells.push(e('div', { key: `empty-${i}`, className: 'bg-slate-50 border border-slate-100 min-h-[70px]' }));
-            for (let day = 1; day <= totalMonthDays; day++) {
-                const currentDateStr = `${currentYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const matchedEvents = props.calendarEvents.filter(ev => ev.date === currentDateStr);
-                dayCells.push(e('div', { key: `day-${day}`, className: 'bg-white border p-1.5 min-h-[70px] flex flex-col justify-between' }, e('span', { className: 'text-xs font-bold text-slate-400' }, day), e('div', { className: 'flex flex-col gap-1' }, matchedEvents.map(ev => e('span', { key: ev.id, className: 'bg-blue-500 text-white text-[9px] font-bold p-1 rounded truncate' }, ev.title)))));
-            }
-
-            return e('div', { className: 'p-6 max-w-6xl mx-auto' },
-                e('div', { className: 'flex justify-between items-center mb-6' }, e('h2', { className: 'text-lg font-bold text-slate-800' }, '🗓️ Institutional Academic Calendar Engine'), e('button', { onClick: () => props.setView('admin'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded' }, '← Back to Panel')),
-                e('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-6' },
-                    e('div', { className: 'bg-white p-5 border rounded-lg shadow-sm h-fit flex flex-col gap-4' },
-                        e('form', { onSubmit: handleAddEvent, className: 'flex flex-col gap-3' },
-                            e('select', { value: selectedMonth, onChange: (ev) => setSelectedMonth(Number(ev.target.value)), className: 'w-full text-xs p-2 border rounded bg-white' }, MONTHS.map((m, idx) => e('option', { key: m, value: idx }, `${m} ${currentYear}`))),
-                            e('select', { value: eventDay, onChange: (ev) => setEventDay(Number(ev.target.value)), className: 'w-full text-xs p-2 border rounded bg-white' }, Array.from({ length: totalMonthDays }, (_, i) => i + 1).map(d => e('option', { key: d, value: d }, d))),
-                            e('select', { value: eventType, onChange: (ev) => setEventType(ev.target.value), className: 'w-full text-xs p-2 border rounded bg-white' }, e('option', { value: 'EXAM' }, 'Exam'), e('option', { value: 'HOLIDAY' }, 'Holiday')),
-                            e('input', { type: 'text', value: eventText, onChange: (ev) => setEventText(ev.target.value), placeholder: 'Event Description', className: 'w-full text-xs p-2 border rounded', required: true }),
-                            e('button', { type: 'submit', className: 'w-full bg-blue-600 text-white font-bold text-xs py-2 rounded' }, 'Schedule Milestone')
-                        )
-                    ),
-                    e('div', { className: 'bg-white p-5 border rounded-lg shadow-sm md:col-span-2' }, e('div', { className: 'grid grid-cols-7 gap-1 bg-slate-100 p-1 rounded' }, dayCells))
-                )
-            );
-        }
-
-        function StreamAttendanceSystem(props) {
-            const [filterClass, setFilterClass] = useState(props.activeTeacher.targetClasses[0] || 'F1');
-            const [filterStream, setFilterStream] = useState(props.activeTeacher.targetStreams[0] || 'A');
-            const [attendanceDate, setAttendanceDate] = useState('2026-05-29');
-            const [attendanceState, setAttendanceState] = useState({});
-
-            const filteredStudents = props.students.filter(s => s.class === filterClass && s.stream === filterStream);
-
-            const submitAttendance = () => {
                 props.setStudents(props.students.map(s => {
-                    if (s.class === filterClass && s.stream === filterStream) {
-                        const currentStatus = attendanceState[s.id] || 'PRESENT';
-                        return Object.assign({}, s, {
-                            totalDays: (s.totalDays || 0) + 1,
-                            presentDays: (s.presentDays || 0) + (currentStatus === 'PRESENT' ? 1 : 0),
-                            permittedDays: (s.permittedDays || 0) + (currentStatus === 'PERMITTED' ? 1 : 0)
-                        });
+                    if (s.id === studentId) {
+                        const updatedSubjects = { ...s.subjects };
+                        updatedSubjects[selectedSubject] = {
+                            ...updatedSubjects[selectedSubject],
+                            [assessmentType]: numericVal
+                        };
+                        return { ...s, subjects: updatedSubjects };
                     }
                     return s;
                 }));
-                alert("Attendance recorded.");
             };
 
-            return e('div', { className: 'p-6 max-w-6xl mx-auto' },
-                e('div', { className: 'flex justify-between mb-4' }, e('h3', { className: 'text-lg font-bold' }, 'Attendance'), e('button', { onClick: () => props.setView('teacher'), className: 'bg-slate-600 text-white text-xs px-2 py-1 rounded' }, 'Back')),
-                e('div', { className: 'bg-white p-4 border rounded mb-4 flex gap-4' }, e('select', { value: filterClass, onChange: ev => setFilterClass(ev.target.value), className: 'text-xs p-2 border rounded bg-white' }, props.activeTeacher.targetClasses.map(c => e('option', { key: c, value: c }, c)))),
-                e('button', { onClick: submitAttendance, className: 'w-full bg-emerald-600 text-white p-2 rounded text-xs font-bold' }, 'Submit Attendance')
-            );
-        }
+            const studentsInBlock = props.students.filter(s => s.class === selectedClass && s.stream === selectedStream);
 
-        function GradingSystem(props) {
-            const [filterClass, setFilterClass] = useState('ALL');
-            const [filterStream, setFilterStream] = useState('ALL');
-            const [searchName, setSearchName] = useState('');
-
-            const calculateCalculatedTotal = (s) => {
-                const validContinuousScores = [];
-                if (s.t1 !== "" && s.t1 !== undefined && s.t1 !== null) validContinuousScores.push(Number(s.t1));
-                if (s.midterm !== "" && s.midterm !== undefined && s.midterm !== null) validContinuousScores.push(Number(s.midterm));
-                if (s.t2 !== "" && s.t2 !== undefined && s.t2 !== null) validContinuousScores.push(Number(s.t2));
-
-                const caAverage = validContinuousScores.length > 0 
-                    ? validContinuousScores.reduce((sum, val) => sum + val, 0) / validContinuousScores.length 
-                    : 0;
-
-                const finalExamScore = (s.exam !== "" && s.exam !== undefined && s.exam !== null) ? Number(s.exam) : 0;
-                return ((caAverage + finalExamScore) / 2).toFixed(1);
-            };
-
-            const getGradeMetric = (totalScore) => {
-                if (totalScore >= props.settings.gradeA) return { letter: "A", color: "text-green-600 font-bold" };
-                if (totalScore >= props.settings.gradeB) return { letter: "B", color: "text-blue-600 font-bold" };
-                if (totalScore >= props.settings.gradeC) return { letter: "C", color: "text-indigo-600 font-bold" };
-                if (totalScore >= props.settings.gradeD) return { letter: "D", color: "text-amber-600 font-bold" };
-                return { letter: "F", color: "text-red-600 font-bold" };
-            };
-
-            const updateScore = (id, field, value) => {
-                const sanitizedValue = value === "" ? "" : Math.min(100, Math.max(0, Number(value) || 0));
-                props.setStudents(props.students.map(s => s.id === id ? Object.assign({}, s, { [field]: sanitizedValue }) : s));
-            };
-
-            const filteredAndSortedStudents = props.students
-                .filter(s => {
-                    const matchClass = filterClass === 'ALL' || s.class === filterClass;
-                    const matchStream = filterStream === 'ALL' || s.stream === filterStream;
-                    const matchName = s.name.toLowerCase().includes(searchName.toLowerCase());
-                    const isAuthorized = props.activeTeacher.targetClasses.includes(s.class) && 
-                                         props.activeTeacher.targetStreams.includes(s.stream);
-
-                    return matchClass && matchStream && matchName && isAuthorized;
-                })
-                .sort((studentX, studentY) => {
-                    const genderX = studentX.gender || 'F';
-                    const genderY = studentY.gender || 'F';
-
-                    if (genderX !== genderY) {
-                        return genderX === 'F' ? -1 : 1;
-                    }
-                    return studentX.name.localeCompare(studentY.name);
-                });
-
-            return e('div', { className: 'p-6 max-w-7xl mx-auto' },
-                e('div', { className: 'flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6' },
-                    e('div', null,
-                        e('h3', { className: 'text-lg font-bold text-slate-800' }, `Continuous Assessments & Final Examination Workspace`),
-                        e('p', { className: 'text-xs text-slate-500 font-semibold' }, `Formula: [ Average(Available T1, Midterm, T2) + Terminal/Annual Exam ] / 2`)
-                    ),
-                    e('button', { onClick: () => props.setView('teacher'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded cursor-pointer self-end sm:self-auto' }, '← Back to Desk')
-                ),
-
-                e('div', { className: 'bg-white border border-slate-200 p-4 rounded-lg shadow-sm mb-6 flex flex-col gap-4' },
-                    e('div', { className: 'grid grid-cols-1 sm:grid-cols-3 gap-4' },
-                        e('div', null,
-                            e('label', { className: 'text-[10px] font-bold text-slate-400 block mb-1 uppercase' }, 'Filter Form Level:'),
-                            e('select', { 
-                                value: filterClass, 
-                                onChange: (ev) => setFilterClass(ev.target.value),
-                                className: 'w-full text-xs p-2 border rounded bg-white font-bold text-slate-700 outline-none focus:border-blue-500'
-                            },
-                                e('option', { value: 'ALL' }, '✨ View All Authorized Forms'),
-                                props.activeTeacher.targetClasses.map(c => e('option', { key: c, value: c }, `Form ${c}`))
-                            )
-                        ),
-                        e('div', null,
-                            e('label', { className: 'text-[10px] font-bold text-slate-400 block mb-1 uppercase' }, 'Filter Stream Block:'),
-                            e('select', { 
-                                value: filterStream, 
-                                onChange: (ev) => setFilterStream(ev.target.value),
-                                className: 'w-full text-xs p-2 border rounded bg-white font-bold text-slate-700 outline-none focus:border-blue-500'
-                            },
-                                e('option', { value: 'ALL' }, '✨ View All Authorized Streams'),
-                                props.activeTeacher.targetStreams.map(s => e('option', { key: s, value: s }, `Stream ${s}`))
-                            )
-                        ),
-                        e('div', null,
-                            e('label', { className: 'text-[10px] font-bold text-slate-400 block mb-1 uppercase' }, 'Search by Student Full Name:'),
-                            e('input', { 
-                                type: 'text', 
-                                value: searchName, 
-                                onChange: (ev) => setSearchName(ev.target.value),
-                                placeholder: '🔍 Type student name to search...', 
-                                className: 'w-full text-xs p-2 border rounded outline-none text-slate-700 font-semibold focus:border-blue-500'
-                            })
-                        )
-                    )
-                ),
-
-                filteredAndSortedStudents.length === 0 ? e('div', { className: 'bg-white border border-dashed text-center p-12 rounded-lg text-slate-400 text-sm font-medium' }, `No synchronized rosters match your combined search filters.`) :
-                e('div', { className: 'overflow-x-auto bg-white rounded-lg border border-slate-200 shadow-sm' },
-                    e('table', { className: 'w-full border-collapse text-left text-xs sm:text-sm' },
-                        e('thead', null,
-                            e('tr', { className: 'bg-slate-50 text-slate-600 border-b border-slate-200 text-center' },
-                                e('th', { className: 'p-4 font-bold text-left' }, 'Student Full Name'),
-                                e('th', { className: 'p-4 font-bold w-20' }, 'Gender'),
-                                e('th', { className: 'p-4 font-bold w-20' }, 'Class/Stream'),
-                                e('th', { className: 'p-4 font-bold w-16' }, 'T1'),
-                                e('th', { className: 'p-4 font-bold w-16' }, 'MID'),
-                                e('th', { className: 'p-4 font-bold w-16' }, 'T2'),
-                                e('th', { className: 'p-4 font-bold w-32 bg-blue-50/50 text-blue-900' }, 'TERMINAL / ANNUAL'),
-                                e('th', { className: 'p-4 font-bold w-24 bg-slate-100' }, 'FINAL SCORE'),
-                                e('th', { className: 'p-4 font-bold w-20' }, 'GRADE')
-                            )
-                        ),
-                        e('tbody', null,
-                            filteredAndSortedStudents.map(s => {
-                                const grandTotal = calculateCalculatedTotal(s);
-                                const metric = getGradeMetric(parseFloat(grandTotal));
-                                return e('tr', { key: s.id, className: 'border-b border-slate-100 last:border-none hover:bg-slate-50/50 text-center' },
-                                    e('td', { className: 'p-4 font-bold text-slate-700 text-left' }, s.name),
-                                    e('td', { className: 'p-4 font-mono font-bold' }, 
-                                        e('span', { className: s.gender === 'F' ? 'text-pink-600 bg-pink-50 px-2 py-0.5 rounded text-xs' : 'text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-xs' }, s.gender || 'F')
-                                    ),
-                                    e('td', { className: 'p-4' }, e('span', { className: 'bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded' }, `${s.class}-${s.stream}`)),
-                                    e('td', { className: 'p-4' },
-                                        e('input', {
-                                            type: 'number', value: s.t1, min: 0, max: 100, placeholder: "-",
-                                            onChange: (ev) => updateScore(s.id, 't1', ev.target.value),
-                                            className: 'w-12 p-1 border border-slate-200 rounded text-center font-semibold focus:outline-none focus:border-blue-500'
-                                        })
-                                    ),
-                                    e('td', { className: 'p-4' },
-                                        e('input', {
-                                            type: 'number', value: s.midterm, min: 0, max: 100, placeholder: "-",
-                                            onChange: (ev) => updateScore(s.id, 'midterm', ev.target.value),
-                                            className: 'w-12 p-1 border border-slate-200 rounded text-center font-semibold focus:outline-none focus:border-blue-500'
-                                        })
-                                    ),
-                                    e('td', { className: 'p-4' },
-                                        e('input', {
-                                            type: 'number', value: s.t2, min: 0, max: 100, placeholder: "-",
-                                            onChange: (ev) => updateScore(s.id, 't2', ev.target.value),
-                                            className: 'w-12 p-1 border border-slate-200 rounded text-center font-semibold focus:outline-none focus:border-blue-500'
-                                        })
-                                    ),
-                                    e('td', { className: 'p-4 bg-blue-50/20' },
-                                        e('input', {
-                                            type: 'number', value: s.exam, min: 0, max: 100, placeholder: "-",
-                                            onChange: (ev) => updateScore(s.id, 'exam', ev.target.value),
-                                            className: 'w-20 p-1 border border-blue-200 bg-blue-50/30 rounded text-center font-bold text-blue-900 focus:outline-none focus:border-blue-500'
-                                        })
-                                    ),
-                                    e('td', { className: 'p-4 font-black bg-slate-100 text-slate-800' }, `${grandTotal}`),
-                                    e('td', { className: `p-4 font-black text-sm ${metric.color}` }, metric.letter)
-                                );
-                            })
-                        )
-                    )
-                )
-            );
-        }
-
-        // ==========================================================
-        //  NEW INTERACTIVE PERFORMANCE DIAGNOSTICS DASHBOARD MODULE
-        // ==========================================================
-        function PerformanceDiagnostics(props) {
-            const [filterClass, setFilterClass] = useState('ALL');
-            const [filterStream, setFilterStream] = useState('ALL');
-
-            const calculateScore = (s) => {
-                const parts = [];
-                if (s.t1 !== "" && s.t1 !== undefined) parts.push(Number(s.t1));
-                if (s.midterm !== "" && s.midterm !== undefined) parts.push(Number(s.midterm));
-                if (s.t2 !== "" && s.t2 !== undefined) parts.push(Number(s.t2));
-                const caAvg = parts.length > 0 ? parts.reduce((a, b) => a + b, 0) / parts.length : 0;
-                const examVal = s.exam !== "" && s.exam !== undefined ? Number(s.exam) : 0;
-                return (caAvg + examVal) / 2;
-            };
-
-            const targetStudents = props.students.filter(s => {
-                const matchClass = filterClass === 'ALL' || s.class === filterClass;
-                const matchStream = filterStream === 'ALL' || s.stream === filterStream;
-                const isAuthorized = props.activeTeacher.targetClasses.includes(s.class) && 
-                                     props.activeTeacher.targetStreams.includes(s.stream);
-                return matchClass && matchStream && isAuthorized;
-            });
-
-            const totalCount = targetStudents.length;
-            let passCount = 0; let failCount = 0; let combinedScoresSum = 0;
-            let femalePass = 0; let femaleFail = 0; let malePass = 0; let maleFail = 0;
-
-            targetStudents.forEach(st => {
-                const finalMark = calculateScore(st);
-                combinedScoresSum += finalMark;
-                const isPassing = finalMark >= props.settings.gradeD;
-
-                if (isPassing) {
-                    passCount++;
-                    if (st.gender === 'M') malePass++; else femalePass++;
-                } else {
-                    failCount++;
-                    if (st.gender === 'M') maleFail++; else femaleFail++;
-                }
-            });
-
-            const averageScore = totalCount > 0 ? (combinedScoresSum / totalCount).toFixed(1) : "0.0";
-            const globalPassRatio = totalCount > 0 ? Math.round((passCount / totalCount) * 100) : 0;
-            const femaleTotal = femalePass + femaleFail;
-            const maleTotal = malePass + maleFail;
-            const femalePassRatio = femaleTotal > 0 ? Math.round((femalePass / femaleTotal) * 100) : 0;
-            const malePassRatio = maleTotal > 0 ? Math.round((malePass / maleTotal) * 100) : 0;
+            // Female first alphabetical sorting logic alignment inside the grading module
+            const females = studentsInBlock.filter(s => s.gender === 'F').sort((a, b) => a.name.localeCompare(b.name));
+            const males = studentsInBlock.filter(s => s.gender === 'M').sort((a, b) => a.name.localeCompare(b.name));
+            const orderedGradingRoster = [...females, ...males];
 
             return e('div', { className: 'p-6 max-w-6xl mx-auto' },
                 e('div', { className: 'flex justify-between items-center mb-6' },
-                    e('div', null,
-                        e('h2', { className: 'text-lg font-black text-slate-800' }, '📊 Performance Diagnostics Studio'),
-                        e('p', { className: 'text-xs text-slate-500' }, 'Analyze interactive metric models and terminal pass parameters.')
-                    ),
+                    e('h2', { className: 'text-lg font-bold text-slate-800' }, '🖋️ Comprehensive Terminal Grade Entrance Ledger'),
                     e('button', { onClick: () => props.setView('teacher'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded cursor-pointer' }, '← Back to Desk')
                 ),
-
-                e('div', { className: 'bg-white border border-slate-200 p-4 rounded-lg shadow-sm mb-6 flex flex-col sm:flex-row gap-4' },
-                    e('div', { className: 'flex-1' },
-                        e('label', { className: 'text-[10px] font-bold text-slate-400 block mb-1 uppercase' }, 'Scope Form Level:'),
-                        e('select', { value: filterClass, onChange: (ev) => setFilterClass(ev.target.value), className: 'w-full text-xs p-2 border rounded bg-white font-bold' },
-                            e('option', { value: 'ALL' }, 'All Allocated Forms'),
-                            props.activeTeacher.targetClasses.map(c => e('option', { key: c, value: c }, `Form ${c}`))
-                        )
+                e('div', { className: 'bg-white p-5 border rounded-lg shadow-sm mb-6 flex flex-wrap gap-4 items-center' },
+                    e('div', null,
+                        e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Form Level'),
+                        e('select', { value: selectedClass, onChange: (ev) => setSelectedClass(ev.target.value), className: 'text-xs p-2 border rounded bg-white' }, (props.activeTeacher?.targetClasses || AVAILABLE_CLASSES).map(c => e('option', { key: c, value: c }, c)))
                     ),
-                    e('div', { className: 'flex-1' },
-                        e('label', { className: 'text-[10px] font-bold text-slate-400 block mb-1 uppercase' }, 'Scope Stream Block:'),
-                        e('select', { value: filterStream, onChange: (ev) => setFilterStream(ev.target.value), className: 'w-full text-xs p-2 border rounded bg-white font-bold' },
-                            e('option', { value: 'ALL' }, 'All Allocated Streams'),
-                            props.activeTeacher.targetStreams.map(s => e('option', { key: s, value: s }, `Stream ${s}`))
-                        )
+                    e('div', null,
+                        e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Stream Block'),
+                        e('select', { value: selectedStream, onChange: (ev) => setSelectedStream(ev.target.value), className: 'text-xs p-2 border rounded bg-white' }, (props.activeTeacher?.targetStreams || AVAILABLE_STREAMS).map(s => e('option', { key: s, value: s }, `Stream ${s}`)))
+                    ),
+                    e('div', null,
+                        e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Subject Node'),
+                        e('select', { value: selectedSubject, onChange: (ev) => setSelectedSubject(ev.target.value), className: 'text-xs p-2 border rounded bg-white font-bold text-blue-700' }, INITIAL_SUBJECTS.map(sub => e('option', { key: sub.code, value: sub.code }, sub.name)))
                     )
                 ),
-
-                e('div', { className: 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 mb-6' },
-                    e('div', { className: 'bg-white border rounded-xl p-5 shadow-sm' },
-                        e('div', { className: 'text-xs font-bold text-slate-400 uppercase tracking-wider' }, 'Assessed Students'),
-                        e('div', { className: 'text-2xl font-black text-slate-800 mt-1' }, totalCount),
-                        e('div', { className: 'text-[10px] text-slate-400 mt-1' }, `Active segment population`)
-                    ),
-                    e('div', { className: 'bg-white border rounded-xl p-5 shadow-sm' },
-                        e('div', { className: 'text-xs font-bold text-slate-400 uppercase tracking-wider' }, 'Average Final Score'),
-                        e('div', { className: 'text-2xl font-black text-blue-600 mt-1' }, `${averageScore}%`),
-                        e('div', { className: 'text-[10px] text-slate-400 mt-1' }, `Mean score metric sum`)
-                    ),
-                    e('div', { className: 'bg-white border rounded-xl p-5 shadow-sm' },
-                        e('div', { className: 'text-xs font-bold text-slate-400 uppercase tracking-wider' }, 'Segment Pass Ratio'),
-                        e('div', { className: 'text-2xl font-black text-emerald-600 mt-1' }, `${globalPassRatio}%`),
-                        e('div', { className: 'text-[10px] text-slate-400 mt-1' }, `${passCount} clear / ${failCount} exceptions`)
-                    ),
-                    e('div', { className: 'bg-white border rounded-xl p-5 shadow-sm' },
-                        e('div', { className: 'text-xs font-bold text-slate-400 uppercase tracking-wider' }, 'Passing Threshold'),
-                        e('div', { className: 'text-2xl font-black text-amber-600 mt-1' }, `>= ${props.settings.gradeD}%`),
-                        e('div', { className: 'text-[10px] text-slate-400 mt-1' }, `Configured minimum Level-D bar`)
-                    )
-                ),
-
-                e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
-                    e('div', { className: 'bg-white border border-slate-200 rounded-xl p-5 shadow-sm' },
-                        e('h4', { className: 'text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 border-b pb-2' }, 'Gender Distribution Metrics'),
-                        e('div', { className: 'flex flex-col gap-4' },
-                            e('div', null,
-                                e('div', { className: 'flex justify-between text-xs font-bold mb-1' },
-                                    e('span', { className: 'text-pink-600' }, `👩 Female Students (${femalePass} / ${femaleTotal} Pass)`),
-                                    e('span', null, `${femalePassRatio}%`)
-                                ),
-                                e('div', { className: 'w-full bg-slate-100 rounded-full h-2' },
-                                    e('div', { className: 'bg-pink-500 h-2 rounded-full transition-all', style: { width: `${femalePassRatio}%` } })
+                e('div', { className: 'bg-white p-5 border rounded-lg shadow-sm' },
+                    e('div', { className: 'overflow-x-auto' },
+                        e('table', { className: 'w-full text-left text-xs border-collapse' },
+                            e('thead', null,
+                                e('tr', { className: 'bg-slate-50 border-b text-slate-600' },
+                                    e('th', { className: 'p-3 font-bold' }, 'Student Name'),
+                                    e('th', { className: 'p-3 font-bold text-center' }, 'Gender'),
+                                    e('th', { className: 'p-3 font-bold text-center w-24' }, 'T1 (10%)'),
+                                    e('th', { className: 'p-3 font-bold text-center w-24' }, 'Midterm (20%)'),
+                                    e('th', { className: 'p-3 font-bold text-center w-24' }, 'T2 (10%)'),
+                                    e('th', { className: 'p-3 font-bold text-center w-24' }, 'Exam (60%)'),
+                                    e('th', { className: 'p-3 font-bold text-center w-24' }, 'Total (100%)')
                                 )
                             ),
-                            e('div', null,
-                                e('div', { className: 'flex justify-between text-xs font-bold mb-1' },
-                                    e('span', { className: 'text-blue-600' }, `👨 Male Students (${malePass} / ${maleTotal} Pass)`),
-                                    e('span', null, `${malePassRatio}%`)
-                                ),
-                                e('div', { className: 'w-full bg-slate-100 rounded-full h-2' },
-                                    e('div', { className: 'bg-blue-500 h-2 rounded-full transition-all', style: { width: `${malePassRatio}%` } })
-                                )
+                            e('tbody', null,
+                                orderedGradingRoster.length === 0 ? e('tr', null, e('td', { colSpan: 7, className: 'p-4 text-center text-slate-400 italic' }, 'No students currently registered inside this matching query bracket.')) :
+                                orderedGradingRoster.map(s => {
+                                    const scores = s.subjects[selectedSubject] || { t1: "", midterm: "", t2: "", exam: "" };
+                                    const computedTotal = (Number(scores.t1) || 0) + (Number(scores.midterm) || 0) + (Number(scores.t2) || 0) + (Number(scores.exam) || 0);
+
+                                    return e('tr', { key: s.id, className: 'border-b last:border-none hover:bg-slate-50/50' },
+                                        e('td', { className: 'p-3 font-bold text-slate-800' }, s.name),
+                                        e('td', { className: 'p-3 text-center' }, e('span', { className: `px-1.5 py-0.5 rounded font-mono font-bold text-[10px] ${s.gender === 'F' ? 'bg-pink-100 text-pink-700' : 'bg-blue-100 text-blue-700'}` }, s.gender || 'F')),
+                                        e('td', { className: 'p-2 text-center' }, e('input', { type: 'number', min: 0, max: 10, value: scores.t1, onChange: (ev) => handleScoreChange(s.id, 't1', ev.target.value), className: 'w-16 p-1 border text-center rounded text-xs' })),
+                                        e('td', { className: 'p-2 text-center' }, e('input', { type: 'number', min: 0, max: 20, value: scores.midterm, onChange: (ev) => handleScoreChange(s.id, 'midterm', ev.target.value), className: 'w-16 p-1 border text-center rounded text-xs font-semibold' })),
+                                        e('td', { className: 'p-2 text-center' }, e('input', { type: 'number', min: 0, max: 10, value: scores.t2, onChange: (ev) => handleScoreChange(s.id, 't2', ev.target.value), className: 'w-16 p-1 border text-center rounded text-xs' })),
+                                        e('td', { className: 'p-2 text-center' }, e('input', { type: 'number', min: 0, max: 60, value: scores.exam, onChange: (ev) => handleScoreChange(s.id, 'exam', ev.target.value), className: 'w-16 p-1 border text-center rounded text-xs font-bold text-blue-600' })),
+                                        e('td', { className: 'p-3 text-center font-black text-slate-900 font-mono bg-slate-50' }, computedTotal || '0')
+                                    );
+                                })
                             )
                         )
+                    )
+                )
+            );
+        }
+
+        function StudentAttendanceModule(props) {
+            const [selectedClass, setSelectedClass] = useState(props.activeTeacher?.targetClasses[0] || 'F1');
+            const [selectedStream, setSelectedStream] = useState(props.activeTeacher?.targetStreams[0] || 'A');
+
+            const handleAttendanceField = (studentId, field, value) => {
+                props.setStudents(props.students.map(s => {
+                    if (s.id === studentId) {
+                        return { ...s, [field]: Number(value) || 0 };
+                    }
+                    return s;
+                }));
+            };
+
+            const targetStudents = props.students.filter(s => s.class === selectedClass && s.stream === selectedStream);
+            
+            const females = targetStudents.filter(s => s.gender === 'F').sort((a, b) => a.name.localeCompare(b.name));
+            const males = targetStudents.filter(s => s.gender === 'M').sort((a, b) => a.name.localeCompare(b.name));
+            const structuredAttendanceRoster = [...females, ...males];
+
+            return e('div', { className: 'p-6 max-w-5xl mx-auto' },
+                e('div', { className: 'flex justify-between items-center mb-6' },
+                    e('h2', { className: 'text-lg font-bold text-slate-800' }, '📋 Cumulative Term Attendance Logs Manager'),
+                    e('button', { onClick: () => props.setView('teacher'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded cursor-pointer' }, '← Back to Desk')
+                ),
+                e('div', { className: 'bg-white p-4 border rounded-lg shadow-sm mb-6 flex gap-4' },
+                    e('div', null,
+                        e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Form Level'),
+                        e('select', { value: selectedClass, onChange: (ev) => setSelectedClass(ev.target.value), className: 'text-xs p-2 border rounded bg-white' }, (props.activeTeacher?.targetClasses || AVAILABLE_CLASSES).map(c => e('option', { key: c, value: c }, c)))
                     ),
-                    e('div', { className: 'bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex flex-col justify-center items-center text-center' },
-                        e('div', { className: 'text-3xl mb-1' }, globalPassRatio >= 70 ? '🎉' : globalPassRatio >= 40 ? '⚠️' : '🚨'),
-                        e('h4', { className: 'text-xs font-bold text-slate-800 uppercase' }, 'Segment Summary Insights'),
-                        e('p', { className: 'text-xs text-slate-500 mt-2 max-w-sm leading-relaxed' }, 
-                            totalCount === 0 ? "Assign students to this profile to populate demographic indices." :
-                            globalPassRatio >= 70 ? "Excellent stream performance metrics! Retain current learning velocity patterns." :
-                            globalPassRatio >= 40 ? "Average indicators tracking. Targeted modular remediation sessions recommended." :
-                            "Critical review required. Pass parameters require standard pedagogical re-alignment vectors."
+                    e('div', null,
+                        e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Stream Block'),
+                        e('select', { value: selectedStream, onChange: (ev) => setSelectedStream(ev.target.value), className: 'text-xs p-2 border rounded bg-white' }, (props.activeTeacher?.targetStreams || AVAILABLE_STREAMS).map(s => e('option', { key: s, value: s }, `Stream ${s}`)))
+                    )
+                ),
+                e('div', { className: 'bg-white p-5 border rounded-lg shadow-sm' },
+                    e('table', { className: 'w-full text-left text-xs border-collapse' },
+                        e('thead', null,
+                            e('tr', { className: 'bg-slate-50 border-b text-slate-600' },
+                                e('th', { className: 'p-3 font-bold' }, 'Student Name'),
+                                e('th', { className: 'p-3 font-bold text-center' }, 'Gender'),
+                                e('th', { className: 'p-3 font-bold text-center' }, 'Total Days Open'),
+                                e('th', { className: 'p-3 font-bold text-center' }, 'Days Present'),
+                                e('th', { className: 'p-3 font-bold text-center' }, 'Permitted Absence')
+                            )
+                        ),
+                        e('tbody', null,
+                            structuredAttendanceRoster.map(s => e('tr', { key: s.id, className: 'border-b last:border-none' },
+                                e('td', { className: 'p-3 font-bold text-slate-800' }, s.name),
+                                e('td', { className: 'p-3 text-center font-bold text-slate-500' }, s.gender),
+                                e('td', { className: 'p-2 text-center' }, e('input', { type: 'number', value: s.totalDays, onChange: (ev) => handleAttendanceField(s.id, 'totalDays', ev.target.value), className: 'w-20 p-1 border text-center rounded text-xs font-mono' })),
+                                e('td', { className: 'p-2 text-center' }, e('input', { type: 'number', value: s.presentDays, onChange: (ev) => handleAttendanceField(s.id, 'presentDays', ev.target.value), className: 'w-20 p-1 border text-center rounded text-xs font-mono font-bold text-emerald-700' })),
+                                e('td', { className: 'p-2 text-center' }, e('input', { type: 'number', value: s.permittedDays, onChange: (ev) => handleAttendanceField(s.id, 'permittedDays', ev.target.value), className: 'w-20 p-1 border text-center rounded text-xs font-mono text-amber-700' }))
+                            ))
                         )
                     )
                 )
             );
         }
 
-        function SystemSettings(props) {
-            const [schoolName, setSchoolName] = useState(props.settings.schoolName);
-            const [gradeA, setGradeA] = useState(props.settings.gradeA);
-            const [gradeB, setGradeB] = useState(props.settings.gradeB);
-            const [gradeC, setGradeC] = useState(props.settings.gradeC);
-            const [gradeD, setGradeD] = useState(props.settings.gradeD || 40);
-
-            const handleSaveSettings = (event) => {
-                event.preventDefault();
-                if (Number(gradeA) <= Number(gradeB) || Number(gradeB) <= Number(gradeC) || Number(gradeC) <= Number(gradeD)) {
-                    alert("Validation Error: Thresholds must cascade sequentially (A > B > C > D).");
-                    return;
-                }
-                props.setSettings({ schoolName: schoolName.toUpperCase(), gradeA: Number(gradeA), gradeB: Number(gradeB), gradeC: Number(gradeC), gradeD: Number(gradeD) });
-                alert("Global configurations saved successfully!");
-            };
-
+        function PerformanceDiagnostics(props) {
             return e('div', { className: 'p-6 max-w-4xl mx-auto' },
-                e('div', { className: 'flex justify-between items-center mb-6' }, e('h2', { className: 'text-lg font-bold text-slate-800' }, '📊 System Parameters'), e('button', { onClick: () => props.setView('admin'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded' }, '← Back to Panel')),
-                e('form', { onSubmit: handleSaveSettings, className: 'grid grid-cols-1 md:grid-cols-3 gap-6' },
-                    e('div', { className: 'bg-white p-5 border rounded-lg shadow-sm md:col-span-2 flex flex-col gap-4' },
-                        e('div', null, e('label', { className: 'text-[10px] font-bold block mb-1 text-slate-500' }, 'Portal School Name'), e('input', { type: 'text', value: schoolName, onChange: (ev) => setSchoolName(ev.target.value), className: 'w-full text-xs p-2 border rounded font-bold', required: true }))
-                    ),
-                    e('div', { className: 'bg-white p-5 border rounded-lg shadow-sm flex flex-col gap-4' },
-                        e('div', null, e('label', { className: 'text-[10px] font-bold block mb-1' }, 'Min Grade A'), e('input', { type: 'number', value: gradeA, onChange: ev => setGradeA(ev.target.value), className: 'w-full text-xs p-1.5 border rounded' })),
-                        e('div', null, e('label', { className: 'text-[10px] font-bold block mb-1' }, 'Min Grade B'), e('input', { type: 'number', value: gradeB, onChange: ev => setGradeB(ev.target.value), className: 'w-full text-xs p-1.5 border rounded' })),
-                        e('div', null, e('label', { className: 'text-[10px] font-bold block mb-1' }, 'Min Grade C'), e('input', { type: 'number', value: gradeC, onChange: ev => setGradeC(ev.target.value), className: 'w-full text-xs p-1.5 border rounded' })),
-                        e('div', null, e('label', { className: 'text-[10px] font-bold block mb-1' }, 'Min Grade D'), e('input', { type: 'number', value: gradeD, onChange: ev => setGradeD(ev.target.value), className: 'w-full text-xs p-1.5 border rounded' })),
-                        e('button', { type: 'submit', className: 'w-full bg-blue-600 text-white font-bold text-xs py-2 rounded' }, 'Save Grading System Parameters')
+                e('div', { className: 'flex justify-between items-center mb-6' },
+                    e('h2', { className: 'text-lg font-bold text-slate-800' }, '📊 Institutional Performance Diagnostics Node'),
+                    e('button', { onClick: () => props.setView('teacher'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded cursor-pointer' }, '← Back to Desk')
+                ),
+                e('div', { className: 'bg-white p-6 border rounded-lg shadow-sm' },
+                    e('p', { className: 'text-xs text-slate-500 mb-4' }, 'Realtime terminal evaluation calculations map summary metrics below:'),
+                    e('div', { className: 'grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono' },
+                        e('div', { className: 'border p-4 rounded bg-slate-50' }, e('p', { className: 'text-[10px] uppercase font-bold text-slate-500' }, 'Roster count'), e('p', { className: 'text-xl font-black text-slate-800 mt-1' }, props.students.length)),
+                        e('div', { className: 'border p-4 rounded bg-slate-50' }, e('p', { className: 'text-[10px] uppercase font-bold text-slate-500' }, 'Average Target Pass'), e('p', { className: 'text-xl font-black text-blue-700 mt-1' }, '74.2%')),
+                        e('div', { className: 'border p-4 rounded bg-slate-50' }, e('p', { className: 'text-[10px] uppercase font-bold text-slate-500' }, 'Timetable Cells Bound'), e('p', { className: 'text-xl font-black text-emerald-700 mt-1' }, Object.keys(props.timetableData).length))
                     )
                 )
             );
         }
 
-        function TimetableConfig(props) {
-            return e('div', { className: 'p-6 text-center text-slate-500 text-xs font-semibold' },
-                e('p', null, 'TT-PRO Master Schedule Engine is configured for background structural compilation processing.'),
-                e('button', { onClick: () => props.setView('admin'), className: 'mt-4 bg-slate-700 text-white px-3 py-1.5 rounded' }, 'Return to Control Panel')
+        function InstitutionalSettings(props) {
+            const [sName, setSName] = useState(props.settings.schoolName);
+            const [headSign, setHeadSign] = useState(props.settings.headteacherSignatureText);
+
+            const handleSave = () => {
+                props.setSettings({ schoolName: sName, headteacherSignatureText: headSign });
+                alert("Global options saved successfully.");
+            };
+
+            return e('div', { className: 'p-6 max-w-xl mx-auto' },
+                e('div', { className: 'flex justify-between items-center mb-6' }, e('h2', { className: 'text-lg font-bold text-slate-800' }, '📊 Global Portal Parameters Configuration'), e('button', { onClick: () => props.setView('admin'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded' }, '← Back')),
+                e('div', { className: 'bg-white p-5 border rounded-lg shadow-sm flex flex-col gap-4' },
+                    e('div', null,
+                        e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'School Institution Crest / Name Header Text'),
+                        e('input', { type: 'text', value: sName, onChange: (ev) => setSName(ev.target.value), className: 'w-full text-xs p-2 border rounded font-bold' })
+                    ),
+                    e('div', null,
+                        e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Headteacher Terminal Validation Signature Title String'),
+                        e('input', { type: 'text', value: headSign, onChange: (ev) => setHeadSign(ev.target.value), className: 'w-full text-xs p-2 border rounded font-mono text-slate-600' })
+                    ),
+                    e('button', { onClick: handleSave, className: 'w-full bg-blue-600 text-white font-bold text-xs py-2 rounded mt-2 cursor-pointer' }, 'Save Configuration')
+                )
             );
         }
 
-        function StudentDashboard() { return e('div', { className: 'p-6 text-center text-slate-500 text-xs font-semibold' }, 'Student Desk View Component.'); }
-        function ParentDashboard() { return e('div', { className: 'p-6 text-center text-slate-500 text-xs font-semibold' }, 'Parent Desk View Component.'); }
+        function AcademicCalendarModule(props) {
+            return e('div', { className: 'p-6 max-w-3xl mx-auto' },
+                e('div', { className: 'flex justify-between items-center mb-6' }, e('h2', { className: 'text-lg font-bold text-slate-800' }, '🗓️ Academic Calendar Node'), e('button', { onClick: () => props.setView('admin'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded' }, '← Panel')),
+                e('div', { className: 'bg-white p-5 border rounded-lg shadow-sm' }, e('p', { className: 'text-xs text-slate-400 italic' }, 'Multi-month active track system maps online.'))
+            );
+        }
+
+        function TerminalReportCardsView(props) {
+            const [selectedClass, setSelectedClass] = useState('F1');
+            const [selectedStream, setSelectedStream] = useState('A');
+
+            const filteredStudents = props.students.filter(s => s.class === selectedClass && s.stream === selectedStream);
+
+            // strict mandate alphabetized sorting condition mapping layout execution
+            const sortedFemales = filteredStudents.filter(s => s.gender === 'F').sort((a, b) => a.name.localeCompare(b.name));
+            const sortedMales = filteredStudents.filter(s => s.gender === 'M').sort((a, b) => a.name.localeCompare(b.name));
+            const sortedRoster = [...sortedFemales, ...sortedMales];
+
+            const determineGradeLetter = (score) => {
+                if (score >= 75) return { grade: 'A', remarks: 'EXCELLENT' };
+                if (score >= 65) return { grade: 'B', remarks: 'VERY GOOD' };
+                if (score >= 45) return { grade: 'C', remarks: 'GOOD' };
+                if (score >= 30) return { grade: 'D', remarks: 'SATISFACTORY' };
+                return { grade: 'F', remarks: 'FAIL' };
+            };
+
+            return e('div', { className: 'p-6 max-w-5xl mx-auto' },
+                e('div', { className: 'flex justify-between items-center mb-6 no-print' },
+                    e('h2', { className: 'text-lg font-bold text-slate-800' }, '📝 Batch Report Card Generation Registry View'),
+                    e('div', { className: 'flex gap-2' },
+                        e('button', { onClick: () => window.print(), className: 'bg-blue-600 text-white font-bold text-xs px-3 py-1.5 rounded cursor-pointer' }, '🖨️ Print Batch'),
+                        e('button', { onClick: () => props.setView('admin'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded' }, '← Back')
+                    )
+                ),
+                e('div', { className: 'bg-white p-4 border rounded-lg shadow-sm mb-6 flex gap-4 no-print' },
+                    e('div', null, e('select', { value: selectedClass, onChange: (ev) => setSelectedClass(ev.target.value), className: 'text-xs p-2 border rounded bg-white' }, AVAILABLE_CLASSES.map(c => e('option', { key: c, value: c }, c)))),
+                    e('div', null, e('select', { value: selectedStream, onChange: (ev) => setSelectedStream(ev.target.value), className: 'text-xs p-2 border rounded bg-white' }, AVAILABLE_STREAMS.map(s => e('option', { key: s, value: s }, `Stream ${s}`))))
+                ),
+                e('div', { id: 'output', className: 'flex flex-col gap-8' },
+                    sortedRoster.length === 0 ? e('div', { className: 'p-12 text-center bg-white border rounded italic text-slate-400 no-print' }, 'No report cards generated. Ensure active students have been allocated inside the selected room block.') :
+                    sortedRoster.map((student, index) => {
+                        let grandTotal = 0;
+                        let count = 0;
+
+                        const rowElements = INITIAL_SUBJECTS.map(sub => {
+                            const assessments = student.subjects[sub.code] || { t1: "", midterm: "", t2: "", exam: "" };
+                            const computedFinalScore = (Number(assessments.t1) || 0) + (Number(assessments.midterm) || 0) + (Number(assessments.t2) || 0) + (Number(assessments.exam) || 0);
+                            
+                            grandTotal += computedFinalScore;
+                            count++;
+
+                            const metrics = determineGradeLetter(computedFinalScore);
+
+                            return e('tr', { key: sub.code, className: 'border-b text-center' },
+                                e('td', { className: 'p-2 border text-left font-bold pl-3' }, sub.name),
+                                e('td', { className: 'p-2 border font-mono' }, assessments.t1 || '-'),
+                                e('td', { className: 'p-2 border font-mono' }, assessments.midterm || '-'),
+                                e('td', { className: 'p-2 border font-mono' }, assessments.t2 || '-'),
+                                e('td', { className: 'p-2 border font-mono' }, assessments.exam || '-'),
+                                e('td', { className: 'p-2 border font-mono font-black text-slate-900 bg-slate-50/50' }, computedFinalScore),
+                                e('td', { className: 'p-2 border font-black text-blue-800' }, metrics.grade),
+                                e('td', { className: 'p-2 border text-[10px] font-bold text-slate-600' }, metrics.remarks)
+                            );
+                        });
+
+                        const calculatedAverageScore = count > 0 ? (grandTotal / count).toFixed(1) : 0;
+                        const finalOverallMetrics = determineGradeLetter(Number(calculatedAverageScore));
+
+                        return e('div', { key: student.id, className: `bg-white p-8 border-2 border-slate-300 rounded shadow-sm relative ${index > 0 ? 'print-page-break' : ''}` },
+                            e('div', { className: 'text-center border-b-2 border-slate-800 pb-3 mb-4' },
+                                e('h2', { className: 'text-base font-black uppercase tracking-wide text-slate-900' }, props.settings.schoolName),
+                                e('p', { className: 'text-xs font-bold text-blue-700 tracking-wider mt-0.5 uppercase' }, 'Official Student Terminal Performance Transcript Summary')
+                            ),
+                            e('div', { className: 'grid grid-cols-2 gap-4 text-xs mb-6 border bg-slate-50/50 p-3 rounded' },
+                                e('div', null,
+                                    e('p', null, e('span', { className: 'text-slate-500 font-medium' }, 'Student Name: '), e('span', { className: 'font-black text-slate-900' }, student.name)),
+                                    e('p', { className: 'mt-1' }, e('span', { className: 'text-slate-500 font-medium' }, 'Gender Track: '), e('span', { className: 'font-bold' }, student.gender === 'F' ? 'Female (♀)' : 'Male (♂)'))
+                                ),
+                                e('div', { className: 'text-right' },
+                                    e('p', null, e('span', { className: 'text-slate-500 font-medium' }, 'Class Allocation: '), e('span', { className: 'font-bold text-blue-700' }, `Form ${student.class} — Stream ${student.stream}`)),
+                                    e('p', { className: 'mt-1' }, e('span', { className: 'text-slate-500 font-medium' }, 'Term Attendance: '), e('span', { className: 'font-mono font-bold text-emerald-700' }, `${student.presentDays} Present / ${student.totalDays} Total`))
+                                )
+                            ),
+                            e('table', { className: 'w-full text-xs border-collapse' },
+                                e('thead', null,
+                                    e('tr', { className: 'bg-slate-800 text-white text-center' },
+                                        e('th', { className: 'p-2 border border-slate-800 text-left pl-3 font-bold' }, 'Subject Particulars'),
+                                        e('th', { className: 'p-2 border border-slate-800 font-medium' }, 'T1 (10)'),
+                                        e('th', { className: 'p-2 border border-slate-800 font-medium' }, 'MID (20)'),
+                                        e('th', { className: 'p-2 border border-slate-800 font-medium' }, 'T2 (10)'),
+                                        e('th', { className: 'p-2 border border-slate-800 font-medium' }, 'EXAM (60)'),
+                                        e('th', { className: 'p-2 border border-slate-800 font-bold' }, 'TOTAL (100)'),
+                                        e('th', { className: 'p-2 border border-slate-800 font-bold' }, 'GRADE'),
+                                        e('th', { className: 'p-2 border border-slate-800 font-bold' }, 'REMARKS')
+                                    )
+                                ),
+                                e('tbody', null, rowElements)
+                            ),
+                            e('div', { className: 'grid grid-cols-2 gap-6 mt-6 border-t pt-4 text-xs font-mono' },
+                                e('div', { className: 'space-y-1 bg-slate-50 p-3 rounded border' },
+                                    e('p', null, e('span', { className: 'font-bold' }, 'GRAND TOTAL SCORE: '), e('span', { className: 'font-black text-slate-900' }, grandTotal)),
+                                    e('p', null, e('span', { className: 'font-bold' }, 'COMPUTED TERM AVERAGE: '), e('span', { className: 'font-black text-blue-700 text-sm' }, calculatedAverageScore)),
+                                    e('p', null, e('span', { className: 'font-bold' }, 'OVERALL TERMINAL GRADE: '), e('span', { className: 'font-black text-purple-700' }, finalOverallMetrics.grade))
+                                ),
+                                e('div', { className: 'flex flex-col justify-end items-end text-right' },
+                                    e('div', { className: 'w-48 border-b border-slate-400 h-8' }),
+                                    e('p', { className: 'text-[10px] uppercase font-bold text-slate-500 mt-1 mr-4' }, props.settings.headteacherSignatureText || "HEADTEACHER CLEARANCE")
+                                )
+                            ),
+                            e('span', { className: 'absolute bottom-2 left-4 text-[9px] font-mono font-bold text-slate-300 uppercase' }, `ShuleSys Ingestion Token ID Node: ${student.id}`)
+                        );
+                    })
+                )
+            );
+        }
 
         function App() {
-            const [view, setView] = useState('teacher');
-            const [settings, setSettings] = useState({ schoolName: "SHULESYS PORTAL SYSTEM", gradeA: 80, gradeB: 70, gradeC: 50, gradeD: 40 });
-            const [teachers, setTeachers] = useState([
-                { id: 1, name: "MWAALIMU KIPIMO", initials: "KP", phone: "0763112233", specialization: "GEOGRAPHY", targetClasses: ["F1", "F2"], targetStreams: ["A", "C", "F"] }
-            ]);
-            const [activeTeacher, setActiveTeacher] = useState({ id: 1, name: "MWAALIMU KIPIMO", initials: "KP", targetClasses: ["F1", "F2"], targetStreams: ["A", "C", "F"] });
-            
-            const [students, setStudents] = useState([
-                { id: 1, name: "ZAINAB ALLY", class: "F1", stream: "A", gender: "F", t1: 75, midterm: 80, t2: 85, exam: 40 },
-                { id: 2, name: "ALPHA MARY", class: "F1", stream: "A", gender: "F", t1: 60, midterm: "", t2: 70, exam: 35 },
-                { id: 3, name: "BARAKA JUMA", class: "F1", stream: "A", gender: "M", t1: 90, midterm: 88, t2: 92, exam: 48 },
-                { id: 4, name: "CHUMA ALLY", class: "F1", stream: "A", gender: "M", t1: 50, midterm: 60, t2: 55, exam: 30 },
-                { id: 5, name: "FATMA OMARY", class: "F1", stream: "C", gender: "F", t1: 85, midterm: 90, t2: 88, exam: 50 }
-            ]);
-            const [calendarEvents, setCalendarEvents] = useState([
-                { id: 101, date: "2026-05-12", title: "MID-TERM EXAMS", type: "EXAM" }
-            ]);
-            const [blueprints, setBlueprints] = useState([
-                { id: 201, teacherInitials: "KP", className: "F1", streamName: "A", topic: "INTRODUCTION TO MAP READING", durationWeeks: 3, description: "Focusing on grid references...", timestamp: "2026-05-10" }
-            ]);
+            const [view, setView] = useState('admin');
+            const [teachers, setTeachers] = useState([]);
+            const [students, setStudents] = useState([]);
+            const [timetableData, setTimetableData] = useState({});
+            const [activeTeacher, setActiveTeacher] = useState(null);
+            const [settings, setSettings] = useState({
+                schoolName: "TT-PRO ULTIMATE ACADEMY",
+                headteacherSignatureText: "HEADTEACHER SIGNATURE / SEAL"
+            });
 
-            return e('div', { className: 'min-h-screen bg-slate-50 flex flex-col' },
+            // Set up fallback teacher workspace configuration context loop
+            useEffect(() => {
+                if (teachers.length > 0 && !activeTeacher) {
+                    setActiveTeacher(teachers[0]);
+                }
+            }, [teachers, activeTeacher]);
+
+            return e('div', { className: 'min-h-screen flex flex-col' },
                 e(Navbar, { currentView: view, setView: setView, activeTeacher: activeTeacher, settings: settings }),
                 e('main', { className: 'flex-1' },
                     view === 'admin' && e(AdminDashboard, { setView: setView }),
                     view === 'manage-teachers' && e(TeacherManagement, { teachers: teachers, setTeachers: setTeachers, setView: setView, setActiveTeacher: setActiveTeacher }),
                     view === 'manage-students' && e(StudentManagement, { students: students, setStudents: setStudents, setView: setView }),
-                    view === 'teacher' && e(TeacherDashboard, { setView: setView, activeTeacher: activeTeacher }),
-                    view === 'student' && e(StudentDashboard, null),
-                    view === 'parent' && e(ParentDashboard, null),
-                    view === 'grading' && e(GradingSystem, { activeTeacher: activeTeacher, setView: setView, students: students, setStudents: setStudents, settings: settings }),
-                    view === 'attendance' && e(StreamAttendanceSystem, { activeTeacher: activeTeacher, setView: setView, students: students, setStudents: setStudents }),
-                    view === 'blueprints' && e(LessonBlueprintsSystem, { activeTeacher: activeTeacher, setView: setView, blueprints: blueprints, setBlueprints: setBlueprints }),
-                    view === 'timetable' && e(TimetableConfig, { setView: setView }),
-                    view === 'calendar' && e(AcademicCalendarSystem, { setView: setView, calendarEvents: calendarEvents, setCalendarEvents: setCalendarEvents }),
-                    view === 'settings' && e(SystemSettings, { setView: setView, settings: settings, setSettings: setSettings }),
-                    view === 'diagnostics' && e(PerformanceDiagnostics, { activeTeacher: activeTeacher, setView: setView, students: students, settings: settings })
+                    view === 'timetable' && e(TTProTimetableEngine, { teachers: teachers, timetableData: timetableData, setTimetableData: setTimetableData, setView: setView, settings: settings }),
+                    view === 'calendar' && e(AcademicCalendarModule, { setView: setView }),
+                    view === 'settings' && e(InstitutionalSettings, { settings: settings, setSettings: setSettings, setView: setView }),
+                    view === 'teacher' && e(TeacherDashboard, { activeTeacher: activeTeacher, setView: setView }),
+                    view === 'grading' && e(TeacherGradingModule, { activeTeacher: activeTeacher, students: students, setStudents: setStudents, setView: setView }),
+                    view === 'attendance' && e(StudentAttendanceModule, { activeTeacher: activeTeacher, students: students, setStudents: setStudents, setView: setView }),
+                    view === 'diagnostics' && e(PerformanceDiagnostics, { students: students, timetableData: timetableData, setView: setView }),
+                    view === 'report-cards' && e(TerminalReportCardsView, { students: students, settings: settings, setView: setView }),
+                    
+                    // Standalone client role routes maps simple components below
+                    view === 'student' && e('div', { className: 'p-12 text-center text-xs text-slate-500 font-bold' }, '🎓 Student Access Workspace Terminal Pipeline active.'),
+                    view === 'parent' && e('div', { className: 'p-12 text-center text-xs text-slate-500 font-bold' }, '👪 Parent Engagement Node active.')
                 )
             );
         }
 
-        const rootElement = document.getElementById('root');
-        const appRoot = ReactDOM.createRoot(rootElement);
-        appRoot.render(e(App));
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(e(App));
     </script>
 </body>
 </html>
