@@ -1,989 +1,1176 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sw">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShuleSys Portal & TT-PRO Ultimate Engine</title>
-    <!-- Stable Tailwind CSS Stylesheet -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Production-ready React and ReactDOM Core Engines -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <title>Student Admission & Bulk Report Card Manager</title>
     <style>
-        @media print {
-            .no-print { display: none !important; }
-            .print-page-break { page-break-before: always !important; break-before: page !important; margin-top: 0 !important; padding-top: 10px !important; }
-            body { background-color: #ffffff !important; padding: 0 !important; }
-            #output { max-width: 100% !important; width: 100% !important; }
+        :root {
+            --primary-blue: #2563eb;
+            --dark-navy: #1e293b;
+            --border-color: #000;
+            --bg-light: #f8fafc;
+            --panel-bg: #ffffff;
         }
-        .mosque-strips {
-            background: repeating-linear-gradient(45deg, #fef08a, #fef08a 10px, #fefcbf 10px, #fefcbf 20px);
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 0;
+            background-color: #e2e8f0;
+            color: #000;
+        }
+
+        /* --- Admin Layout Container (Hidden on Print) --- */
+        #admin-container {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+            padding: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .admin-header-bar {
+            grid-column: 1 / -1;
+            background-color: var(--dark-navy);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        .admin-header-bar h1 {
+            margin: 0;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-panel {
+            background-color: #475569;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .btn-panel:hover {
+            background-color: #334155;
+        }
+
+        .admin-card {
+            background: var(--panel-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin-bottom: 20px;
+        }
+
+        .admin-card h2 {
+            font-size: 14px;
+            color: #475569;
+            text-transform: uppercase;
+            margin-top: 0;
+            margin-bottom: 15px;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 8px;
+        }
+
+        .form-control {
+            margin-bottom: 12px;
+        }
+
+        .form-control label {
+            display: block;
+            font-size: 11px;
+            font-weight: bold;
+            color: #64748b;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .form-control input, .form-control select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background-color: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .db-filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .db-filters input, .db-filters select {
+            padding: 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .bulk-actions-bar {
+            background-color: #f1f5f9;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+        }
+
+        .roster-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .roster-table th {
+            color: #64748b;
+            padding: 10px;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 600;
+        }
+
+        .roster-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #1e293b;
+        }
+
+        .roster-table tr.active-student {
+            background-color: #eff6ff;
+            font-weight: bold;
+        }
+
+        .roster-table tr:hover {
+            background-color: #f8fafc;
+            cursor: pointer;
+        }
+
+        .badge-stream {
+            background-color: #dcfce7;
+            color: #15803d;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* --- Input Fields Styles --- */
+        .marks-panel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .subject-block {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .subject-block label {
+            font-weight: bold;
+            font-size: 13px;
+            display: block;
+            margin-bottom: 6px;
+            color: #1e293b;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 2px;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            margin-bottom: 4px;
+        }
+
+        .input-row div {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-row span {
+            font-size: 10px;
+            color: #64748b;
+            font-weight: bold;
+        }
+
+        .input-row input {
+            padding: 4px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            font-size: 11px;
+            box-sizing: border-box;
+        }
+
+        .workspace-split {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .print-btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .btn-print-action {
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-single { background-color: #10b981; }
+        .btn-bulk { background-color: #7c3aed; }
+
+        /* --- Report Card Page View --- */
+        #print-output-container {
+            display: block;
+        }
+
+        .report-card-page {
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 15mm 20mm;
+            margin: 30px auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.15);
+            box-sizing: border-box;
+            position: relative;
+            page-break-after: always;
+        }
+
+        .report-header {
+            text-align: center;
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .logo-placeholder {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 80px;
+            height: 80px;
+            border: 1px dashed #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .header-title {
+            font-size: 16px;
+            font-weight: bold;
+            line-height: 1.4;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .report-title {
+            margin-top: 15px;
+            font-size: 14px;
+            font-weight: bold;
+            text-decoration: underline;
+            text-transform: uppercase;
+        }
+
+        .meta-info {
+            width: 100%;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+
+        .meta-info td {
+            padding: 4px 0;
+        }
+
+        .dotted-line {
+            border-bottom: 1px dotted #000;
+            display: inline-block;
+            font-weight: bold;
+            padding-left: 5px;
+        }
+
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        table.data-table th, table.data-table td {
+            border: 1px solid var(--border-color);
+            padding: 5px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        table.data-table th {
+            font-weight: bold;
+            background-color: #f2f2f2;
+        }
+
+        table.data-table td.subject-name {
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .summary-row {
+            font-size: 13px;
+            font-weight: bold;
+            margin: 10px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .behavior-section {
+            margin-top: 15px;
+        }
+
+        .section-heading {
+            font-size: 13px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .behavior-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        table.behavior-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        table.behavior-table th, table.behavior-table td {
+            border: 1px solid var(--border-color);
+            padding: 4px;
+        }
+
+        table.behavior-table td:nth-child(1) { text-align: left; }
+        table.behavior-table td:nth-child(2) { text-align: center; font-weight: bold; width: 60px; }
+
+        .grading-legend {
+            font-size: 11px;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .admin-section {
+            margin-top: 15px;
+            font-size: 12px;
+            line-height: 1.8;
+        }
+
+        .signature-stamp-space {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .stamp-box {
+            border: 2px dashed #0000ff;
+            color: #0000ff;
+            border-radius: 50%;
+            width: 110px;
+            height: 110px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 9px;
+            font-weight: bold;
+            transform: rotate(-5deg);
+            margin-top: -10px;
+        }
+
+        .parent-slip {
+            margin-top: 25px;
+            border-top: 1px dashed #000;
+            position: relative;
+            padding-top: 15px;
+            font-size: 12px;
+        }
+
+        .scissors-icon {
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            font-size: 16px;
+            background: white;
+            padding: 0 5px;
+        }
+
+        .slip-title {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        /* --- Print Rules --- */
+        @media print {
+            #admin-container {
+                display: none !important;
+            }
+            body {
+                background-color: white;
+                padding: 0;
+            }
+            .report-card-page {
+                box-shadow: none;
+                margin: 0 auto 0mm auto;
+                padding: 10mm 15mm;
+                width: 210mm;
+                height: 297mm;
+                page-break-after: always;
+                overflow: hidden;
+            }
+            .report-card-page.hidden-print {
+                display: none !important;
+            }
         }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen text-slate-800">
+<body onload="init()">
 
-    <div id="root">
-        <div id="fallback-loader" class="flex flex-col items-center justify-center min-h-screen p-6 text-center">
-            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
-            <p class="text-sm font-semibold text-slate-600">Initializing ShuleSys Portal Engines...</p>
+    <div id="admin-container">
+        <div class="admin-header-bar">
+            <h1>🎓 Student Admission & Bulk Report Card Manager</h1>
+            <button class="btn-panel" onclick="backToPanel()">← Back to Panel</button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div class="admin-card">
+                <h2>⚙️ Report Card Settings</h2>
+                <div class="form-control">
+                    <label>Muhula (Term)</label>
+                    <select id="cfg-term" onchange="updateGlobalSettings()">
+                        <option value="I">MUHULA WA I</option>
+                        <option value="II" selected>MUHULA WA II</option>
+                    </select>
+                </div>
+                <div class="form-control">
+                    <label>Mwaka (Year)</label>
+                    <input type="text" id="cfg-year" value="2026" oninput="updateGlobalSettings()">
+                </div>
+                <div class="form-control">
+                    <label>Shule Imefungwa</label>
+                    <input type="text" id="cfg-close-date" value="05/12/2026" oninput="updateGlobalSettings()">
+                </div>
+                <div class="form-control">
+                    <label>Itafunguliwa Tarehe</label>
+                    <input type="text" id="cfg-open-date" value="12/01/2027" oninput="updateGlobalSettings()">
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <h2>Enroll New Student</h2>
+                <form id="enrollment-form" onsubmit="handleEnrollment(event)">
+                    <div class="form-control">
+                        <label>Student Full Name</label>
+                        <input type="text" id="stu-fullname" placeholder="E.G. CHUMA KANYAMA" required>
+                    </div>
+                    <div class="form-control">
+                        <label>Gender</label>
+                        <select id="stu-gender">
+                            <option value="F">Female</option>
+                            <option value="M">Male</option>
+                        </select>
+                    </div>
+                    <div class="form-control">
+                        <label>Form Level</label>
+                        <select id="stu-form" onchange="adjustEnrollmentSchemaHint()">
+                            <option value="F1">F1</option>
+                            <option value="F2">F2</option>
+                            <option value="F3" selected>F3</option>
+                            <option value="F4">F4</option>
+                        </select>
+                    </div>
+                    <div class="form-control">
+                        <label>Assigned Stream</label>
+                        <select id="stu-stream">
+                            <option value="Stream A">Stream A</option>
+                            <option value="Stream B">Stream B</option>
+                            <option value="Stream C">Stream C</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-submit">Admit Student</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="workspace-split">
+            <div class="admin-card">
+                <h2>Global Enrolled Database</h2>
+                <div class="db-filters">
+                    <input type="text" id="search-filter" placeholder="🔍 Search student name..." oninput="renderRosterTable()" style="flex: 2;">
+                    <select id="form-filter" onchange="renderRosterTable()" style="flex: 1;">
+                        <option value="All">All Forms</option>
+                        <option value="F1">F1</option>
+                        <option value="F2">F2</option>
+                        <option value="F3">F3</option>
+                        <option value="F4">F4</option>
+                    </select>
+                    <select id="stream-filter" onchange="renderRosterTable()" style="flex: 1;">
+                        <option value="All">All Streams</option>
+                        <option value="Stream A">Stream A</option>
+                        <option value="Stream B">Stream B</option>
+                        <option value="Stream C">Stream C</option>
+                    </select>
+                </div>
+
+                <div class="bulk-actions-bar">
+                    <label><input type="checkbox" id="select-all-box" onchange="toggleSelectAll(this)"> Select All for Bulk Print</label>
+                    <span id="selected-count-badge">Selected: 0 student(s)</span>
+                </div>
+
+                <table class="roster-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px; text-align: center;">Print</th>
+                            <th>Student Name</th>
+                            <th>Gender</th>
+                            <th>Class Room</th>
+                            <th>Stream Block</th>
+                        </tr>
+                    </thead>
+                    <tbody id="roster-tbody"></tbody>
+                </table>
+            </div>
+
+            <div class="admin-card">
+                <h2>Edit Term Assessments (T1, T2, Mid, Annual)</h2>
+                <div id="active-student-banner" style="font-weight: bold; color: var(--primary-blue); margin-bottom: 10px;">
+                    Selected: NONE
+                </div>
+                <div class="marks-panel-grid" id="marks-entry-grid"></div>
+                
+                <div class="print-btn-group">
+                    <button class="btn-print-action btn-single" onclick="printSingleReport()">
+                        🖨️ Print Selected Single Report
+                    </button>
+                    <button class="btn-print-action btn-bulk" onclick="printBulkReports()">
+                        📚 Bulk Print All Checked Reports
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Diagnostic Script Catch-Block -->
-    <script type="text/javascript">
-        window.addEventListener('error', function(e) {
-            var rootEl = document.getElementById('root');
-            if (rootEl) {
-                rootEl.innerHTML = `
-                    <div class="p-6 max-w-xl mx-auto my-12 bg-white border border-red-200 rounded-lg shadow-sm">
-                        <h2 class="text-red-600 font-bold text-base mb-2">System Execution Exception Caught</h2>
-                        <p class="text-xs text-slate-600 font-mono bg-slate-50 p-3 rounded border mb-4">${e.message}</p>
+    <div id="print-output-container"></div>
+
+    <script>
+        // Data ya wanafunzi wenye alama za mfano
+        let globalStudents = [
+            { id: 1, name: "ZAINAB ALLY", gender: "F", form: "F1", stream: "Stream A", checkedForPrint: true, marks: {
+                "his_maadili": { t1: 80, t2: 70, mid: 75, ann: 78, rnk: 1 }, "hist": { t1: 60, t2: 65, mid: 70, ann: 68, rnk: 2 },
+                "geo": { t1: 50, t2: 55, mid: 45, ann: 52, rnk: 3 }, "kisw": { t1: 85, t2: 90, mid: 88, ann: 86, rnk: 1 },
+                "eng": { t1: 70, t2: 75, mid: 72, ann: 74, rnk: 2 }, "phy": { t1: 40, t2: 45, mid: 50, ann: 48, rnk: 4 },
+                "chem": { t1: 55, t2: 60, mid: 58, ann: 56, rnk: 3 }, "bio": { t1: 65, t2: 70, mid: 62, ann: 66, rnk: 2 },
+                "math": { t1: 30, t2: 35, mid: 40, ann: 38, rnk: 5 }, "bus_studies": { t1: 60, t2: 62, mid: 65, ann: 63, rnk: 3 },
+                "book_keeping": { t1: 70, t2: 68, mid: 72, ann: 71, rnk: 2 }
+            }},
+            { id: 2, name: "ALPHA MARY", gender: "F", form: "F1", stream: "Stream A", checkedForPrint: true, marks: {
+                "his_maadili": { t1: 40, t2: 42, mid: 45, ann: 43, rnk: 4 }, "hist": { t1: 30, t2: 35, mid: 32, ann: 34, rnk: 5 },
+                "geo": { t1: 55, t2: 58, mid: 60, ann: 62, rnk: 2 }, "kisw": { t1: 70, t2: 72, mid: 75, ann: 71, rnk: 3 }
+            }},
+            { id: 3, name: "BARAKA JUMA", gender: "M", form: "F2", stream: "Stream B", checkedForPrint: true, marks: {
+                "his_maadili": { t1: 65, t2: 60, mid: 62, ann: 66, rnk: 2 }, "hist": { t1: 70, t2: 75, mid: 72, ann: 74, rnk: 1 }
+            }},
+            { id: 4, name: "CHUMA ALLY", gender: "M", form: "F2", stream: "Stream A", checkedForPrint: true, marks: {
+                "his_maadili": { t1: 50, t2: 52, mid: 55, ann: 58, rnk: 3 }, "hist": { t1: 45, t2: 48, mid: 50, ann: 52, rnk: 4 }
+            }},
+            { id: 5, name: "FATMA OMARY", gender: "F", form: "F1", stream: "Stream C", checkedForPrint: true, marks: {
+                "his_maadili": { t1: 90, t2: 92, mid: 95, ann: 94, rnk: 1 }, "hist": { t1: 85, t2: 88, mid: 82, ann: 86, rnk: 1 }
+            }},
+            { id: 6, name: "PAULO THOMAS LOISUJAKU", gender: "M", form: "F3", stream: "Stream A", checkedForPrint: true, marks: {
+                "civ": { t1: 75, t2: 80, mid: 85, ann: 78, rnk: 1 }, "hist": { t1: 70, t2: 72, mid: 68, ann: 71, rnk: 2 }, 
+                "geo": { t1: 60, t2: 65, mid: 62, ann: 64, rnk: 3 }, "kisw": { t1: 85, t2: 88, mid: 90, ann: 87, rnk: 1 }, 
+                "eng": { t1: 80, t2: 82, mid: 78, ann: 81, rnk: 2 }, "phy": { t1: 50, t2: 55, mid: 52, ann: 54, rnk: 4 },
+                "chem": { t1: 65, t2: 68, mid: 62, ann: 66, rnk: 3 }, "bio": { t1: 70, t2: 75, mid: 72, ann: 73, rnk: 2 }, 
+                "math": { t1: 45, t2: 50, mid: 48, ann: 49, rnk: 5 }, "nutr": { t1: 60, t2: 62, mid: 58, ann: 61, rnk: 4 }, 
+                "lit": { t1: 70, t2: 72, mid: 74, ann: 73, rnk: 3 }
+            }}
+        ];
+
+        const subjectsF1F2 = [
+            { id: "his_maadili", name: "HISTORIA NA MAADILI" }, { id: "hist", name: "HISTORIA" }, { id: "geo", name: "GEOGRAPHY" },
+            { id: "kisw", name: "KISWAHILI" }, { id: "eng", name: "ENGLISH" }, { id: "phy", name: "PHYSICS" },
+            { id: "chem", name: "CHEMISTRY" }, { id: "bio", name: "BIOLOGY" }, { id: "math", name: "MATHEMATICS" },
+            { id: "bus_studies", name: "BUSINESS STUDIES" }, { id: "book_keeping", name: "BOOK KEEPING" }
+        ];
+
+        const subjectsF3F4 = [
+            { id: "civ", name: "CIVICS" }, { id: "hist", name: "HISTORY" }, { id: "geo", name: "GEOGRAPHY" },
+            { id: "kisw", name: "KISWAHILI" }, { id: "eng", name: "ENGLISH" }, { id: "phy", name: "PHYSICS" },
+            { id: "chem", name: "CHEMISTRY" }, { id: "bio", name: "BIOLOGY" }, { id: "math", name: "B/MATHS" },
+            { id: "nutr", name: "NUTRITION" }, { id: "lit", name: "LITERATURE" }
+        ];
+
+        let selectedStudentId = 6;
+
+        function backToPanel() {
+            window.location.href = "dashboard.html"; 
+        }
+
+        function init() {
+            sortGlobalStudentsRoster();
+            renderRosterTable();
+            selectStudent(selectedStudentId);
+        }
+
+        function updateGlobalSettings() {
+            generateAllReportCardsHTML();
+        }
+
+        function getSubjectSchemaForStudent(form) {
+            return (form === "F1" || form === "F2") ? subjectsF1F2 : subjectsF3F4;
+        }
+
+        // Kanuni Maalum: Panga orodha kila mara - Wasichana kwanza, kisha Wavulana (Kialfabeti kila kundi)
+        function sortGlobalStudentsRoster() {
+            globalStudents.sort((a, b) => {
+                if (a.gender === b.gender) {
+                    return a.name.localeCompare(b.name);
+                }
+                return a.gender === 'F' ? -1 : 1;
+            });
+        }
+
+        function handleEnrollment(e) {
+            e.preventDefault();
+            const name = document.getElementById('stu-fullname').value.trim().toUpperCase();
+            const gender = document.getElementById('stu-gender').value;
+            const form = document.getElementById('stu-form').value;
+            const stream = document.getElementById('stu-stream').value;
+
+            if(!name) return;
+
+            const newStudent = { id: Date.now(), name, gender, form, stream, marks: {}, checkedForPrint: true };
+            globalStudents.push(newStudent);
+            
+            document.getElementById('enrollment-form').reset();
+            sortGlobalStudentsRoster();
+            renderRosterTable();
+            selectStudent(newStudent.id);
+        }
+
+        function adjustEnrollmentSchemaHint() {
+            // Can be used to change interface hints dynamically if needed.
+        }
+
+        function renderRosterTable() {
+            const tbody = document.getElementById('roster-tbody');
+            const search = document.getElementById('search-filter').value.toLowerCase();
+            const fFilter = document.getElementById('form-filter').value;
+            const sFilter = document.getElementById('stream-filter').value;
+
+            tbody.innerHTML = '';
+            let checkedCount = 0;
+
+            globalStudents.forEach(stu => {
+                if (search && !stu.name.toLowerCase().includes(search)) return;
+                if (fFilter !== 'All' && stu.form !== fFilter) return;
+                if (sFilter !== 'All' && stu.stream !== sFilter) return;
+
+                if (stu.checkedForPrint) checkedCount++;
+
+                let tr = document.createElement('tr');
+                if (stu.id === selectedStudentId) tr.className = 'active-student';
+                
+                tr.onclick = (e) => {
+                    if(e.target.type !== 'checkbox') selectStudent(stu.id);
+                };
+                
+                tr.innerHTML = `
+                    <td style="text-align:center;">
+                        <input type="checkbox" ${stu.checkedForPrint ? 'checked' : ''} onchange="toggleStudentCheck(${stu.id}, this.checked)">
+                    </td>
+                    <td><strong>${stu.name}</strong></td>
+                    <td>${stu.gender}</td>
+                    <td style="color:#2563eb;">${stu.form}</td>
+                    <td><span class="badge-stream">${stu.stream}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('selected-count-badge').innerText = `Selected: ${checkedCount} student(s)`;
+        }
+
+        function toggleStudentCheck(id, isChecked) {
+            const student = globalStudents.find(s => s.id === id);
+            if(student) student.checkedForPrint = isChecked;
+            
+            let checkedCount = globalStudents.filter(s => s.checkedForPrint).length;
+            document.getElementById('selected-count-badge').innerText = `Selected: ${checkedCount} student(s)`;
+            generateAllReportCardsHTML();
+        }
+
+        function toggleSelectAll(masterBox) {
+            const search = document.getElementById('search-filter').value.toLowerCase();
+            const fFilter = document.getElementById('form-filter').value;
+            const sFilter = document.getElementById('stream-filter').value;
+
+            globalStudents.forEach(stu => {
+                if (search && !stu.name.toLowerCase().includes(search)) return;
+                if (fFilter !== 'All' && stu.form !== fFilter) return;
+                if (sFilter !== 'All' && stu.stream !== sFilter) return;
+                stu.checkedForPrint = masterBox.checked;
+            });
+
+            renderRosterTable();
+            generateAllReportCardsHTML();
+        }
+
+        function selectStudent(id) {
+            selectedStudentId = id;
+            const student = globalStudents.find(s => s.id === id);
+            if (!student) return;
+
+            document.getElementById('active-student-banner').innerText = `Selected: ${student.name} (${student.form} - ${student.stream})`;
+            buildMarksInputs(student);
+
+            const currentSchema = getSubjectSchemaForStudent(student.form);
+            currentSchema.forEach(sub => {
+                const sData = student.marks[sub.id] || { t1: "", t2: "", mid: "", ann: "", rnk: "" };
+                document.getElementById(`in-t1-${sub.id}`).value = sData.t1 !== undefined ? sData.t1 : "";
+                document.getElementById(`in-t2-${sub.id}`).value = sData.t2 !== undefined ? sData.t2 : "";
+                document.getElementById(`in-mid-${sub.id}`).value = sData.mid !== undefined ? sData.mid : "";
+                document.getElementById(`in-ann-${sub.id}`).value = sData.ann !== undefined ? sData.ann : "";
+                document.getElementById(`in-rnk-${sub.id}`).value = sData.rnk !== undefined ? sData.rnk : "";
+            });
+
+            // Refresh table highlights
+            const rows = document.getElementById('roster-tbody').children;
+            let idx = 0;
+            const search = document.getElementById('search-filter').value.toLowerCase();
+            const fFilter = document.getElementById('form-filter').value;
+            const sFilter = document.getElementById('stream-filter').value;
+
+            globalStudents.forEach(stu => {
+                if (search && !stu.name.toLowerCase().includes(search)) return;
+                if (fFilter !== 'All' && stu.form !== fFilter) return;
+                if (sFilter !== 'All' && stu.stream !== sFilter) return;
+
+                if (rows[idx]) {
+                    if (stu.id === selectedStudentId) rows[idx].className = 'active-student';
+                    else rows[idx].className = '';
+                }
+                idx++;
+            });
+
+            generateAllReportCardsHTML();
+        }
+
+        function buildMarksInputs(student) {
+            const formLevel = student ? student.form : "F3";
+            const currentSchema = getSubjectSchemaForStudent(formLevel);
+
+            const grid = document.getElementById('marks-entry-grid');
+            grid.innerHTML = '';
+
+            currentSchema.forEach(sub => {
+                let div = document.createElement('div');
+                div.className = 'subject-block';
+                div.innerHTML = `
+                    <label>${sub.name}</label>
+                    <div class="input-row">
+                        <div><span>T1 Marks</span><input type="text" id="in-t1-${sub.id}" oninput="saveMarks('${sub.id}')"></div>
+                        <div><span>T2 Marks</span><input type="text" id="in-t2-${sub.id}" oninput="saveMarks('${sub.id}')"></div>
+                    </div>
+                    <div class="input-row">
+                        <div><span>Midterm</span><input type="text" id="in-mid-${sub.id}" oninput="saveMarks('${sub.id}')"></div>
+                        <div><span>Annual</span><input type="text" id="in-ann-${sub.id}" oninput="saveMarks('${sub.id}')"></div>
+                    </div>
+                    <div class="input-row" style="grid-template-columns: 1fr;">
+                        <div><span>Subject Rank</span><input type="text" id="in-rnk-${sub.id}" oninput="saveMarks('${sub.id}')"></div>
                     </div>
                 `;
-            }
-        });
-    </script>
-
-    <!-- React Application Logic Engine Script Container -->
-    <script type="text/javascript">
-        const e = React.createElement;
-        const useState = React.useState;
-        const useEffect = React.useEffect;
-
-        const AVAILABLE_STREAMS = ['A', 'B', 'C', 'D', 'E', 'F'];
-        const AVAILABLE_CLASSES = ['F1', 'F2', 'F3', 'F4'];
-        const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-        
-        const TIMETABLE_SLOTS = [
-            { id: 1, label: "08:00 - 08:40", isBefore1040: true, isBreak: false },
-            { id: 2, label: "08:40 - 09:20", isBefore1040: true, isBreak: false },
-            { id: 3, label: "09:20 - 10:00", isBefore1040: true, isBreak: false },
-            { id: 4, label: "10:00 - 10:40", isBefore1040: true, isBreak: false },
-            { id: 5, label: "10:40 - 11:00", isBefore1040: false, isBreak: true, labelName: "MORNING BREAK" },
-            { id: 6, label: "11:00 - 11:40", isBefore1040: false, isBreak: false },
-            { id: 7, label: "11:40 - 12:20", isBefore1040: false, isBreak: false },
-            { id: 8, label: "12:20 - 01:00", isBefore1040: false, isBreak: false },
-            { id: 9, label: "01:00 - 02:00", isBefore1040: false, isBreak: true, labelName: "LUNCH & PRAYERS" },
-            { id: 10, label: "02:00 - 02:40", isBefore1040: false, isBreak: false },
-            { id: 11, label: "02:40 - 03:20", isBefore1040: false, isBreak: false }
-        ];
-
-        const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-
-        const INITIAL_SUBJECTS = [
-            { code: "CIV", name: "CIVICS", type: "core" },
-            { code: "HIST", name: "HISTORY", type: "core" },
-            { code: "GEO", name: "GEOGRAPHY", type: "core" },
-            { code: "KISW", name: "KISWAHILI", type: "core" },
-            { code: "ENGL", name: "ENGLISH", type: "core" },
-            { code: "PHY", name: "PHYSICS", type: "science" },
-            { code: "CHEM", name: "CHEMISTRY", type: "science" },
-            { code: "BIO", name: "BIOLOGY", type: "science" },
-            { code: "B/MATH", name: "BASIC MATHEMATICS", type: "core" }
-        ];
-
-        function Navbar(props) {
-            return e('nav', { className: 'flex justify-between items-center bg-[#2c3e50] text-white px-6 py-3 shadow-md no-print' },
-                e('h2', { className: 'text-sm sm:text-base font-bold' }, `🏫 ${props.settings.schoolName || 'ShuleSys Portal'}`),
-                e('div', { className: 'flex gap-4 items-center text-xs' },
-                    ['admin', 'teacher', 'student', 'parent'].map(v => 
-                        e('button', {
-                            key: v,
-                            onClick: () => props.setView(v),
-                            className: `hover:text-white transition capitalize cursor-pointer ${props.currentView === v || ['manage-teachers', 'manage-students', 'timetable', 'settings', 'grading', 'attendance', 'calendar', 'blueprints', 'diagnostics', 'report-cards'].includes(props.currentView) && v === 'admin' ? 'text-white font-black underline underline-offset-4' : 'text-slate-300'}`
-                        }, v === 'teacher' ? `Teacher Workspace (${props.activeTeacher?.initials || 'None'})` : v)
-                    )
-                )
-            );
-        }
-
-        function DashboardCard(props) {
-            return e('div', {
-                onClick: props.onClick,
-                className: 'bg-white border border-slate-200 rounded-lg p-5 shadow-sm cursor-pointer transition transform hover:-translate-y-0.5 hover:shadow-md hover:border-blue-300'
-            },
-                e('div', { className: 'text-2xl mb-2' }, props.icon),
-                e('h3', { className: 'text-sm font-bold text-slate-800 mb-1' }, props.title),
-                e('p', { className: 'text-xs text-slate-500 leading-relaxed' }, props.description)
-            );
-        }
-
-        function AdminDashboard(props) {
-            return e('div', { className: 'p-6 max-w-7xl mx-auto' },
-                e('h2', { className: 'text-lg font-bold text-slate-800 mb-5' }, 'Control Panel Overview'),
-                e('div', { className: 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5' },
-                    e(DashboardCard, { icon: '👨‍🏫', title: 'Manage Teachers', description: 'Add teachers and assign multiple forms/streams (A-F).', onClick: () => props.setView('manage-teachers') }),
-                    e(DashboardCard, { icon: '🧑‍🎓', title: 'Manage Students', description: 'Enroll students, assign streams, and track global terminal rosters.', onClick: () => props.setView('manage-students') }),
-                    e(DashboardCard, { icon: '📅', title: 'TT-PRO Timetable Engine', description: 'Configure schedules with automated validation metrics rules.', onClick: () => props.setView('timetable') }),
-                    e(DashboardCard, { icon: '📝', title: 'Terminal Report Cards', description: 'Generate comprehensive report logs sorted Alphabetically by Female First.', onClick: () => props.setView('report-cards') }),
-                    e(DashboardCard, { icon: '🗓️', title: 'Academic Calendar', description: 'Schedule and map multi-month key institutional milestones.', onClick: () => props.setView('calendar') }),
-                    e(DashboardCard, { icon: '📊', title: 'System Settings', description: 'Configure system names, active streams, and grading scales.', onClick: () => props.setView('settings') })
-                )
-            );
-        }
-
-        function TeacherManagement(props) {
-            const [name, setName] = useState('');
-            const [initials, setInitials] = useState('');
-            const [phone, setPhone] = useState('');
-            const [specialization, setSpecialization] = useState('');
-            const [selectedClasses, setSelectedClasses] = useState(['F1']);
-            const [selectedStreams, setSelectedStreams] = useState(['A']);
-
-            const toggleClass = (cls) => {
-                if (selectedClasses.includes(cls)) {
-                    setSelectedClasses(selectedClasses.filter(c => c !== cls));
-                } else {
-                    setSelectedClasses([...selectedClasses, cls]);
-                }
-            };
-
-            const toggleStream = (strm) => {
-                if (selectedStreams.includes(strm)) {
-                    setSelectedStreams(selectedStreams.filter(s => s !== strm));
-                } else {
-                    setSelectedStreams([...selectedStreams, strm]);
-                }
-            };
-
-            const handleAddTeacher = (event) => {
-                event.preventDefault();
-                if (!name.trim() || !initials.trim()) return;
-                if (selectedClasses.length === 0 || selectedStreams.length === 0) {
-                    alert("Please select at least one Class and one Stream for this teacher.");
-                    return;
-                }
-
-                const newTeacher = {
-                    id: Date.now(),
-                    name: name.toUpperCase(),
-                    initials: initials.toUpperCase().slice(0, 4),
-                    phone: phone || '-',
-                    specialization: specialization.toUpperCase() || 'GENERAL',
-                    targetClasses: selectedClasses,
-                    targetStreams: selectedStreams
-                };
-
-                props.setTeachers([...props.teachers, newTeacher]);
-                setName(''); setInitials(''); setPhone(''); setSpecialization('');
-                setSelectedClasses(['F1']); setSelectedStreams(['A']);
-            };
-
-            return e('div', { className: 'p-6 max-w-6xl mx-auto' },
-                e('div', { className: 'flex justify-between items-center mb-6' },
-                    e('h2', { className: 'text-lg font-bold text-slate-800' }, '👨‍🏫 Teacher Registry & Multi-Stream Allocation'),
-                    e('button', { onClick: () => props.setView('admin'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded cursor-pointer' }, '← Back to Panel')
-                ),
-                e('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-6' },
-                    e('div', { className: 'bg-white p-5 border border-slate-200 rounded-lg shadow-sm h-fit' },
-                        e('h3', { className: 'text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 border-b pb-2' }, 'Register New Teacher'),
-                        e('form', { onSubmit: handleAddTeacher, className: 'flex flex-col gap-3' },
-                            e('div', null,
-                                e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Full Name'),
-                                e('input', { type: 'text', value: name, onChange: (ev) => setName(ev.target.value), placeholder: 'E.G. MR. JOHN MEMA', className: 'w-full text-xs p-2 border border-slate-200 rounded outline-none focus:border-blue-500', required: true })
-                            ),
-                            e('div', null,
-                                e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Staff Initials'),
-                                e('input', { type: 'text', value: initials, onChange: (ev) => setInitials(ev.target.value), maxLength: 4, placeholder: 'E.G. JM', className: 'w-full text-xs p-2 border border-slate-200 rounded outline-none focus:border-blue-500', required: true })
-                            ),
-                            e('div', null,
-                                e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Assigned Classes'),
-                                e('div', { className: 'grid grid-cols-4 gap-2 mt-1' },
-                                    AVAILABLE_CLASSES.map(f => e('button', {
-                                        type: 'button',
-                                        key: f,
-                                        onClick: () => toggleClass(f),
-                                        className: `p-2 text-xs font-bold rounded border text-center transition cursor-pointer ${selectedClasses.includes(f) ? 'bg-blue-600 border-blue-600 text-white' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}`
-                                    }, f))
-                                )
-                            ),
-                            e('div', null,
-                                e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Assigned Streams'),
-                                e('div', { className: 'grid grid-cols-3 gap-2 mt-1' },
-                                    AVAILABLE_STREAMS.map(s => e('button', {
-                                        type: 'button',
-                                        key: s,
-                                        onClick: () => toggleStream(s),
-                                        className: `p-2 text-xs font-bold rounded border text-center transition cursor-pointer ${selectedStreams.includes(s) ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}`
-                                    }, `Stream ${s}`))
-                                )
-                            ),
-                            e('div', null,
-                                e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Core Subject Focus'),
-                                e('input', { type: 'text', value: specialization, onChange: (ev) => setSpecialization(ev.target.value), placeholder: 'E.G. PHYSICS', className: 'w-full text-xs p-2 border border-slate-200 rounded outline-none focus:border-blue-500' })
-                            ),
-                            e('button', { type: 'submit', className: 'w-full bg-blue-600 text-white font-bold text-xs py-2 rounded mt-2 cursor-pointer' }, 'Save Staff Member')
-                        )
-                    ),
-                    e('div', { className: 'bg-white p-5 border border-slate-200 rounded-lg shadow-sm md:col-span-2' },
-                        e('h3', { className: 'text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 border-b pb-2' }, `Active Staff Roster (${props.teachers.length})`),
-                        e('div', { className: 'overflow-x-auto' },
-                            e('table', { className: 'w-full text-left text-xs border-collapse' },
-                                e('thead', null,
-                                    e('tr', { className: 'bg-slate-50 text-slate-600 border-b border-slate-200' },
-                                        e('th', { className: 'p-3 font-bold' }, 'Initials'),
-                                        e('th', { className: 'p-3 font-bold' }, 'Full Name'),
-                                        e('th', { className: 'p-3 font-bold' }, 'Assigned Forms'),
-                                        e('th', { className: 'p-3 font-bold' }, 'Assigned Streams'),
-                                        e('th', { className: 'p-3 font-bold text-center' }, 'Switch Profile')
-                                    )
-                                ),
-                                e('tbody', null,
-                                    props.teachers.map(t => 
-                                        e('tr', { key: t.id, className: 'border-b border-slate-100 last:border-none hover:bg-slate-50/50' },
-                                            e('td', { className: 'p-3' }, e('span', { className: 'bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-black' }, t.initials)),
-                                            e('td', { className: 'p-3 font-bold text-slate-800' }, t.name),
-                                            e('td', { className: 'p-3' }, 
-                                                e('div', { className: 'flex flex-wrap gap-1' },
-                                                    t.targetClasses.map(c => e('span', { key: c, className: 'bg-blue-50 text-blue-700 font-bold px-1.5 py-0.5 rounded text-[10px]' }, c))
-                                                )
-                                            ),
-                                            e('td', { className: 'p-3' }, 
-                                                e('div', { className: 'flex flex-wrap gap-1' },
-                                                    t.targetStreams.map(s => e('span', { key: s, className: 'bg-emerald-50 text-emerald-700 font-bold px-1.5 py-0.5 rounded text-[10px]' }, `Str ${s}`))
-                                                )
-                                            ),
-                                            e('td', { className: 'p-3 text-center' }, 
-                                                e('button', { onClick: () => { props.setActiveTeacher(t); alert(`Switched workspace to view as: ${t.name}`); }, className: 'text-blue-600 hover:underline font-bold cursor-pointer' }, 'Login as Teacher')
-                                            )
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-            );
-        }
-
-        function StudentManagement(props) {
-            const [fullName, setFullName] = useState('');
-            const [selectedClass, setSelectedClass] = useState('F1');
-            const [selectedStream, setSelectedStream] = useState('A');
-            const [selectedGender, setSelectedGender] = useState('F');
-            const [searchQuery, setSearchQuery] = useState('');
-            const [filterClass, setFilterClass] = useState('ALL');
-            const [filterStream, setFilterStream] = useState('ALL');
-
-            const handleDownloadTemplate = () => {
-                const headers = "Full Name,Class (F1-F4),Stream (A-F),Gender (M/F)\n";
-                const sampleRows = ["REHEMA JUMA,F1,A,F", "JOHN LUKAS,F1,A,M", "AMANI ALLY,F1,A,M", "ZENA SEIF,F1,A,F"].join("\n");
-                const blob = new Blob([headers + sampleRows], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement("a");
-                link.setAttribute("href", url);
-                link.setAttribute("download", "shulesys_student_template.csv");
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            };
-
-            const handleBulkUploadCSV = (event) => {
-                const file = event.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const text = e.target.result;
-                    const lines = text.split(/\r?\n/);
-                    if (lines.length <= 1) { alert("The file selected appears to be empty."); return; }
-                    const loadedStudents = [];
-                    let skippedCount = 0; let successCount = 0;
-                    for (let i = 1; i < lines.length; i++) {
-                        const line = lines[i].trim(); if (!line) continue;
-                        const columns = line.split(','); if (columns.length < 4) { skippedCount++; continue; }
-                        const nameParsed = columns[0].trim().toUpperCase();
-                        const classParsed = columns[1].trim().toUpperCase();
-                        const streamParsed = columns[2].trim().toUpperCase();
-                        const genderParsed = columns[3].trim().toUpperCase();
-                        if (nameParsed && AVAILABLE_CLASSES.includes(classParsed) && AVAILABLE_STREAMS.includes(streamParsed) && ['M', 'F'].includes(genderParsed)) {
-                            
-                            const gradesStructure = {};
-                            INITIAL_SUBJECTS.forEach(sub => {
-                                gradesStructure[sub.code] = { t1: "", midterm: "", t2: "", exam: "" };
-                            });
-
-                            loadedStudents.push({
-                                id: Date.now() + i, 
-                                name: nameParsed, 
-                                class: classParsed, 
-                                stream: streamParsed, 
-                                gender: genderParsed,
-                                totalDays: 60, 
-                                presentDays: 60, 
-                                permittedDays: 0,
-                                subjects: gradesStructure
-                            });
-                            successCount++;
-                        } else { skippedCount++; }
-                    }
-                    if (loadedStudents.length > 0) {
-                        props.setStudents(prev => [...prev, ...loadedStudents]);
-                        alert(`Bulk Ingestion Complete!\nEnrolled: ${successCount} entries.\nSkipped/Invalid items: ${skippedCount}.`);
-                    } else { alert("Error: No valid rows detected."); }
-                    event.target.value = "";
-                };
-                reader.readAsText(file);
-            };
-
-            const handleEnrollStudent = (event) => {
-                event.preventDefault();
-                if (!fullName.trim()) return;
-
-                const gradesStructure = {};
-                INITIAL_SUBJECTS.forEach(sub => {
-                    gradesStructure[sub.code] = { t1: "", midterm: "", t2: "", exam: "" };
-                });
-
-                props.setStudents([...props.students, {
-                    id: Date.now(), 
-                    name: fullName.toUpperCase(), 
-                    class: selectedClass, 
-                    stream: selectedStream, 
-                    gender: selectedGender,
-                    totalDays: 60, 
-                    presentDays: 60, 
-                    permittedDays: 0,
-                    subjects: gradesStructure
-                }]);
-                setFullName('');
-            };
-
-            // Implement strict structural sorting blueprint: Female first alphabetically, then Male alphabetically
-            const getSortedRoster = (list) => {
-                const females = list.filter(s => s.gender === 'F').sort((a, b) => a.name.localeCompare(b.name));
-                const males = list.filter(s => s.gender === 'M').sort((a, b) => a.name.localeCompare(b.name));
-                return [...females, ...males];
-            };
-
-            const filteredRoster = props.students.filter(s => {
-                return s.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-                       (filterClass === 'ALL' || s.class === filterClass) &&
-                       (filterStream === 'ALL' || s.stream === filterStream);
+                grid.appendChild(div);
             });
-
-            const sortedFinalRoster = getSortedRoster(filteredRoster);
-
-            return e('div', { className: 'p-6 max-w-6xl mx-auto' },
-                e('div', { className: 'flex justify-between items-center mb-6' },
-                    e('h2', { className: 'text-lg font-bold text-slate-800' }, '🧑‍🎓 Student Admission & Roster Manager'),
-                    e('button', { onClick: () => props.setView('admin'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded cursor-pointer' }, '← Back to Panel')
-                ),
-                e('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-6' },
-                    e('div', { className: 'flex flex-col gap-6' },
-                        e('div', { className: 'bg-white p-5 border border-slate-200 rounded-lg shadow-sm' },
-                            e('h3', { className: 'text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 border-b pb-2' }, 'Enroll New Student'),
-                            e('form', { onSubmit: handleEnrollStudent, className: 'flex flex-col gap-3' },
-                                e('div', null,
-                                    e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Student Full Name'),
-                                    e('input', { type: 'text', value: fullName, onChange: (ev) => setFullName(ev.target.value), placeholder: 'E.G. CHUMA KANYAMA', className: 'w-full text-xs p-2 border rounded outline-none focus:border-blue-500', required: true })
-                                ),
-                                e('div', null,
-                                    e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Gender'),
-                                    e('select', { value: selectedGender, onChange: (ev) => setSelectedGender(ev.target.value), className: 'w-full text-xs p-2 border rounded bg-white font-bold' }, 
-                                        e('option', { value: 'F' }, 'Female ♀'),
-                                        e('option', { value: 'M' }, 'Male ♂')
-                                    )
-                                ),
-                                e('div', null,
-                                    e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Form Level'),
-                                    e('select', { value: selectedClass, onChange: (ev) => setSelectedClass(ev.target.value), className: 'w-full text-xs p-2 border rounded bg-white' }, AVAILABLE_CLASSES.map(c => e('option', { key: c, value: c }, c)))
-                                ),
-                                e('div', null,
-                                    e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Assigned Stream'),
-                                    e('select', { value: selectedStream, onChange: (ev) => setSelectedStream(ev.target.value), className: 'w-full text-xs p-2 border rounded bg-white' }, AVAILABLE_STREAMS.map(s => e('option', { key: s, value: s }, `Stream ${s}`)))
-                                ),
-                                e('button', { type: 'submit', className: 'w-full bg-blue-600 text-white font-bold text-xs py-2 rounded mt-2 cursor-pointer' }, 'Admit Student')
-                            )
-                        ),
-                        e('div', { className: 'bg-white p-5 border border-slate-200 rounded-lg shadow-sm' },
-                            e('h3', { className: 'text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 border-b pb-2' }, 'Mass Import Tools'),
-                            e('button', { type: 'button', onClick: handleDownloadTemplate, className: 'w-full border text-blue-700 bg-blue-50/50 hover:bg-blue-50 font-bold text-xs py-2 rounded mb-3 text-center cursor-pointer' }, '📥 Download CSV Template'),
-                            e('input', { type: 'file', accept: '.csv', onChange: handleBulkUploadCSV, className: 'w-full text-xs text-slate-500 border rounded p-1 cursor-pointer' })
-                        )
-                    ),
-                    e('div', { className: 'bg-white p-5 border border-slate-200 rounded-lg shadow-sm md:col-span-2' },
-                        e('div', { className: 'flex justify-between items-center border-b pb-2 mb-4' },
-                            e('h3', { className: 'text-xs font-bold text-slate-700 uppercase tracking-wider' }, `Global Enrolled Database (${props.students.length})`),
-                            e('span', { className: 'text-[10px] bg-purple-100 text-purple-800 px-2 py-0.5 rounded font-bold' }, '♀ Female-First Structured View Sorted')
-                        ),
-                        e('div', { className: 'grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4' },
-                            e('input', { type: 'text', value: searchQuery, onChange: (ev) => setSearchQuery(ev.target.value), placeholder: '🔍 Search student name...', className: 'text-xs p-2 border rounded outline-none' }),
-                            e('select', { value: filterClass, onChange: (ev) => setFilterClass(ev.target.value), className: 'text-xs p-2 border rounded bg-white' }, e('option', { value: 'ALL' }, 'All Forms'), AVAILABLE_CLASSES.map(c => e('option', { key: c, value: c }, c))),
-                            e('select', { value: filterStream, onChange: (ev) => setFilterStream(ev.target.value), className: 'text-xs p-2 border rounded bg-white' }, e('option', { value: 'ALL' }, 'All Streams'), AVAILABLE_STREAMS.map(s => e('option', { key: s, value: s }, `Stream ${s}`)))
-                        ),
-                        e('div', { className: 'overflow-x-auto' },
-                            e('table', { className: 'w-full text-left text-xs border-collapse' },
-                                e('thead', null, e('tr', { className: 'bg-slate-50 text-slate-600 border-b' }, e('th', { className: 'p-3 font-bold' }, 'Student Name'), e('th', { className: 'p-3 font-bold text-center' }, 'Gender'), e('th', { className: 'p-3 font-bold text-center' }, 'Class Room'), e('th', { className: 'p-3 font-bold text-center' }, 'Stream Block'))),
-                                e('tbody', null, sortedFinalRoster.map(s => e('tr', { key: s.id, className: 'border-b border-slate-100 hover:bg-slate-50/50' }, 
-                                    e('td', { className: 'p-3 font-bold text-slate-800' }, s.name), 
-                                    e('td', { className: 'p-3 text-center' }, e('span', { className: `px-2 py-0.5 font-bold rounded font-mono text-[11px] ${s.gender === 'F' ? 'bg-pink-100 text-pink-700' : 'bg-blue-100 text-blue-700'}` }, s.gender === 'F' ? 'F ♀' : 'M ♂')), 
-                                    e('td', { className: 'p-3 text-center font-semibold text-blue-600' }, s.class), 
-                                    e('td', { className: 'p-3 text-center' }, e('span', { className: 'bg-emerald-50 text-emerald-700 px-2 py-0.5 font-bold rounded' }, `Stream ${s.stream}`))
-                                )))
-                            )
-                        )
-                    )
-                )
-            );
         }
 
-        function TTProTimetableEngine(props) {
-            const [selectedClass, setSelectedClass] = useState('F1');
-            const [selectedStream, setSelectedStream] = useState('A');
-            const [activeSubject, setActiveSubject] = useState(INITIAL_SUBJECTS[0].code);
-            const [activeTeacher, setActiveTeacher] = useState(props.teachers[0]?.initials || 'UNASSIGNED');
+        function saveMarks(subId) {
+            const student = globalStudents.find(s => s.id === selectedStudentId);
+            if (!student) return;
 
-            const scheduleMatrix = props.timetableData[`${selectedClass}-${selectedStream}`] || {};
-
-            const updateCell = (day, slotId, value) => {
-                const key = `${selectedClass}-${selectedStream}`;
-                const currentTimetable = props.timetableData[key] ? { ...props.timetableData[key] } : {};
-                
-                if (!value) {
-                    delete currentTimetable[`${day}-${slotId}`];
-                } else {
-                    currentTimetable[`${day}-${slotId}`] = value;
-                }
-
-                props.setTimetableData({
-                    ...props.timetableData,
-                    [key]: currentTimetable
-                });
-            };
-
-            // Structural checking diagnostics algorithm 
-            const runValidationDiagnostics = () => {
-                const logs = [];
-                let trackingDoubleCounter = {};
-
-                DAYS_OF_WEEK.forEach(day => {
-                    trackingDoubleCounter[day] = {};
-                    
-                    let continuousStreak = 1;
-                    let lastSubject = null;
-
-                    TIMETABLE_SLOTS.forEach((slot, index) => {
-                        if (slot.isBreak) return;
-                        
-                        const cellData = scheduleMatrix[`${day}-${slot.id}`];
-                        
-                        // Rule Check 1: No single periods or free slots before 10:40 AM
-                        if (slot.isBefore1040) {
-                            if (!cellData) {
-                                logs.push(`⚠️ ${day} (${slot.label}): Critical Warning - Free space detected before 10:40 AM limit.`);
-                            }
-                        }
-
-                        if (cellData) {
-                            const currentSub = cellData.subject;
-
-                            if (currentSub === lastSubject) {
-                                continuousStreak++;
-                            } else {
-                                if (continuousStreak === 2 && lastSubject) {
-                                    trackingDoubleCounter[day][lastSubject] = (trackingDoubleCounter[day][lastSubject] || 0) + 1;
-                                }
-                                continuousStreak = 1;
-                            }
-                            
-                            // Check rule break boundary crossover points
-                            const nextSlot = TIMETABLE_SLOTS[index + 1];
-                            if (nextSlot && nextSlot.isBreak && currentSub === lastSubject) {
-                                logs.push(`❌ ${day} Violation: Subject ${currentSub} double block splits across a system rest period interval.`);
-                            }
-
-                            lastSubject = currentSub;
-                        } else {
-                            if (continuousStreak === 2 && lastSubject) {
-                                trackingDoubleCounter[day][lastSubject] = (trackingDoubleCounter[day][lastSubject] || 0) + 1;
-                            }
-                            continuousStreak = 1;
-                            lastSubject = null;
-                        }
-                    });
-
-                    // Catch trailing elements
-                    if (continuousStreak === 2 && lastSubject) {
-                        trackingDoubleCounter[day][lastSubject] = (trackingDoubleCounter[day][lastSubject] || 0) + 1;
-                    }
-
-                    // Rule Check 2: Maximum exactly one double block per subject a day
-                    Object.keys(trackingDoubleCounter[day]).forEach(subCode => {
-                        if (trackingDoubleCounter[day][subCode] > 1) {
-                            logs.push(`❌ ${day} Over-allocation: Subject ${subCode} has ${trackingDoubleCounter[day][subCode]} separate double periods scheduled.`);
-                        }
-                    });
-                });
-
-                return logs.length === 0 ? ["✅ Perfect Alignment: Rules pass matching priority logic criteria successfully."] : logs;
-            };
-
-            const diagnosticsOutput = runValidationDiagnostics();
-
-            return e('div', { className: 'p-6 max-w-7xl mx-auto' },
-                e('div', { className: 'flex justify-between items-center mb-6 no-print' },
-                    e('h2', { className: 'text-lg font-bold text-slate-800' }, '📅 TT-PRO Ultimate Timetable Matrix Engine'),
-                    e('div', { className: 'flex gap-2' },
-                        e('button', { onClick: () => window.print(), className: 'bg-emerald-600 text-white font-bold text-xs px-3 py-1.5 rounded cursor-pointer' }, '🖨️ Print View'),
-                        e('button', { onClick: () => props.setView('admin'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded cursor-pointer' }, '← Back to Panel')
-                    )
-                ),
-                e('div', { className: 'grid grid-cols-1 lg:grid-cols-4 gap-6' },
-                    e('div', { className: 'bg-white p-5 border rounded-lg shadow-sm h-fit no-print flex flex-col gap-4' },
-                        e('h3', { className: 'text-xs font-bold text-slate-700 uppercase tracking-wider border-b pb-2' }, 'Matrix Filters'),
-                        e('div', null,
-                            e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Form Level'),
-                            e('select', { value: selectedClass, onChange: (ev) => setSelectedClass(ev.target.value), className: 'w-full text-xs p-2 border rounded bg-white' }, AVAILABLE_CLASSES.map(c => e('option', { key: c, value: c }, c)))
-                        ),
-                        e('div', null,
-                            e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Stream Block'),
-                            e('select', { value: selectedStream, onChange: (ev) => setSelectedStream(ev.target.value), className: 'w-full text-xs p-2 border rounded bg-white' }, AVAILABLE_STREAMS.map(s => e('option', { key: s, value: s }, `Stream ${s}`)))
-                        ),
-                        e('h3', { className: 'text-xs font-bold text-slate-700 uppercase tracking-wider border-b pb-2 pt-2' }, 'Placement Configuration Tool'),
-                        e('div', null,
-                            e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Active Subject Assignment'),
-                            e('select', { value: activeSubject, onChange: (ev) => setActiveSubject(ev.target.value), className: 'w-full text-xs p-2 border rounded bg-white font-bold text-blue-700' }, INITIAL_SUBJECTS.map(sub => e('option', { key: sub.code, value: sub.code }, `${sub.code} - ${sub.name}`)))
-                        ),
-                        e('div', null,
-                            e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Allocated Staff Initial'),
-                            e('select', { value: activeTeacher, onChange: (ev) => setActiveTeacher(ev.target.value), className: 'w-full text-xs p-2 border rounded bg-white' }, 
-                                props.teachers.length === 0 ? e('option', { value: 'UNASSIGNED' }, 'No registered staff') :
-                                props.teachers.map(t => e('option', { key: t.initials, value: t.initials }, `${t.initials} (${t.name})`))
-                            )
-                        ),
-                        e('div', { className: 'bg-amber-50 p-3 rounded border border-amber-200 text-[11px] text-amber-900 leading-relaxed' },
-                            e('span', { className: 'font-bold block mb-1' }, 'Engine Enforcement Constraints Active:'),
-                            e('ul', { className: 'list-disc pl-4 space-y-0.5' },
-                                e('li', null, 'Max exactly 1 Double Period per subject a day.'),
-                                e('li', null, 'No isolated single slots before 10:40 AM.'),
-                                e('li', null, 'No free periods scheduled before 10:40 AM Break.'),
-                                e('li', null, 'Double blocks cannot straddle rest/lunch dividers.')
-                            )
-                        )
-                    ),
-                    e('div', { className: 'lg:col-span-3 bg-white p-6 border rounded-lg shadow-sm overflow-x-auto' },
-                        e('div', { className: 'mb-4 text-center border-b pb-3' },
-                            e('h1', { className: 'text-base font-black text-slate-900 tracking-wide uppercase' }, props.settings.schoolName || "ShuleSys Portal Master Timetable"),
-                            e('p', { className: 'text-xs text-blue-700 font-bold mt-0.5' }, `Room Specification Node: Form ${selectedClass} — Stream ${selectedStream}`)
-                        ),
-                        e('table', { className: 'w-full text-[11px] border-collapse text-center table-fixed min-w-[700px]' },
-                            e('thead', null,
-                                e('tr', { className: 'bg-slate-100 border' },
-                                    e('th', { className: 'p-2 border font-bold text-slate-700 w-24' }, 'Day / Slot'),
-                                    TIMETABLE_SLOTS.map(slot => e('th', { key: slot.id, className: `p-2 border font-bold text-[10px] text-slate-600 ${slot.isBreak ? 'bg-slate-50 text-slate-400 w-16' : ''}` }, slot.label))
-                                )
-                            ),
-                            e('tbody', null,
-                                DAYS_OF_WEEK.map(day => e('tr', { key: day, className: 'border h-14' },
-                                    e('td', { className: 'p-2 border font-bold bg-slate-50 text-slate-700' }, day),
-                                    TIMETABLE_SLOTS.map(slot => {
-                                        if (slot.isBreak) {
-                                            return e('td', { key: slot.id, className: 'p-1 border mosque-strips text-[9px] font-black text-amber-800 tracking-wider font-mono vertical-lr select-none' }, slot.labelName);
-                                        }
-                                        const cell = scheduleMatrix[`${day}-${slot.id}`];
-                                        return e('td', {
-                                            key: slot.id,
-                                            onClick: () => {
-                                                if (cell) {
-                                                    updateCell(day, slot.id, null);
-                                                } else {
-                                                    updateCell(day, slot.id, { subject: activeSubject, teacher: activeTeacher });
-                                                }
-                                            },
-                                            className: `p-1 border cursor-pointer transition relative group ${cell ? 'bg-blue-50 hover:bg-red-50' : 'hover:bg-slate-100'}`
-                                        }, cell ? e('div', null,
-                                            e('p', { className: 'font-black text-blue-800 text-[12px]' }, cell.subject),
-                                            e('p', { className: 'text-[9px] text-slate-500 font-bold mt-0.5' }, `Staff: ${cell.teacher}`),
-                                            e('span', { className: 'absolute top-0 right-0 hidden group-hover:block text-[9px] bg-red-600 text-white font-bold px-1 rounded-bl' }, 'X')
-                                        ) : e('span', { className: 'text-slate-300 opacity-0 group-hover:opacity-100 text-[9px] font-bold' }, '+ Place'));
-                                    })
-                                ))
-                            )
-                        ),
-                        e('div', { className: 'mt-6 no-print border-t pt-4' },
-                            e('h4', { className: 'text-xs font-bold text-slate-700 uppercase mb-2 tracking-wider' }, 'TT-PRO Automated Quality Verification Logs'),
-                            e('div', { className: 'bg-slate-50 border p-3 rounded font-mono text-[11px] flex flex-col gap-1.5' },
-                                diagnosticsOutput.map((log, idx) => e('p', { 
-                                    key: idx, 
-                                    className: log.startsWith('✅') ? 'text-emerald-700 font-bold' : log.startsWith('❌') ? 'text-red-600 font-bold' : 'text-amber-700 font-semibold' 
-                                }, log))
-                            )
-                        )
-                    )
-                )
-            );
-        }
-
-        function TeacherDashboard(props) {
-            return e('div', { className: 'p-6 max-w-7xl mx-auto' },
-                e('div', { className: 'bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6 flex justify-between items-center' },
-                    e('div', null,
-                        e('p', { className: 'text-xs font-bold text-blue-800 uppercase' }, 'Logged-In Workspace'),
-                        e('h2', { className: 'text-base font-black text-slate-900' }, props.activeTeacher?.name || 'NO LOGGED IN TEACHER'),
-                        e('div', { className: 'text-xs text-slate-600 mt-1 flex flex-wrap items-center gap-1' }, 'Authorized Streams:', 
-                            (props.activeTeacher?.targetClasses || []).flatMap(c => 
-                                (props.activeTeacher?.targetStreams || []).map(s => 
-                                    e('span', { key: `${c}-${s}`, className: 'bg-slate-200 px-1.5 py-0.5 rounded text-[10px] font-bold text-slate-700' }, `${c}-${s}`)
-                                )
-                            )
-                        )
-                    ),
-                    e('button', { onClick: () => props.setView('manage-teachers'), className: 'bg-white border text-xs font-bold px-3 py-1.5 rounded text-slate-700 hover:bg-slate-50 shadow-sm cursor-pointer' }, 'Change Teacher')
-                ),
-                e('div', { className: 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5' },
-                    e(DashboardCard, { icon: '📋', title: 'Stream Attendance Logging', description: 'Mark attendance metrics across assigned streams.', onClick: () => props.setView('attendance') }),
-                    e(DashboardCard, { icon: '🖋️', title: 'Enter Grades Module', description: 'Directly input raw sequential assessment numbers.', onClick: () => props.setView('grading') }),
-                    e(DashboardCard, { icon: '📊', title: 'Performance Diagnostics', description: 'Analyze term pass ratios for assigned student blocks.', onClick: () => props.setView('diagnostics') })
-                )
-            );
-        }
-
-        function TeacherGradingModule(props) {
-            const [selectedClass, setSelectedClass] = useState(props.activeTeacher?.targetClasses[0] || 'F1');
-            const [selectedStream, setSelectedStream] = useState(props.activeTeacher?.targetStreams[0] || 'A');
-            const [selectedSubject, setSelectedSubject] = useState(INITIAL_SUBJECTS[0].code);
-
-            const handleScoreChange = (studentId, assessmentType, val) => {
-                let numericVal = val === "" ? "" : Number(val);
-                if (numericVal !== "" && (numericVal < 0 || numericVal > 100)) return;
-
-                props.setStudents(props.students.map(s => {
-                    if (s.id === studentId) {
-                        const updatedSubjects = { ...s.subjects };
-                        updatedSubjects[selectedSubject] = {
-                            ...updatedSubjects[selectedSubject],
-                            [assessmentType]: numericVal
-                        };
-                        return { ...s, subjects: updatedSubjects };
-                    }
-                    return s;
-                }));
-            };
-
-            const studentsInBlock = props.students.filter(s => s.class === selectedClass && s.stream === selectedStream);
-
-            // Female first alphabetical sorting logic alignment inside the grading module
-            const females = studentsInBlock.filter(s => s.gender === 'F').sort((a, b) => a.name.localeCompare(b.name));
-            const males = studentsInBlock.filter(s => s.gender === 'M').sort((a, b) => a.name.localeCompare(b.name));
-            const orderedGradingRoster = [...females, ...males];
-
-            return e('div', { className: 'p-6 max-w-6xl mx-auto' },
-                e('div', { className: 'flex justify-between items-center mb-6' },
-                    e('h2', { className: 'text-lg font-bold text-slate-800' }, '🖋️ Comprehensive Terminal Grade Entrance Ledger'),
-                    e('button', { onClick: () => props.setView('teacher'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded cursor-pointer' }, '← Back to Desk')
-                ),
-                e('div', { className: 'bg-white p-5 border rounded-lg shadow-sm mb-6 flex flex-wrap gap-4 items-center' },
-                    e('div', null,
-                        e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Form Level'),
-                        e('select', { value: selectedClass, onChange: (ev) => setSelectedClass(ev.target.value), className: 'text-xs p-2 border rounded bg-white' }, (props.activeTeacher?.targetClasses || AVAILABLE_CLASSES).map(c => e('option', { key: c, value: c }, c)))
-                    ),
-                    e('div', null,
-                        e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Stream Block'),
-                        e('select', { value: selectedStream, onChange: (ev) => setSelectedStream(ev.target.value), className: 'text-xs p-2 border rounded bg-white' }, (props.activeTeacher?.targetStreams || AVAILABLE_STREAMS).map(s => e('option', { key: s, value: s }, `Stream ${s}`)))
-                    ),
-                    e('div', null,
-                        e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Subject Node'),
-                        e('select', { value: selectedSubject, onChange: (ev) => setSelectedSubject(ev.target.value), className: 'text-xs p-2 border rounded bg-white font-bold text-blue-700' }, INITIAL_SUBJECTS.map(sub => e('option', { key: sub.code, value: sub.code }, sub.name)))
-                    )
-                ),
-                e('div', { className: 'bg-white p-5 border rounded-lg shadow-sm' },
-                    e('div', { className: 'overflow-x-auto' },
-                        e('table', { className: 'w-full text-left text-xs border-collapse' },
-                            e('thead', null,
-                                e('tr', { className: 'bg-slate-50 border-b text-slate-600' },
-                                    e('th', { className: 'p-3 font-bold' }, 'Student Name'),
-                                    e('th', { className: 'p-3 font-bold text-center' }, 'Gender'),
-                                    e('th', { className: 'p-3 font-bold text-center w-24' }, 'T1 (10%)'),
-                                    e('th', { className: 'p-3 font-bold text-center w-24' }, 'Midterm (20%)'),
-                                    e('th', { className: 'p-3 font-bold text-center w-24' }, 'T2 (10%)'),
-                                    e('th', { className: 'p-3 font-bold text-center w-24' }, 'Exam (60%)'),
-                                    e('th', { className: 'p-3 font-bold text-center w-24' }, 'Total (100%)')
-                                )
-                            ),
-                            e('tbody', null,
-                                orderedGradingRoster.length === 0 ? e('tr', null, e('td', { colSpan: 7, className: 'p-4 text-center text-slate-400 italic' }, 'No students currently registered inside this matching query bracket.')) :
-                                orderedGradingRoster.map(s => {
-                                    const scores = s.subjects[selectedSubject] || { t1: "", midterm: "", t2: "", exam: "" };
-                                    const computedTotal = (Number(scores.t1) || 0) + (Number(scores.midterm) || 0) + (Number(scores.t2) || 0) + (Number(scores.exam) || 0);
-
-                                    return e('tr', { key: s.id, className: 'border-b last:border-none hover:bg-slate-50/50' },
-                                        e('td', { className: 'p-3 font-bold text-slate-800' }, s.name),
-                                        e('td', { className: 'p-3 text-center' }, e('span', { className: `px-1.5 py-0.5 rounded font-mono font-bold text-[10px] ${s.gender === 'F' ? 'bg-pink-100 text-pink-700' : 'bg-blue-100 text-blue-700'}` }, s.gender || 'F')),
-                                        e('td', { className: 'p-2 text-center' }, e('input', { type: 'number', min: 0, max: 10, value: scores.t1, onChange: (ev) => handleScoreChange(s.id, 't1', ev.target.value), className: 'w-16 p-1 border text-center rounded text-xs' })),
-                                        e('td', { className: 'p-2 text-center' }, e('input', { type: 'number', min: 0, max: 20, value: scores.midterm, onChange: (ev) => handleScoreChange(s.id, 'midterm', ev.target.value), className: 'w-16 p-1 border text-center rounded text-xs font-semibold' })),
-                                        e('td', { className: 'p-2 text-center' }, e('input', { type: 'number', min: 0, max: 10, value: scores.t2, onChange: (ev) => handleScoreChange(s.id, 't2', ev.target.value), className: 'w-16 p-1 border text-center rounded text-xs' })),
-                                        e('td', { className: 'p-2 text-center' }, e('input', { type: 'number', min: 0, max: 60, value: scores.exam, onChange: (ev) => handleScoreChange(s.id, 'exam', ev.target.value), className: 'w-16 p-1 border text-center rounded text-xs font-bold text-blue-600' })),
-                                        e('td', { className: 'p-3 text-center font-black text-slate-900 font-mono bg-slate-50' }, computedTotal || '0')
-                                    );
-                                })
-                            )
-                        )
-                    )
-                )
-            );
-        }
-
-        function StudentAttendanceModule(props) {
-            const [selectedClass, setSelectedClass] = useState(props.activeTeacher?.targetClasses[0] || 'F1');
-            const [selectedStream, setSelectedStream] = useState(props.activeTeacher?.targetStreams[0] || 'A');
-
-            const handleAttendanceField = (studentId, field, value) => {
-                props.setStudents(props.students.map(s => {
-                    if (s.id === studentId) {
-                        return { ...s, [field]: Number(value) || 0 };
-                    }
-                    return s;
-                }));
-            };
-
-            const targetStudents = props.students.filter(s => s.class === selectedClass && s.stream === selectedStream);
+            if (!student.marks) student.marks = {};
             
-            const females = targetStudents.filter(s => s.gender === 'F').sort((a, b) => a.name.localeCompare(b.name));
-            const males = targetStudents.filter(s => s.gender === 'M').sort((a, b) => a.name.localeCompare(b.name));
-            const structuredAttendanceRoster = [...females, ...males];
-
-            return e('div', { className: 'p-6 max-w-5xl mx-auto' },
-                e('div', { className: 'flex justify-between items-center mb-6' },
-                    e('h2', { className: 'text-lg font-bold text-slate-800' }, '📋 Cumulative Term Attendance Logs Manager'),
-                    e('button', { onClick: () => props.setView('teacher'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded cursor-pointer' }, '← Back to Desk')
-                ),
-                e('div', { className: 'bg-white p-4 border rounded-lg shadow-sm mb-6 flex gap-4' },
-                    e('div', null,
-                        e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Form Level'),
-                        e('select', { value: selectedClass, onChange: (ev) => setSelectedClass(ev.target.value), className: 'text-xs p-2 border rounded bg-white' }, (props.activeTeacher?.targetClasses || AVAILABLE_CLASSES).map(c => e('option', { key: c, value: c }, c)))
-                    ),
-                    e('div', null,
-                        e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Stream Block'),
-                        e('select', { value: selectedStream, onChange: (ev) => setSelectedStream(ev.target.value), className: 'text-xs p-2 border rounded bg-white' }, (props.activeTeacher?.targetStreams || AVAILABLE_STREAMS).map(s => e('option', { key: s, value: s }, `Stream ${s}`)))
-                    )
-                ),
-                e('div', { className: 'bg-white p-5 border rounded-lg shadow-sm' },
-                    e('table', { className: 'w-full text-left text-xs border-collapse' },
-                        e('thead', null,
-                            e('tr', { className: 'bg-slate-50 border-b text-slate-600' },
-                                e('th', { className: 'p-3 font-bold' }, 'Student Name'),
-                                e('th', { className: 'p-3 font-bold text-center' }, 'Gender'),
-                                e('th', { className: 'p-3 font-bold text-center' }, 'Total Days Open'),
-                                e('th', { className: 'p-3 font-bold text-center' }, 'Days Present'),
-                                e('th', { className: 'p-3 font-bold text-center' }, 'Permitted Absence')
-                            )
-                        ),
-                        e('tbody', null,
-                            structuredAttendanceRoster.map(s => e('tr', { key: s.id, className: 'border-b last:border-none' },
-                                e('td', { className: 'p-3 font-bold text-slate-800' }, s.name),
-                                e('td', { className: 'p-3 text-center font-bold text-slate-500' }, s.gender),
-                                e('td', { className: 'p-2 text-center' }, e('input', { type: 'number', value: s.totalDays, onChange: (ev) => handleAttendanceField(s.id, 'totalDays', ev.target.value), className: 'w-20 p-1 border text-center rounded text-xs font-mono' })),
-                                e('td', { className: 'p-2 text-center' }, e('input', { type: 'number', value: s.presentDays, onChange: (ev) => handleAttendanceField(s.id, 'presentDays', ev.target.value), className: 'w-20 p-1 border text-center rounded text-xs font-mono font-bold text-emerald-700' })),
-                                e('td', { className: 'p-2 text-center' }, e('input', { type: 'number', value: s.permittedDays, onChange: (ev) => handleAttendanceField(s.id, 'permittedDays', ev.target.value), className: 'w-20 p-1 border text-center rounded text-xs font-mono text-amber-700' }))
-                            ))
-                        )
-                    )
-                )
-            );
-        }
-
-        function PerformanceDiagnostics(props) {
-            return e('div', { className: 'p-6 max-w-4xl mx-auto' },
-                e('div', { className: 'flex justify-between items-center mb-6' },
-                    e('h2', { className: 'text-lg font-bold text-slate-800' }, '📊 Institutional Performance Diagnostics Node'),
-                    e('button', { onClick: () => props.setView('teacher'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded cursor-pointer' }, '← Back to Desk')
-                ),
-                e('div', { className: 'bg-white p-6 border rounded-lg shadow-sm' },
-                    e('p', { className: 'text-xs text-slate-500 mb-4' }, 'Realtime terminal evaluation calculations map summary metrics below:'),
-                    e('div', { className: 'grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono' },
-                        e('div', { className: 'border p-4 rounded bg-slate-50' }, e('p', { className: 'text-[10px] uppercase font-bold text-slate-500' }, 'Roster count'), e('p', { className: 'text-xl font-black text-slate-800 mt-1' }, props.students.length)),
-                        e('div', { className: 'border p-4 rounded bg-slate-50' }, e('p', { className: 'text-[10px] uppercase font-bold text-slate-500' }, 'Average Target Pass'), e('p', { className: 'text-xl font-black text-blue-700 mt-1' }, '74.2%')),
-                        e('div', { className: 'border p-4 rounded bg-slate-50' }, e('p', { className: 'text-[10px] uppercase font-bold text-slate-500' }, 'Timetable Cells Bound'), e('p', { className: 'text-xl font-black text-emerald-700 mt-1' }, Object.keys(props.timetableData).length))
-                    )
-                )
-            );
-        }
-
-        function InstitutionalSettings(props) {
-            const [sName, setSName] = useState(props.settings.schoolName);
-            const [headSign, setHeadSign] = useState(props.settings.headteacherSignatureText);
-
-            const handleSave = () => {
-                props.setSettings({ schoolName: sName, headteacherSignatureText: headSign });
-                alert("Global options saved successfully.");
+            student.marks[subId] = {
+                t1: document.getElementById(`in-t1-${subId}`).value.trim(),
+                t2: document.getElementById(`in-t2-${subId}`).value.trim(),
+                mid: document.getElementById(`in-mid-${subId}`).value.trim(),
+                ann: document.getElementById(`in-ann-${subId}`).value.trim(),
+                rnk: document.getElementById(`in-rnk-${subId}`).value.trim()
             };
-
-            return e('div', { className: 'p-6 max-w-xl mx-auto' },
-                e('div', { className: 'flex justify-between items-center mb-6' }, e('h2', { className: 'text-lg font-bold text-slate-800' }, '📊 Global Portal Parameters Configuration'), e('button', { onClick: () => props.setView('admin'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded' }, '← Back')),
-                e('div', { className: 'bg-white p-5 border rounded-lg shadow-sm flex flex-col gap-4' },
-                    e('div', null,
-                        e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'School Institution Crest / Name Header Text'),
-                        e('input', { type: 'text', value: sName, onChange: (ev) => setSName(ev.target.value), className: 'w-full text-xs p-2 border rounded font-bold' })
-                    ),
-                    e('div', null,
-                        e('label', { className: 'block text-[10px] font-bold text-slate-500 uppercase mb-1' }, 'Headteacher Terminal Validation Signature Title String'),
-                        e('input', { type: 'text', value: headSign, onChange: (ev) => setHeadSign(ev.target.value), className: 'w-full text-xs p-2 border rounded font-mono text-slate-600' })
-                    ),
-                    e('button', { onClick: handleSave, className: 'w-full bg-blue-600 text-white font-bold text-xs py-2 rounded mt-2 cursor-pointer' }, 'Save Configuration')
-                )
-            );
+            generateAllReportCardsHTML();
         }
 
-        function AcademicCalendarModule(props) {
-            return e('div', { className: 'p-6 max-w-3xl mx-auto' },
-                e('div', { className: 'flex justify-between items-center mb-6' }, e('h2', { className: 'text-lg font-bold text-slate-800' }, '🗓️ Academic Calendar Node'), e('button', { onClick: () => props.setView('admin'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded' }, '← Panel')),
-                e('div', { className: 'bg-white p-5 border rounded-lg shadow-sm' }, e('p', { className: 'text-xs text-slate-400 italic' }, 'Multi-month active track system maps online.'))
-            );
-        }
+        // Hesabu za Kikazi na Dynamic Calculations za Alama
+        function computeStudentPerformance(student) {
+            const currentSchema = getSubjectSchemaForStudent(student.form);
+            let subjectAverages = [];
+            let gradePoints = [];
+            let tableRowsHTML = '';
 
-        function TerminalReportCardsView(props) {
-            const [selectedClass, setSelectedClass] = useState('F1');
-            const [selectedStream, setSelectedStream] = useState('A');
+            currentSchema.forEach(sub => {
+                const sData = student.marks[sub.id] || { t1: "", t2: "", mid: "", ann: "", rnk: "" };
+                let mazoezi = "-";
+                let mtihani = "-";
+                let jumla = "-";
+                let wastani = "-";
+                let daraja = "-";
+                let maoni = "-";
+                let pts = 5;
 
-            const filteredStudents = props.students.filter(s => s.class === selectedClass && s.stream === selectedStream);
+                // Dynamic Continuous Assessment Formula (T1, T2, Mid)
+                let cAssessList = [];
+                if(sData.t1 !== "" && sData.t1 !== undefined && sData.t1 !== null) cAssessList.push(parseFloat(sData.t1) || 0);
+                if(sData.t2 !== "" && sData.t2 !== undefined && sData.t2 !== null) cAssessList.push(parseFloat(sData.t2) || 0);
+                if(sData.mid !== "" && sData.mid !== undefined && sData.mid !== null) cAssessList.push(parseFloat(sData.mid) || 0);
 
-            // strict mandate alphabetized sorting condition mapping layout execution
-            const sortedFemales = filteredStudents.filter(s => s.gender === 'F').sort((a, b) => a.name.localeCompare(b.name));
-            const sortedMales = filteredStudents.filter(s => s.gender === 'M').sort((a, b) => a.name.localeCompare(b.name));
-            const sortedRoster = [...sortedFemales, ...sortedMales];
+                if(cAssessList.length > 0) {
+                    mazoezi = cAssessList.reduce((a, b) => a + b, 0) / cAssessList.length;
+                }
+                if(sData.ann !== "" && sData.ann !== undefined && sData.ann !== null) {
+                    mtihani = parseFloat(sData.ann) || 0;
+                }
 
-            const determineGradeLetter = (score) => {
-                if (score >= 75) return { grade: 'A', remarks: 'EXCELLENT' };
-                if (score >= 65) return { grade: 'B', remarks: 'VERY GOOD' };
-                if (score >= 45) return { grade: 'C', remarks: 'GOOD' };
-                if (score >= 30) return { grade: 'D', remarks: 'SATISFACTORY' };
-                return { grade: 'F', remarks: 'FAIL' };
-            };
+                if(mazoezi !== "-" && mtihani !== "-") {
+                    wastani = (mazoezi + mtihani) / 2;
+                    jumla = mazoezi + mtihani;
 
-            return e('div', { className: 'p-6 max-w-5xl mx-auto' },
-                e('div', { className: 'flex justify-between items-center mb-6 no-print' },
-                    e('h2', { className: 'text-lg font-bold text-slate-800' }, '📝 Batch Report Card Generation Registry View'),
-                    e('div', { className: 'flex gap-2' },
-                        e('button', { onClick: () => window.print(), className: 'bg-blue-600 text-white font-bold text-xs px-3 py-1.5 rounded cursor-pointer' }, '🖨️ Print Batch'),
-                        e('button', { onClick: () => props.setView('admin'), className: 'bg-slate-600 text-white font-bold text-xs px-3 py-1.5 rounded' }, '← Back')
-                    )
-                ),
-                e('div', { className: 'bg-white p-4 border rounded-lg shadow-sm mb-6 flex gap-4 no-print' },
-                    e('div', null, e('select', { value: selectedClass, onChange: (ev) => setSelectedClass(ev.target.value), className: 'text-xs p-2 border rounded bg-white' }, AVAILABLE_CLASSES.map(c => e('option', { key: c, value: c }, c)))),
-                    e('div', null, e('select', { value: selectedStream, onChange: (ev) => setSelectedStream(ev.target.value), className: 'text-xs p-2 border rounded bg-white' }, AVAILABLE_STREAMS.map(s => e('option', { key: s, value: s }, `Stream ${s}`))))
-                ),
-                e('div', { id: 'output', className: 'flex flex-col gap-8' },
-                    sortedRoster.length === 0 ? e('div', { className: 'p-12 text-center bg-white border rounded italic text-slate-400 no-print' }, 'No report cards generated. Ensure active students have been allocated inside the selected room block.') :
-                    sortedRoster.map((student, index) => {
-                        let grandTotal = 0;
-                        let count = 0;
+                    if (wastani >= 75) { daraja = "A"; maoni = "VIZURI SANA"; pts = 1; }
+                    else if (wastani >= 65) { daraja = "B"; maoni = "VIZURI"; pts = 2; }
+                    else if (wastani >= 45) { daraja = "C"; maoni = "WASTANI"; pts = 3; }
+                    else if (wastani >= 30) { daraja = "D"; maoni = "INARIDHISHA"; pts = 4; }
+                    else { daraja = "F"; maoni = "FELI"; pts = 5; }
 
-                        const rowElements = INITIAL_SUBJECTS.map(sub => {
-                            const assessments = student.subjects[sub.code] || { t1: "", midterm: "", t2: "", exam: "" };
-                            const computedFinalScore = (Number(assessments.t1) || 0) + (Number(assessments.midterm) || 0) + (Number(assessments.t2) || 0) + (Number(assessments.exam) || 0);
-                            
-                            grandTotal += computedFinalScore;
-                            count++;
+                    subjectAverages.push(wastani);
+                    gradePoints.push(pts);
+                }
 
-                            const metrics = determineGradeLetter(computedFinalScore);
-
-                            return e('tr', { key: sub.code, className: 'border-b text-center' },
-                                e('td', { className: 'p-2 border text-left font-bold pl-3' }, sub.name),
-                                e('td', { className: 'p-2 border font-mono' }, assessments.t1 || '-'),
-                                e('td', { className: 'p-2 border font-mono' }, assessments.midterm || '-'),
-                                e('td', { className: 'p-2 border font-mono' }, assessments.t2 || '-'),
-                                e('td', { className: 'p-2 border font-mono' }, assessments.exam || '-'),
-                                e('td', { className: 'p-2 border font-mono font-black text-slate-900 bg-slate-50/50' }, computedFinalScore),
-                                e('td', { className: 'p-2 border font-black text-blue-800' }, metrics.grade),
-                                e('td', { className: 'p-2 border text-[10px] font-bold text-slate-600' }, metrics.remarks)
-                            );
-                        });
-
-                        const calculatedAverageScore = count > 0 ? (grandTotal / count).toFixed(1) : 0;
-                        const finalOverallMetrics = determineGradeLetter(Number(calculatedAverageScore));
-
-                        return e('div', { key: student.id, className: `bg-white p-8 border-2 border-slate-300 rounded shadow-sm relative ${index > 0 ? 'print-page-break' : ''}` },
-                            e('div', { className: 'text-center border-b-2 border-slate-800 pb-3 mb-4' },
-                                e('h2', { className: 'text-base font-black uppercase tracking-wide text-slate-900' }, props.settings.schoolName),
-                                e('p', { className: 'text-xs font-bold text-blue-700 tracking-wider mt-0.5 uppercase' }, 'Official Student Terminal Performance Transcript Summary')
-                            ),
-                            e('div', { className: 'grid grid-cols-2 gap-4 text-xs mb-6 border bg-slate-50/50 p-3 rounded' },
-                                e('div', null,
-                                    e('p', null, e('span', { className: 'text-slate-500 font-medium' }, 'Student Name: '), e('span', { className: 'font-black text-slate-900' }, student.name)),
-                                    e('p', { className: 'mt-1' }, e('span', { className: 'text-slate-500 font-medium' }, 'Gender Track: '), e('span', { className: 'font-bold' }, student.gender === 'F' ? 'Female (♀)' : 'Male (♂)'))
-                                ),
-                                e('div', { className: 'text-right' },
-                                    e('p', null, e('span', { className: 'text-slate-500 font-medium' }, 'Class Allocation: '), e('span', { className: 'font-bold text-blue-700' }, `Form ${student.class} — Stream ${student.stream}`)),
-                                    e('p', { className: 'mt-1' }, e('span', { className: 'text-slate-500 font-medium' }, 'Term Attendance: '), e('span', { className: 'font-mono font-bold text-emerald-700' }, `${student.presentDays} Present / ${student.totalDays} Total`))
-                                )
-                            ),
-                            e('table', { className: 'w-full text-xs border-collapse' },
-                                e('thead', null,
-                                    e('tr', { className: 'bg-slate-800 text-white text-center' },
-                                        e('th', { className: 'p-2 border border-slate-800 text-left pl-3 font-bold' }, 'Subject Particulars'),
-                                        e('th', { className: 'p-2 border border-slate-800 font-medium' }, 'T1 (10)'),
-                                        e('th', { className: 'p-2 border border-slate-800 font-medium' }, 'MID (20)'),
-                                        e('th', { className: 'p-2 border border-slate-800 font-medium' }, 'T2 (10)'),
-                                        e('th', { className: 'p-2 border border-slate-800 font-medium' }, 'EXAM (60)'),
-                                        e('th', { className: 'p-2 border border-slate-800 font-bold' }, 'TOTAL (100)'),
-                                        e('th', { className: 'p-2 border border-slate-800 font-bold' }, 'GRADE'),
-                                        e('th', { className: 'p-2 border border-slate-800 font-bold' }, 'REMARKS')
-                                    )
-                                ),
-                                e('tbody', null, rowElements)
-                            ),
-                            e('div', { className: 'grid grid-cols-2 gap-6 mt-6 border-t pt-4 text-xs font-mono' },
-                                e('div', { className: 'space-y-1 bg-slate-50 p-3 rounded border' },
-                                    e('p', null, e('span', { className: 'font-bold' }, 'GRAND TOTAL SCORE: '), e('span', { className: 'font-black text-slate-900' }, grandTotal)),
-                                    e('p', null, e('span', { className: 'font-bold' }, 'COMPUTED TERM AVERAGE: '), e('span', { className: 'font-black text-blue-700 text-sm' }, calculatedAverageScore)),
-                                    e('p', null, e('span', { className: 'font-bold' }, 'OVERALL TERMINAL GRADE: '), e('span', { className: 'font-black text-purple-700' }, finalOverallMetrics.grade))
-                                ),
-                                e('div', { className: 'flex flex-col justify-end items-end text-right' },
-                                    e('div', { className: 'w-48 border-b border-slate-400 h-8' }),
-                                    e('p', { className: 'text-[10px] uppercase font-bold text-slate-500 mt-1 mr-4' }, props.settings.headteacherSignatureText || "HEADTEACHER CLEARANCE")
-                                )
-                            ),
-                            e('span', { className: 'absolute bottom-2 left-4 text-[9px] font-mono font-bold text-slate-300 uppercase' }, `ShuleSys Ingestion Token ID Node: ${student.id}`)
-                        );
-                    })
-                )
-            );
-        }
-
-        function App() {
-            const [view, setView] = useState('admin');
-            const [teachers, setTeachers] = useState([]);
-            const [students, setStudents] = useState([]);
-            const [timetableData, setTimetableData] = useState({});
-            const [activeTeacher, setActiveTeacher] = useState(null);
-            const [settings, setSettings] = useState({
-                schoolName: "TT-PRO ULTIMATE ACADEMY",
-                headteacherSignatureText: "HEADTEACHER SIGNATURE / SEAL"
+                tableRowsHTML += `
+                    <tr>
+                        <td class="subject-name">${sub.name}</td>
+                        <td>${mazoezi !== "-" ? Math.round(mazoezi) : "-"}</td>
+                        <td>${mtihani !== "-" ? Math.round(mtihani) : "-"}</td>
+                        <td>${jumla !== "-" ? Math.round(jumla) : "-"}</td>
+                        <td>${wastani !== "-" ? wastani.toFixed(1) : "-"}</td>
+                        <td style="font-weight:bold;">${daraja}</td>
+                        <td>${sData.rnk || "-"}</td>
+                        <td>${maoni}</td>
+                        <td><span style="font-size:9px;color:#888;">Sign</span></td>
+                    </tr>
+                `;
             });
 
-            // Set up fallback teacher workspace configuration context loop
-            useEffect(() => {
-                if (teachers.length > 0 && !activeTeacher) {
-                    setActiveTeacher(teachers[0]);
-                }
-            }, [teachers, activeTeacher]);
+            // Kokotoa Mfumo Mkuu wa Division, Points, na Wastani wa Jumla
+            let lblJumla = "-", lblWastani = "-", lblDaraja = "-", lblPoints = "-", lblDivision = "-";
+            let avgValue = 0;
+            let maoniMwalimu = "Ingiza alama kwanza", maoniMkuu = "Ingiza alama kwanza";
 
-            return e('div', { className: 'min-h-screen flex flex-col' },
-                e(Navbar, { currentView: view, setView: setView, activeTeacher: activeTeacher, settings: settings }),
-                e('main', { className: 'flex-1' },
-                    view === 'admin' && e(AdminDashboard, { setView: setView }),
-                    view === 'manage-teachers' && e(TeacherManagement, { teachers: teachers, setTeachers: setTeachers, setView: setView, setActiveTeacher: setActiveTeacher }),
-                    view === 'manage-students' && e(StudentManagement, { students: students, setStudents: setStudents, setView: setView }),
-                    view === 'timetable' && e(TTProTimetableEngine, { teachers: teachers, timetableData: timetableData, setTimetableData: setTimetableData, setView: setView, settings: settings }),
-                    view === 'calendar' && e(AcademicCalendarModule, { setView: setView }),
-                    view === 'settings' && e(InstitutionalSettings, { settings: settings, setSettings: setSettings, setView: setView }),
-                    view === 'teacher' && e(TeacherDashboard, { activeTeacher: activeTeacher, setView: setView }),
-                    view === 'grading' && e(TeacherGradingModule, { activeTeacher: activeTeacher, students: students, setStudents: setStudents, setView: setView }),
-                    view === 'attendance' && e(StudentAttendanceModule, { activeTeacher: activeTeacher, students: students, setStudents: setStudents, setView: setView }),
-                    view === 'diagnostics' && e(PerformanceDiagnostics, { students: students, timetableData: timetableData, setView: setView }),
-                    view === 'report-cards' && e(TerminalReportCardsView, { students: students, settings: settings, setView: setView }),
-                    
-                    // Standalone client role routes maps simple components below
-                    view === 'student' && e('div', { className: 'p-12 text-center text-xs text-slate-500 font-bold' }, '🎓 Student Access Workspace Terminal Pipeline active.'),
-                    view === 'parent' && e('div', { className: 'p-12 text-center text-xs text-slate-500 font-bold' }, '👪 Parent Engagement Node active.')
-                )
-            );
+            if (subjectAverages.length > 0) {
+                let totalOfAvgs = subjectAverages.reduce((a, b) => a + b, 0);
+                avgValue = totalOfAvgs / subjectAverages.length;
+                lblWastani = avgValue.toFixed(1);
+                lblJumla = Math.round(totalOfAvgs);
+
+                if (avgValue >= 75) { lblDaraja = "A"; maoniMwalimu = "Amejitahidi sana, aendeleze kiwango hiki hiki."; maoniMkuu = "Kazi nzuri sana. Nakupongeza kwa matokeo mazuri."; }
+                else if (avgValue >= 65) { lblDaraja = "B"; maoniMwalimu = "Kazi nzuri, akiongeza bidii atafanya vizuri zaidi."; maoniMkuu = "Matokeo ni mazuri. Ongeza juhudi muhula ujao."; }
+                else if (avgValue >= 45) { lblDaraja = "C"; maoniMwalimu = "Uwezo wake ni wa wastani, ana uwezo wa kufanya vizuri zaidi."; maoniMkuu = "Jitahidi kuongeza bidii katika masomo yako."; }
+                else if (avgValue >= 30) { lblDaraja = "D"; maoniMwalimu = "Matokeo yake yanaridhisha, anahitaji uangalizi wa karibu."; maoniMkuu = "Kaza buti, masomo yanahitaji juhudi za makusudi."; }
+                else { lblDaraja = "F"; maoniMwalimu = "Hadi sasa amefeli, anahitaji juhudi za ziada na masomo ya ziada."; maoniMkuu = "Hauridhishi. Unatakiwa kurudia masomo kwa umakini."; }
+
+                // Division Calculation Logic kulingana na miongozo ya NECTA (Best 7 Subjects)
+                let sortedPoints = [...gradePoints].sort((a, b) => a - b);
+                let best7Points = sortedPoints.slice(0, 7);
+                let sumPoints = best7Points.reduce((a, b) => a + b, 0);
+
+                if(gradePoints.length >= 7) {
+                    lblPoints = sumPoints;
+                    if (sumPoints <= 17) lblDivision = "I";
+                    else if (sumPoints <= 21) lblDivision = "II";
+                    else if (sumPoints <= 25) lblDivision = "III";
+                    else if (sumPoints <= 33) lblDivision = "IV";
+                    else lblDivision = "0";
+                } else {
+                    lblPoints = gradePoints.reduce((a, b) => a + b, 0) + " (Subj<7)";
+                    let tempSum = gradePoints.reduce((a, b) => a + b, 0);
+                    if(tempSum <= 17) lblDivision = "I";
+                    else if(tempSum <= 21) lblDivision = "II";
+                    else if(tempSum <= 25) lblDivision = "III";
+                    else if(tempSum <= 33) lblDivision = "IV";
+                    else lblDivision = "0";
+                }
+            }
+
+            return {
+                tableRowsHTML, lblJumla, lblWastani, lblDaraja, lblPoints, lblDivision, maoniMwalimu, maoniMkuu
+            };
         }
 
-        const container = document.getElementById('root');
-        const root = ReactDOM.createRoot(container);
-        root.render(e(App));
+        // Kokotoa Nafasi ya Mwanafunzi (Rank Over Class/Form Group)
+        function calculateFormPositions(studentId, formLevel) {
+            let formGroup = globalStudents.filter(s => s.form === formLevel);
+            let rankingList = [];
+
+            formGroup.forEach(s => {
+                const currentSchema = getSubjectSchemaForStudent(s.form);
+                let subjectAverages = [];
+                currentSchema.forEach(sub => {
+                    const sData = s.marks[sub.id] || { t1: "", t2: "", mid: "", ann: "" };
+                    let cAssessList = [];
+                    if(sData.t1 !== "" && sData.t1 !== undefined) cAssessList.push(parseFloat(sData.t1) || 0);
+                    if(sData.t2 !== "" && sData.t2 !== undefined) cAssessList.push(parseFloat(sData.t2) || 0);
+                    if(sData.mid !== "" && sData.mid !== undefined) cAssessList.push(parseFloat(sData.mid) || 0);
+                    
+                    let mazoezi = cAssessList.length > 0 ? (cAssessList.reduce((a, b) => a + b, 0) / cAssessList.length) : "-";
+                    let mtihani = (sData.ann !== "" && sData.ann !== undefined) ? (parseFloat(sData.ann) || 0) : "-";
+
+                    if(mazoezi !== "-" && mtihani !== "-") {
+                        subjectAverages.push((mazoezi + mtihani) / 2);
+                    }
+                });
+
+                if(subjectAverages.length > 0) {
+                    let avg = subjectAverages.reduce((a, b) => a + b, 0) / subjectAverages.length;
+                    rankingList.push({ id: s.id, average: avg });
+                } else {
+                    rankingList.push({ id: s.id, average: -1 });
+                }
+            });
+
+            rankingList.sort((a, b) => b.average - a.average);
+            let rank = rankingList.findIndex(item => item.id === studentId) + 1;
+            let total = rankingList.filter(item => item.average >= 0).length;
+            
+            return rank > 0 && total > 0 ? `${rank} / ${total}` : "- / -";
+        }
+
+        function generateAllReportCardsHTML() {
+            const container = document.getElementById('print-output-container');
+            container.innerHTML = '';
+
+            const term = document.getElementById('cfg-term').value;
+            const year = document.getElementById('cfg-year').value;
+            const closeDate = document.getElementById('cfg-close-date').value;
+            const openDate = document.getElementById('cfg-open-date').value;
+
+            globalStudents.forEach(stu => {
+                const perf = computeStudentPerformance(stu);
+                const classPosition = calculateFormPositions(stu.id, stu.form);
+
+                let divPage = document.createElement('div');
+                divPage.id = `report-card-${stu.id}`;
+                divPage.className = 'report-card-page';
+                
+                // Set display settings dynamically for view rendering
+                if (stu.id === selectedStudentId) {
+                    divPage.classList.remove('hidden-print');
+                } else {
+                    divPage.classList.add('hidden-print');
+                }
+
+                divPage.innerHTML = `
+                    <div class="report-header">
+                        <div class="logo-placeholder">NEMBO YA<br>SHULE</div>
+                        <h1 class="header-title">JAMHURI YA MUUNGANO WA TANZANIA</h1>
+                        <h1 class="header-title">WIZARA YA ELIMU, SAYANSI NA TEKNOLOJIA</h1>
+                        <h1 class="header-title" style="color: var(--primary-blue); font-size:18px; margin-top:5px;">SHULE YA SEKONDARI TT-PRO</h1>
+                        <div class="report-title">RIPOTI YA MAENDELEO YA TAALUMA NA TABIA - MUHULA WA ${term} ${year}</div>
+                    </div>
+
+                    <table class="meta-info">
+                        <tr>
+                            <td style="width: 15%;">Jina la Mwanafunzi:</td>
+                            <td style="width: 45%;" class="dotted-line">${stu.name}</td>
+                            <td style="width: 10%;">Jinsia:</td>
+                            <td style="width: 10%;" class="dotted-line">${stu.gender}</td>
+                            <td style="width: 10%;">Kidato:</td>
+                            <td style="width: 10%;" class="dotted-line">${stu.form}</td>
+                        </tr>
+                        <tr>
+                            <td>Mkondo (Stream):</td>
+                            <td class="dotted-line">${stu.stream}</td>
+                            <td>Nafasi:</td>
+                            <td class="dotted-line" colspan="3">${classPosition}</td>
+                        </tr>
+                    </table>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left; width:28%;">SOMO</th>
+                                <th style="width:10%;">MAZOEZI (CA)</th>
+                                <th style="width:10%;">MTIHANI</th>
+                                <th style="width:10%;">JUMLA</th>
+                                <th style="width:10%;">WASTANI</th>
+                                <th style="width:8%;">DARAJA</th>
+                                <th style="width:8%;">NAFASI</th>
+                                <th style="width:18%;">MAONI YA MWALIMU</th>
+                                <th style="width:10%;">SAHIHI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${perf.tableRowsHTML}
+                        </tbody>
+                    </table>
+
+                    <div class="summary-row">
+                        <div>JUMLA YA ALAMA: <span class="dotted-line" style="min-width:60px; text-align:center;">${perf.lblJumla}</span></div>
+                        <div>WASTANI MKUU: <span class="dotted-line" style="min-width:60px; text-align:center;">${perf.lblWastani}</span></div>
+                        <div>DARAJA KUU: <span class="dotted-line" style="min-width:50px; text-align:center;">${perf.lblDaraja}</span></div>
+                        <div>POINTS: <span class="dotted-line" style="min-width:50px; text-align:center;">${perf.lblPoints}</span></div>
+                        <div>DIVISION: <span class="dotted-line" style="min-width:60px; text-align:center; font-size:14px;">BRN - ${perf.lblDivision}</span></div>
+                    </div>
+
+                    <!-- --- SEHEMU YA TABIA NA SIFARI NYINGINE --- -->
+                    <div class="behavior-section">
+                        <div class="section-heading">TATHMINI YA TABIA NA MAHUDHURIO (BEHAVIOR ASSESSMENT)</div>
+                        <div class="behavior-container">
+                            <table class="behavior-table">
+                                <thead>
+                                    <tr><th>Sifa za Tabia (Traits)</th><th>Daraja</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>1. Nidhamu na Utii wa Sheria</td><td>A</td></tr>
+                                    <tr><td>2. Bidii ya Kazi na Masomo</td><td>B</td></tr>
+                                    <tr><td>3. Ushirikiano na Wenzake</td><td>A</td></tr>
+                                    <tr><td>4. Usafi wa Mwili na Mavazi</td><td>A</td></tr>
+                                    <tr><td>5. Utunzaji wa Mali ya Shule</td><td>B</td></tr>
+                                </tbody>
+                            </table>
+                            <table class="behavior-table">
+                                <thead>
+                                    <tr><th>Sifa za Mahudhurio (Attendance)</th><th>Daraja</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>1. Siku Alizohudhuria Shuleni</td><td>98 / 102</td></tr>
+                                    <tr><td>2. Kushiriki Michezo na Kazi za Mikono</td><td>VIZURI</td></tr>
+                                    <tr><td>3. Tabia kwa Ujumla (Overall Conduct)</td><td>A (SAFI)</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="grading-legend">Viwango vya Tabia: A = Vizuri Sana, B = Vizuri, C = Wastani, D = Inaridhisha, F = Haifanyi Vizuri</div>
+                    </div>
+
+                    <!-- --- MAONI YA UONGOZI NA UTAWALA --- -->
+                    <div class="admin-section">
+                        <div><strong>Maoni ya Mwalimu wa Darasa:</strong> <span class="dotted-line" style="width:78%;">${perf.maoniMwalimu}</span></div>
+                        <div style="margin-top: 5px;"><strong>Maoni ya Mkuu wa Shule:</strong> <span class="dotted-line" style="width:80%;">${perf.maoniMkuu}</span></div>
+                        
+                        <div class="signature-stamp-space" style="margin-top:15px;">
+                            <div>
+                                <div>Shule Imefungwa Tarehe: <span class="dotted-line" style="min-width:120px;">${closeDate}</span></div>
+                                <div style="margin-top:5px;">Itafunguliwa Tarehe: <span class="dotted-line" style="min-width:120px;">${openDate}</span></div>
+                            </div>
+                            <div class="stamp-box">
+                                <span>MKUU WA SHULE</span>
+                                <span style="font-size:7px;margin:2px 0;">* TT-PRO SEC *</span>
+                                <span>PO BOX 100, TZ</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- --- SLIP YA KURUDISHA KWA WAZAZI --- -->
+                    <div class="parent-slip">
+                        <span class="scissors-icon">✂️ Katalia Hapa (Tear Slip)</span>
+                        <div class="slip-title">SLIP YA DHIBITI/MAREJESHWA KUTOKA KWA MZAZI / MLEZI</div>
+                        <p style="margin: 5px 0; font-size:11px; line-height:1.5;">
+                            Mimi Mzazi/Mlezi wa <span class="dotted-line" style="min-width:250px;">${stu.name}</span> nimepokea na kusoma ripoti ya maendeleo ya mwanangu ya Muhula wa ${term} Mwaka ${year}. 
+                            Nimeona Wastani wake wa masomo kuwa ni <span class="dotted-line" style="min-width:50px; text-align:center;">${perf.lblWastani}</span> na Daraja la Division <span class="dotted-line" style="min-width:50px; text-align:center;">${perf.lblDivision}</span>.
+                        </p>
+                        <div style="display: flex; justify-content: space-between; margin-top: 15px; font-size:11px;">
+                            <div>Jina la Mzazi: <span class="dotted-line" style="min-width:180px;"></span></div>
+                            <div>Sahihi ya Mzazi: <span class="dotted-line" style="min-width:120px;"></span></div>
+                            <div>Tarehe: <span class="dotted-line" style="min-width:100px;"></span></div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(divPage);
+            });
+        }
+
+        function printSingleReport() {
+            // Set styles explicitly to guarantee only selected student renders during single loop execution
+            globalStudents.forEach(stu => {
+                let card = document.getElementById(`report-card-${stu.id}`);
+                if (card) {
+                    if (stu.id === selectedStudentId) card.classList.remove('hidden-print');
+                    else card.classList.add('hidden-print');
+                }
+            });
+            window.print();
+        }
+
+        function printBulkReports() {
+            let anyChecked = globalStudents.some(s => s.checkedForPrint);
+            if(!anyChecked) {
+                alert("Tafadhali chagua angalau mwanafunzi mmoja kwenye jedwali (weka tiki) ili kuchapisha kwa wingi!");
+                return;
+            }
+
+            // Expose all checked indices to structural CSS context layout loops
+            globalStudents.forEach(stu => {
+                let card = document.getElementById(`report-card-${stu.id}`);
+                if (card) {
+                    if (stu.checkedForPrint) card.classList.remove('hidden-print');
+                    else card.classList.add('hidden-print');
+                }
+            });
+            window.print();
+        }
     </script>
 </body>
 </html>
