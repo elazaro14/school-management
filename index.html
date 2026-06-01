@@ -619,6 +619,16 @@
         <!-- LEFT SIDEBAR: CONFIGURATIONS & ADMISSION -->
         <div style="display: flex; flex-direction: column; gap: 15px;">
             
+            <!-- BACKUP & DATA PERSISTENCE CONTROLS (NEW SECTION) -->
+            <div class="admin-card" style="border: 1px solid var(--accent-purple);">
+                <h2>💾 System Storage Sync</h2>
+                <button type="button" class="btn-submit" style="background-color: var(--accent-purple);" onclick="saveDataToComputer()">💾 Save Session Data to Computer</button>
+                <div class="form-control" style="margin-top: 10px;">
+                    <label>Reload Configuration File</label>
+                    <input type="file" id="import-config-file" accept=".json" onchange="loadDataFromComputer(this)" style="font-size: 12px;">
+                </div>
+            </div>
+
             <!-- GLOBAL REPORT SETTINGS PANEL -->
             <div class="admin-card">
                 <h2>⚙️ Report Configuration</h2>
@@ -827,9 +837,98 @@
             else if (viewName === 'students') document.getElementById('search-filter').focus();
         }
 
+        /* --- PERSISTENCE LOGIC (NEW) --- */
+        function autoSaveToCache() {
+            const dataToSave = {
+                students: globalStudents,
+                logo: uploadedLogoBase64,
+                config: {
+                    term: document.getElementById('cfg-term').value,
+                    year: document.getElementById('cfg-year').value,
+                    closeDate: document.getElementById('cfg-close-date').value,
+                    openDate: document.getElementById('cfg-open-date').value
+                }
+            };
+            localStorage.setItem('tt_pro_report_state', JSON.stringify(dataToSave));
+        }
+
+        function loadFromCache() {
+            const cachedData = localStorage.getItem('tt_pro_report_state');
+            if (cachedData) {
+                try {
+                    const parsed = JSON.parse(cachedData);
+                    if (parsed.students) globalStudents = parsed.students;
+                    if (parsed.logo) uploadedLogoBase64 = parsed.logo;
+                    if (parsed.config) {
+                        document.getElementById('cfg-term').value = parsed.config.term || "II";
+                        document.getElementById('cfg-year').value = parsed.config.year || "2026";
+                        document.getElementById('cfg-close-date').value = parsed.config.closeDate || "";
+                        document.getElementById('cfg-open-date').value = parsed.config.openDate || "";
+                    }
+                    if (globalStudents.length > 0) {
+                        selectedStudentId = globalStudents[0].id;
+                    }
+                } catch(e) {
+                    console.error("Cache buffer reading error: ", e);
+                }
+            }
+        }
+
+        function saveDataToComputer() {
+            const dataToExport = {
+                students: globalStudents,
+                logo: uploadedLogoBase64,
+                config: {
+                    term: document.getElementById('cfg-term').value,
+                    year: document.getElementById('cfg-year').value,
+                    closeDate: document.getElementById('cfg-close-date').value,
+                    openDate: document.getElementById('cfg-open-date').value
+                }
+            };
+            const jsonString = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToExport, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", jsonString);
+            downloadAnchor.setAttribute("download", `tt_pro_backup_${document.getElementById('cfg-year').value}_term${document.getElementById('cfg-term').value}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.removeChild(downloadAnchor);
+        }
+
+        function loadDataFromComputer(input) {
+            if (!input.files || input.files.length === 0) return;
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed.students) globalStudents = parsed.students;
+                    if (parsed.logo) uploadedLogoBase64 = parsed.logo;
+                    if (parsed.config) {
+                        document.getElementById('cfg-term').value = parsed.config.term || "II";
+                        document.getElementById('cfg-year').value = parsed.config.year || "2026";
+                        document.getElementById('cfg-close-date').value = parsed.config.closeDate || "";
+                        document.getElementById('cfg-open-date').value = parsed.config.openDate || "";
+                    }
+                    if (globalStudents.length > 0) selectedStudentId = globalStudents[0].id;
+                    
+                    autoSaveToCache();
+                    renderRosterTable();
+                    if (selectedStudentId) selectStudent(selectedStudentId);
+                    generateAllReportCardsHTML();
+                    alert("System parameters and records restored successfully!");
+                } catch(err) {
+                    alert("Invalid JSON workspace file structure. Could not map settings layout.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
         function init() {
+            loadFromCache();
             renderRosterTable();
             buildMarksInputs();
+            if (selectedStudentId) selectStudent(selectedStudentId);
+            generateAllReportCardsHTML();
         }
 
         function handleLogoUpload(input) {
@@ -837,6 +936,7 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     uploadedLogoBase64 = e.target.result;
+                    autoSaveToCache();
                     generateAllReportCardsHTML();
                 };
                 reader.readAsDataURL(input.files[0]);
@@ -931,6 +1031,7 @@
                 }
 
                 alert(`Successfully processed and loaded metric arrays for ${updatedStudentsCount} students!`);
+                autoSaveToCache();
                 if(selectedStudentId) selectStudent(selectedStudentId);
                 generateAllReportCardsHTML();
             };
@@ -971,6 +1072,7 @@
                     }
                 }
                 alert(`Successfully parsed and registered ${addedCount} students into current session!`);
+                autoSaveToCache();
                 renderRosterTable();
                 if(selectedStudentId) selectStudent(selectedStudentId);
                 generateAllReportCardsHTML();
@@ -979,6 +1081,7 @@
         }
 
         function updateGlobalSettings() {
+            autoSaveToCache();
             generateAllReportCardsHTML();
         }
 
@@ -996,6 +1099,7 @@
             const newStudent = { id: Date.now(), name, gender, form, stream, marks: {}, checkedForPrint: true };
             globalStudents.push(newStudent);
             document.getElementById('enrollment-form').reset();
+            autoSaveToCache();
             renderRosterTable();
             selectStudent(newStudent.id);
         }
@@ -1048,11 +1152,13 @@
             const student = globalStudents.find(s => s.id === id);
             if(student) student.checkedForPrint = isChecked;
             document.getElementById('selected-count-badge').innerText = `Selected: ${globalStudents.filter(s=>s.checkedForPrint).length} student(s)`;
+            autoSaveToCache();
             generateAllReportCardsHTML();
         }
 
         function toggleSelectAll(masterBox) {
             globalStudents.forEach(s => s.checkedForPrint = masterBox.checked);
+            autoSaveToCache();
             renderRosterTable();
             generateAllReportCardsHTML();
         }
@@ -1120,6 +1226,7 @@
                 mid: document.getElementById(`in-mid-${subId}`).value.trim(),
                 ann: document.getElementById(`in-ann-${subId}`).value.trim()
             };
+            autoSaveToCache();
             generateAllReportCardsHTML();
         }
 
