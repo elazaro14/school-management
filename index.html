@@ -545,6 +545,562 @@
 </head>
 <body>
 
+    <div class="main-control-panel">
+        <div class="panel-brand">
+            🏫 <span>TT-PRO MANAGEMENT SYSTEM</span>
+        </div>
+        <div class="panel-links">
+            <a href="index.html" class="panel-btn">🎛️ Dashboard Kuu</a>
+            <a href="#admin-section" class="panel-btn active" onclick="switchView('admin')">👑 Admin Panel</a>
+            <a href="#students-section" class="panel-btn" onclick="switchView('students')">🧑‍🎓 Wanafunzi (Roster)</a>
+            <a href="#teachers-section" class="panel-btn" onclick="switchView('teachers')">👩‍🏫 Walimu</a>
+            <a href="#subjects-section" class="panel-btn" onclick="switchView('subjects')">📚 Masomo</a>
+        </div>
+    </div>
+
+    <div id="admin-container">
+        <div class="admin-header-bar">
+            <h1>📊 Student Admission & Bulk Report Card Module</h1>
+            <button class="btn-panel" style="background:#334155; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;" onclick="backToPanel()">← Rudi Kwenye Panel</button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            
+            <div class="admin-card">
+                <h2>⚙️ Mipangilio ya Ripoti</h2>
+                <div class="form-control">
+                    <label>Pakia Nembo ya Shule (Logo)</label>
+                    <input type="file" id="cfg-logo" accept="image/*" onchange="handleLogoUpload(this)">
+                </div>
+                <div class="form-control">
+                    <label>Muhula (Term)</label>
+                    <select id="cfg-term" onchange="updateGlobalSettings()">
+                        <option value="I">MUHULA WA I</option>
+                        <option value="II" selected>MUHULA WA II</option>
+                    </select>
+                </div>
+                <div class="form-control">
+                    <label>Mwaka (Year)</label>
+                    <input type="text" id="cfg-year" value="2026" oninput="updateGlobalSettings()">
+                </div>
+                <div class="form-control">
+                    <label>Shule Imefungwa</label>
+                    <input type="text" id="cfg-close-date" value="05/12/2026" oninput="updateGlobalSettings()">
+                </div>
+                <div class="form-control">
+                    <label>Itafunguliwa Tarehe</label>
+                    <input type="text" id="cfg-open-date" value="12/01/2027" oninput="updateGlobalSettings()">
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <h2>Usajili Mpya</h2>
+                <form id="enrollment-form" onsubmit="handleEnrollment(event)">
+                    <div class="form-control">
+                        <label>Jina Kamili la Mwanafunzi</label>
+                        <input type="text" id="stu-fullname" placeholder="MFANO: CHUMA KANYAMA" required>
+                    </div>
+                    <div class="form-control">
+                        <label>Jinsia</label>
+                        <select id="stu-gender">
+                            <option value="F">Mke (Female)</option>
+                            <option value="M">Mume (Male)</option>
+                        </select>
+                    </div>
+                    <div class="form-control">
+                        <label>Kidato (Form)</label>
+                        <select id="stu-form">
+                            <option value="F1">F1</option>
+                            <option value="F2">F2</option>
+                            <option value="F3" selected>F3</option>
+                            <option value="F4">F4</option>
+                        </select>
+                    </div>
+                    <div class="form-control">
+                        <label>Mkondo (Stream)</label>
+                        <select id="stu-stream">
+                            <option value="Stream A">Stream A</option>
+                            <option value="Stream B">Stream B</option>
+                            <option value="Stream C">Stream C</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-submit">Sajili Mwanafunzi MMOJA</button>
+                </form>
+                
+                <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 15px 0;">
+                
+                <div>
+                    <label style="display: block; font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">Sajili kwa Mkupuo (CSV)</label>
+                    <input type="file" id="bulk-csv-file" accept=".csv" style="font-size: 12px; margin-bottom: 8px; width:100%;">
+                    <button type="button" class="btn-submit" style="background-color: #0284c7;" onclick="handleBulkUpload()">Pakia CSV faili</button>
+                    <a href="javascript:void(0)" class="btn-secondary" onclick="downloadCSVTemplate()">📥 Pakua Kiolezo cha Wanafunzi</a>
+                </div>
+            </div>
+
+            <div class="admin-card" style="border: 2px solid var(--primary-blue);">
+                <h2>📈 Makupuo ya Alama (Scores Section)</h2>
+                <div class="form-control">
+                    <label>Chagua Kidato cha Alama</label>
+                    <select id="score-template-form">
+                        <option value="F1">Form 1 & 2</option>
+                        <option value="F3" selected>Form 3 & 4</option>
+                    </select>
+                </div>
+                <button type="button" class="btn-secondary" style="background-color: #047857;" onclick="downloadScoresTemplate()">📥 Pakua Kiolezo cha Alama</button>
+                
+                <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 10px 0;">
+                
+                <div class="form-control">
+                    <label>Pakia Faili la Alama (CSV)</label>
+                    <input type="file" id="bulk-scores-fil            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .admin-card {
+            background: var(--panel-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin-bottom: 20px;
+        }
+
+        .admin-card h2 {
+            font-size: 14px;
+            color: #475569;
+            text-transform: uppercase;
+            margin-top: 0;
+            margin-bottom: 15px;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 8px;
+        }
+
+        .form-control {
+            margin-bottom: 12px;
+        }
+
+        .form-control label {
+            display: block;
+            font-size: 11px;
+            font-weight: bold;
+            color: #64748b;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .form-control input, .form-control select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background-color: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .btn-secondary {
+            width: 100%;
+            background-color: #64748b;
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 6px;
+            font-weight: normal;
+            cursor: pointer;
+            font-size: 12px;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+            box-sizing: border-box;
+            margin-bottom: 5px;
+        }
+
+        .db-filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .db-filters input, .db-filters select {
+            padding: 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .bulk-actions-bar {
+            background-color: #f1f5f9;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+        }
+
+        .roster-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .roster-table th {
+            color: #64748b;
+            padding: 10px;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 600;
+        }
+
+        .roster-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #1e293b;
+        }
+
+        .roster-table tr.active-student {
+            background-color: #eff6ff;
+            font-weight: bold;
+        }
+
+        .roster-table tr:hover {
+            background-color: #f8fafc;
+            cursor: pointer;
+        }
+
+        .badge-stream {
+            background-color: #dcfce7;
+            color: #15803d;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .marks-panel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .subject-block {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .subject-block label {
+            font-weight: bold;
+            font-size: 13px;
+            display: block;
+            margin-bottom: 6px;
+            color: #1e293b;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 2px;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            margin-bottom: 4px;
+        }
+
+        .input-row div {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-row span {
+            font-size: 10px;
+            color: #64748b;
+            font-weight: bold;
+        }
+
+        .input-row input {
+            padding: 4px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            font-size: 11px;
+            box-sizing: border-box;
+        }
+
+        .workspace-split {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .print-btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .btn-print-action {
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-single { background-color: #10b981; }
+        .btn-bulk { background-color: #7c3aed; }
+
+        /* --- Report Card Page View --- */
+        #print-output-container {
+            display: block;
+        }
+
+        .report-card-page {
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 15mm 20mm;
+            margin: 30px auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.15);
+            box-sizing: border-box;
+            position: relative;
+            page-break-after: always;
+        }
+
+        .report-header {
+            text-align: center;
+            position: relative;
+            margin-bottom: 15px;
+            min-height: 90px;
+        }
+
+        .logo-placeholder {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 90px;
+            height: 90px;
+            border: 1px dashed #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .logo-img {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 90px;
+            height: 90px;
+            object-fit: contain;
+        }
+
+        .header-title {
+            font-size: 15px;
+            font-weight: bold;
+            line-height: 1.3;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .report-title {
+            margin-top: 12px;
+            font-size: 13px;
+            font-weight: bold;
+            text-decoration: underline;
+            text-transform: uppercase;
+        }
+
+        .meta-info {
+            width: 100%;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+
+        .meta-info td {
+            padding: 4px 0;
+        }
+
+        .dotted-line {
+            border-bottom: 1px dotted #000;
+            display: inline-block;
+            font-weight: bold;
+            padding-left: 5px;
+        }
+
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        table.data-table th, table.data-table td {
+            border: 1px solid var(--border-color);
+            padding: 6px 4px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        table.data-table th {
+            font-weight: bold;
+            background-color: #f2f2f2;
+        }
+
+        table.data-table td.subject-name {
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .summary-row {
+            font-size: 13px;
+            font-weight: bold;
+            margin: 10px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .behavior-section {
+            margin-top: 15px;
+        }
+
+        .section-heading {
+            font-size: 13px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .behavior-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        table.behavior-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        table.behavior-table th, table.behavior-table td {
+            border: 1px solid var(--border-color);
+            padding: 4px;
+        }
+
+        table.behavior-table td:nth-child(1) { text-align: left; }
+        table.behavior-table td:nth-child(2) { text-align: center; font-weight: bold; width: 60px; }
+
+        .grading-legend {
+            font-size: 11px;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .admin-section {
+            margin-top: 15px;
+            font-size: 12px;
+            line-height: 1.8;
+        }
+
+        .signature-stamp-space {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .stamp-box {
+            border: 2px dashed #0000ff;
+            color: #0000ff;
+            border-radius: 50%;
+            width: 110px;
+            height: 110px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 9px;
+            font-weight: bold;
+            transform: rotate(-5deg);
+            margin-top: -10px;
+        }
+
+        .parent-slip {
+            margin-top: 25px;
+            border-top: 1px dashed #000;
+            position: relative;
+            padding-top: 15px;
+            font-size: 12px;
+        }
+
+        .scissors-icon {
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            font-size: 16px;
+            background: white;
+            padding: 0 5px;
+        }
+
+        .slip-title {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        /* --- Print Rules --- */
+        @media print {
+            .main-control-panel, #admin-container {
+                display: none !important;
+            }
+            body {
+                background-color: white;
+                padding: 0;
+            }
+            .report-card-page {
+                box-shadow: none;
+                margin: 0 auto 0mm auto;
+                padding: 10mm 15mm;
+                width: 210mm;
+                height: 297mm;
+                page-break-after: always;
+                overflow: hidden;
+            }
+            .report-card-page.hidden-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
     <!-- MAIN CONTROL PANEL NAVIGATION BAR -->
     <div class="main-control-panel">
         <div class="panel-brand">
