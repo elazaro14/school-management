@@ -13,6 +13,7 @@
             --panel-bg: #ffffff;
             --accent-green: #10b981;
             --accent-purple: #7c3aed;
+            --accent-red: #ef4444;
             --text-dark: #0f172a;
             --text-muted: #64748b;
         }
@@ -196,6 +197,23 @@
             background-color: #475569;
         }
 
+        /* --- INDIVIDUAL RECORD REMOVAL ACTION BUTTON --- */
+        .btn-delete {
+            background-color: var(--accent-red);
+            color: #ffffff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 11px;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .btn-delete:hover {
+            opacity: 0.85;
+        }
+
         .db-filters {
             display: flex;
             gap: 12px;
@@ -242,6 +260,7 @@
             padding: 10px;
             border-bottom: 1px solid #f1f5f9;
             color: var(--text-dark);
+            vertical-align: middle;
         }
 
         .roster-table tr.active-student {
@@ -595,7 +614,6 @@
 </head>
 <body>
 
-    <!-- MAIN CONTROL PANEL NAVIGATION BAR -->
     <div class="main-control-panel">
         <div class="panel-brand">
             🏫 <span>TT-PRO MANAGEMENT SYSTEM</span>
@@ -609,17 +627,14 @@
         </div>
     </div>
 
-    <!-- ADMINISTRATIVE WORKSPACE -->
     <div id="admin-container">
         <div class="admin-header-bar">
             <h1>📊 Student Admission & Bulk Report Card Module</h1>
             <button class="panel-btn" onclick="backToPanel()">← Back to Panel</button>
         </div>
 
-        <!-- LEFT SIDEBAR: CONFIGURATIONS & ADMISSION -->
         <div style="display: flex; flex-direction: column; gap: 15px;">
             
-            <!-- BACKUP & DATA PERSISTENCE CONTROLS (NEW SECTION) -->
             <div class="admin-card" style="border: 1px solid var(--accent-purple);">
                 <h2>💾 System Storage Sync</h2>
                 <button type="button" class="btn-submit" style="background-color: var(--accent-purple);" onclick="saveDataToComputer()">💾 Save Session Data to Computer</button>
@@ -629,7 +644,6 @@
                 </div>
             </div>
 
-            <!-- GLOBAL REPORT SETTINGS PANEL -->
             <div class="admin-card">
                 <h2>⚙️ Report Configuration</h2>
                 <div class="form-control">
@@ -657,7 +671,6 @@
                 </div>
             </div>
 
-            <!-- ENROLLMENT CARD WITH BULK UPLOAD -->
             <div class="admin-card">
                 <h2>🧑‍🎓 New Enrollment</h2>
                 <form id="enrollment-form" onsubmit="handleEnrollment(event)">
@@ -694,7 +707,6 @@
                 
                 <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 15px 0;">
                 
-                <!-- BULK ADMISSION CONTROLS -->
                 <div>
                     <label style="display: block; font-size: 11px; font-weight: bold; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase;">Bulk CSV Enrollment</label>
                     <input type="file" id="bulk-csv-file" accept=".csv" style="font-size: 12px; margin-bottom: 8px; width:100%;">
@@ -703,7 +715,6 @@
                 </div>
             </div>
 
-            <!-- SCORES BULK DATA INTERACTION UTILITY -->
             <div class="admin-card" style="border: 1px solid var(--primary-blue);">
                 <h2>📈 Bulk Scores Upload</h2>
                 <div class="form-control">
@@ -726,10 +737,8 @@
 
         </div>
 
-        <!-- RIGHT WORKSPACE SECTION -->
         <div class="workspace-split">
             
-            <!-- MASTER ROSTER GRID -->
             <div class="admin-card">
                 <h2>Active Student Database Roster</h2>
                 <div class="db-filters">
@@ -762,13 +771,13 @@
                             <th>Gender</th>
                             <th>Form</th>
                             <th>Stream</th>
+                            <th style="width: 80px; text-align: center;">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="roster-tbody"></tbody>
                 </table>
             </div>
 
-            <!-- DETAIL MARKS INTERACTIVE GRIDS -->
             <div class="admin-card">
                 <h2>Assessment Scores Input Panel (T1, T2, Mid, Annual)</h2>
                 <div id="active-student-banner" style="font-weight: bold; color: var(--primary-blue); margin-bottom: 12px; font-size: 14px;">
@@ -790,7 +799,6 @@
         </div>
     </div>
 
-    <!-- MAIN EXPORT LIVE PREVIEW CONTAINER -->
     <div id="print-output-container"></div>
 
     <script>
@@ -837,7 +845,7 @@
             else if (viewName === 'students') document.getElementById('search-filter').focus();
         }
 
-        /* --- PERSISTENCE LOGIC (NEW) --- */
+        /* --- PERSISTENCE LOGIC --- */
         function autoSaveToCache() {
             const dataToSave = {
                 students: globalStudents,
@@ -891,7 +899,7 @@
             downloadAnchor.setAttribute("download", `tt_pro_backup_${document.getElementById('cfg-year').value}_term${document.getElementById('cfg-term').value}.json`);
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
-            downloadAnchor.removeChild(downloadAnchor);
+            document.body.removeChild(downloadAnchor);
         }
 
         function loadDataFromComputer(input) {
@@ -910,10 +918,12 @@
                         document.getElementById('cfg-open-date').value = parsed.config.openDate || "";
                     }
                     if (globalStudents.length > 0) selectedStudentId = globalStudents[0].id;
+                    else selectedStudentId = null;
                     
                     autoSaveToCache();
                     renderRosterTable();
                     if (selectedStudentId) selectStudent(selectedStudentId);
+                    else buildMarksInputs();
                     generateAllReportCardsHTML();
                     alert("System parameters and records restored successfully!");
                 } catch(err) {
@@ -1061,12 +1071,13 @@
                         const stream = cols[3].trim();
                         
                         if(name) {
+                            const newId = Date.now() + i;
                             globalStudents.push({
-                                id: Date.now() + i,
+                                id: newId,
                                 name, gender, form, stream,
                                 marks: {}, checkedForPrint: true
                             });
-                            if (addedCount === 0) selectedStudentId = Date.now() + i;
+                            if (addedCount === 0 && !selectedStudentId) selectedStudentId = newId;
                             addedCount++;
                         }
                     }
@@ -1104,6 +1115,39 @@
             selectStudent(newStudent.id);
         }
 
+        /* --- REMOVE INDIVIDUAL REGISTERED RECORD FROM SESSION DATA --- */
+        function deleteStudent(id, event) {
+            if (event) event.stopPropagation(); // Stops row select click from triggering simultaneously
+            
+            const targetStudent = globalStudents.find(s => s.id === id);
+            if (!targetStudent) return;
+
+            if (confirm(`Are you sure you want to permanently delete records for ${targetStudent.name}?`)) {
+                globalStudents = globalStudents.filter(s => s.id !== id);
+                
+                // Safely update selected profile context if current student was removed
+                if (selectedStudentId === id) {
+                    if (globalStudents.length > 0) {
+                        selectedStudentId = globalStudents[0].id;
+                    } else {
+                        selectedStudentId = null;
+                    }
+                }
+
+                autoSaveToCache();
+                renderRosterTable();
+                
+                if (selectedStudentId) {
+                    selectStudent(selectedStudentId);
+                } else {
+                    document.getElementById('active-student-banner').innerText = "No student currently active. Select a row from the database master list above.";
+                    buildMarksInputs();
+                }
+                
+                generateAllReportCardsHTML();
+            }
+        }
+
         function renderRosterTable() {
             const tbody = document.getElementById('roster-tbody');
             const search = document.getElementById('search-filter').value.toLowerCase();
@@ -1114,7 +1158,7 @@
             let checkedCount = 0;
 
             if (globalStudents.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:20px;">No students currently active in local storage context.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">No students currently active in local storage context.</td></tr>';
                 document.getElementById('selected-count-badge').innerText = `Selected: 0 student(s)`;
                 return;
             }
@@ -1130,7 +1174,10 @@
                 if (stu.id === selectedStudentId) tr.className = 'active-student';
                 
                 tr.onclick = (e) => {
-                    if(e.target.type !== 'checkbox') selectStudent(stu.id);
+                    // Do not load profile row if clicking control checkboxes or removal buttons directly
+                    if(e.target.type !== 'checkbox' && !e.target.classList.contains('btn-delete')) {
+                        selectStudent(stu.id);
+                    }
                 };
                 
                 tr.innerHTML = `
@@ -1141,6 +1188,9 @@
                     <td>${stu.gender}</td>
                     <td style="color:var(--primary-blue); font-weight: 700;">${stu.form}</td>
                     <td><span class="badge-stream">${stu.stream}</span></td>
+                    <td style="text-align:center;">
+                        <button type="button" class="btn-delete" onclick="deleteStudent(${stu.id}, event)">🗑️ Delete</button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
