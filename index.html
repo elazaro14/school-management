@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="sw">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -197,6 +197,7 @@
             background-color: #475569;
         }
 
+        /* --- INDIVIDUAL RECORD REMOVAL ACTION BUTTON --- */
         .btn-delete {
             background-color: var(--accent-red);
             color: #ffffff;
@@ -374,7 +375,7 @@
 
         /* --- REPORT CARD PRINT PREVIEW SHEET --- */
         #print-output-container {
-            display: none;
+            display: block;
         }
 
         .report-card-page {
@@ -592,9 +593,6 @@
             .main-control-panel, #admin-container {
                 display: none !important;
             }
-            #print-output-container {
-                display: block !important;
-            }
             body {
                 background-color: #ffffff;
                 padding: 0;
@@ -689,7 +687,7 @@
                     </div>
                     <div class="form-control">
                         <label>Form Level</label>
-                        <select id="stu-form" onchange="handleFormLevelChange()">
+                        <select id="stu-form">
                             <option value="F1">F1</option>
                             <option value="F2">F2</option>
                             <option value="F3" selected>F3</option>
@@ -702,6 +700,8 @@
                             <option value="Stream A">Stream A</option>
                             <option value="Stream B">Stream B</option>
                             <option value="Stream C">Stream C</option>
+                            <option value="Stream D">Stream C</option>
+                            <option value="Stream E">Stream C</option>
                         </select>
                     </div>
                     <button type="submit" class="btn-submit">Register Student</button>
@@ -805,9 +805,6 @@
 
     <script>
         let globalStudents = [];
-        let selectedStudentId = null;
-        let uploadedLogoBase64 = "";
-        let selectedBatchIds = new Set();
 
         const subjectsF1F2 = [
             { id: "his_maadili", name: "HISTORIA NA MAADILI" }, 
@@ -837,15 +834,8 @@
             { id: "lit", name: "LITERATURE" }
         ];
 
-        window.addEventListener('DOMContentLoaded', () => {
-            loadFromCache();
-            renderRosterTable();
-            if (selectedStudentId) {
-                selectStudent(selectedStudentId);
-            } else {
-                buildMarksInputs();
-            }
-        });
+        let selectedStudentId = null;
+        let uploadedLogoBase64 = "";
 
         function backToPanel() {
             window.location.href = "index.html"; 
@@ -857,15 +847,7 @@
             else if (viewName === 'students') document.getElementById('search-filter').focus();
         }
 
-        function handleFormLevelChange() {
-            buildMarksInputs();
-        }
-
-        function getSubjectsForForm(formLevel) {
-            return (formLevel === 'F1' || formLevel === 'F2') ? subjectsF1F2 : subjectsF3F4;
-        }
-
-        /* --- DATA PERSISTENCE --- */
+        /* --- PERSISTENCE LOGIC --- */
         function autoSaveToCache() {
             const dataToSave = {
                 students: globalStudents,
@@ -890,14 +872,14 @@
                     if (parsed.config) {
                         document.getElementById('cfg-term').value = parsed.config.term || "II";
                         document.getElementById('cfg-year').value = parsed.config.year || "2026";
-                        document.getElementById('cfg-close-date').value = parsed.config.closeDate || "05/12/2026";
-                        document.getElementById('cfg-open-date').value = parsed.config.openDate || "12/01/2027";
+                        document.getElementById('cfg-close-date').value = parsed.config.closeDate || "";
+                        document.getElementById('cfg-open-date').value = parsed.config.openDate || "";
                     }
                     if (globalStudents.length > 0) {
                         selectedStudentId = globalStudents[0].id;
                     }
                 } catch(e) {
-                    console.error("Error standardizing cache sync layout: ", e);
+                    console.error("Cache buffer reading error: ", e);
                 }
             }
         }
@@ -937,18 +919,28 @@
                         document.getElementById('cfg-close-date').value = parsed.config.closeDate || "";
                         document.getElementById('cfg-open-date').value = parsed.config.openDate || "";
                     }
-                    selectedStudentId = globalStudents.length > 0 ? globalStudents[0].id : null;
+                    if (globalStudents.length > 0) selectedStudentId = globalStudents[0].id;
+                    else selectedStudentId = null;
                     
                     autoSaveToCache();
                     renderRosterTable();
                     if (selectedStudentId) selectStudent(selectedStudentId);
                     else buildMarksInputs();
-                    alert("System parameters and record dataset successfully synced!");
+                    generateAllReportCardsHTML();
+                    alert("System parameters and records restored successfully!");
                 } catch(err) {
-                    alert("Invalid JSON configuration file layout structure.");
+                    alert("Invalid JSON workspace file structure. Could not map settings layout.");
                 }
             };
             reader.readAsText(file);
+        }
+
+        function init() {
+            loadFromCache();
+            renderRosterTable();
+            buildMarksInputs();
+            if (selectedStudentId) selectStudent(selectedStudentId);
+            generateAllReportCardsHTML();
         }
 
         function handleLogoUpload(input) {
@@ -957,555 +949,685 @@
                 reader.onload = function(e) {
                     uploadedLogoBase64 = e.target.result;
                     autoSaveToCache();
+                    generateAllReportCardsHTML();
                 };
                 reader.readAsDataURL(input.files[0]);
             }
         }
 
-        function updateGlobalSettings() {
-            autoSaveToCache();
-        }
-
-        /* --- ADMISSION / ENROLLMENT PROCESS --- */
-        function handleEnrollment(event) {
-            event.preventDefault();
-            const fullName = document.getElementById('stu-fullname').value.trim().toUpperCase();
-            const gender = document.getElementById('stu-gender').value;
-            const formLevel = document.getElementById('stu-form').value;
-            const stream = document.getElementById('stu-stream').value;
-
-            if(!fullName) return;
-
-            const newStudent = {
-                id: "STU_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
-                name: fullName,
-                gender: gender,
-                form: formLevel,
-                stream: stream,
-                marks: {}
-            };
-
-            globalStudents.push(newStudent);
-            selectedStudentId = newStudent.id;
-            
-            document.getElementById('enrollment-form').reset();
-            autoSaveToCache();
-            renderRosterTable();
-            selectStudent(newStudent.id);
-        }
-
-        /* --- ROSTER VIEW SYNC CONTROLLER --- */
-        function renderRosterTable() {
-            const searchQuery = document.getElementById('search-filter').value.toLowerCase();
-            const formFilter = document.getElementById('form-filter').value;
-            const streamFilter = document.getElementById('stream-filter').value;
-            const tbody = document.getElementById('roster-tbody');
-            
-            tbody.innerHTML = "";
-
-            const filtered = globalStudents.filter(s => {
-                const matchesSearch = s.name.toLowerCase().includes(searchQuery);
-                const matchesForm = (formFilter === 'All' || s.form === formFilter);
-                const matchesStream = (streamFilter === 'All' || s.stream === streamFilter);
-                return matchesSearch && matchesForm && matchesStream;
-            });
-
-            filtered.forEach(student => {
-                const tr = document.createElement('tr');
-                if (student.id === selectedStudentId) {
-                    tr.classList.add('active-student');
-                }
-                
-                tr.onclick = (e) => {
-                    if (e.target.type === 'checkbox' || e.target.classList.contains('btn-delete')) return;
-                    selectStudent(student.id);
-                };
-
-                const isChecked = selectedBatchIds.has(student.id) ? "checked" : "";
-
-                tr.innerHTML = `
-                    <td style="text-align: center;"><input type="checkbox" data-id="${student.id}" ${isChecked} onchange="handleSelectRow(this, '${student.id}')"></td>
-                    <td>${student.name}</td>
-                    <td>${student.gender}</td>
-                    <td>${student.form}</td>
-                    <td><span class="badge-stream">${student.stream}</span></td>
-                    <td style="text-align: center;"><button class="btn-delete" onclick="deleteStudent('${student.id}')">Delete</button></td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            document.getElementById('selected-count-badge').innerText = `Selected: ${selectedBatchIds.size} student(s)`;
-        }
-
-        function handleSelectRow(checkbox, studentId) {
-            if (checkbox.checked) {
-                selectedBatchIds.add(studentId);
-            } else {
-                selectedBatchIds.delete(studentId);
-            }
-            document.getElementById('selected-count-badge').innerText = `Selected: ${selectedBatchIds.size} student(s)`;
-        }
-
-        function toggleSelectAll(masterCheckbox) {
-            const searchQuery = document.getElementById('search-filter').value.toLowerCase();
-            const formFilter = document.getElementById('form-filter').value;
-            const streamFilter = document.getElementById('stream-filter').value;
-
-            const filtered = globalStudents.filter(s => {
-                const matchesSearch = s.name.toLowerCase().includes(searchQuery);
-                const matchesForm = (formFilter === 'All' || s.form === formFilter);
-                const matchesStream = (streamFilter === 'All' || s.stream === streamFilter);
-                return matchesSearch && matchesForm && matchesStream;
-            });
-
-            filtered.forEach(student => {
-                if (masterCheckbox.checked) {
-                    selectedBatchIds.add(student.id);
-                } else {
-                    selectedBatchIds.delete(student.id);
-                }
-            });
-
-            renderRosterTable();
-        }
-
-        function deleteStudent(id) {
-            if (confirm("Are you sure you want to remove this record from system database cache?")) {
-                globalStudents = globalStudents.filter(s => s.id !== id);
-                selectedBatchIds.delete(id);
-                if (selectedStudentId === id) {
-                    selectedStudentId = globalStudents.length > 0 ? globalStudents[0].id : null;
-                }
-                autoSaveToCache();
-                renderRosterTable();
-                if (selectedStudentId) selectStudent(selectedStudentId);
-                else buildMarksInputs();
-            }
-        }
-
-        /* --- ASSESSMENT RECORD INPUT LAYOUT CONTROLLER --- */
-        function buildMarksInputs() {
-            const grid = document.getElementById('marks-entry-grid');
-            grid.innerHTML = "";
-
-            const student = globalStudents.find(s => s.id === selectedStudentId);
-            const currentFormLevel = student ? student.form : document.getElementById('stu-form').value;
-            const targetSubjects = getSubjectsForForm(currentFormLevel);
-
-            if (!student) {
-                document.getElementById('active-student-banner').innerText = "No student currently active. Select a row from the database master list above.";
-                return;
-            }
-
-            document.getElementById('active-student-banner').innerText = `Editing Marks for: ${student.name} (${student.form} - ${student.stream})`;
-
-            targetSubjects.forEach(sub => {
-                const block = document.createElement('div');
-                block.className = "subject-block";
-                
-                const sMarks = student.marks[sub.id] || { t1: "", t2: "", mid: "", annual: "" };
-
-                block.innerHTML = `
-                    <label>${sub.name}</label>
-                    <div class="input-row">
-                        <div><span>T1</span><input type="number" min="0" max="100" value="${sMarks.t1 || ''}" oninput="saveMarkEntry('${sub.id}', 't1', this.value)"></div>
-                        <div><span>T2</span><input type="number" min="0" max="100" value="${sMarks.t2 || ''}" oninput="saveMarkEntry('${sub.id}', 't2', this.value)"></div>
-                    </div>
-                    <div class="input-row">
-                        <div><span>Mid</span><input type="number" min="0" max="100" value="${sMarks.mid || ''}" oninput="saveMarkEntry('${sub.id}', 'mid', this.value)"></div>
-                        <div><span>Ann</span><input type="number" min="0" max="100" value="${sMarks.annual || ''}" oninput="saveMarkEntry('${sub.id}', 'annual', this.value)"></div>
-                    </div>
-                `;
-                grid.appendChild(block);
-            });
-        }
-
-        function selectStudent(id) {
-            selectedStudentId = id;
-            const rows = document.querySelectorAll('#roster-tbody tr');
-            renderRosterTable();
-            buildMarksInputs();
-        }
-
-        function saveMarkEntry(subjectId, assessmentType, value) {
-            const student = globalStudents.find(s => s.id === selectedStudentId);
-            if (!student) return;
-
-            if (!student.marks[subjectId]) {
-                student.marks[subjectId] = { t1: "", t2: "", mid: "", annual: "" };
-            }
-            
-            student.marks[subjectId][assessmentType] = value !== "" ? parseFloat(value) : "";
-            autoSaveToCache();
-        }
-
-        /* --- BULK TEMPLATE MANAGER --- */
         function downloadCSVTemplate() {
-            let csvContent = "data:text/csv;charset=utf-8,Full Name,Gender,Form,Stream\nCHUMA KANYAMA,M,F3,Stream A\nMILA ELIAZA,F,F1,Stream B\n";
+            const csvContent = "data:text/csv;charset=utf-8,FullName,Gender,Form,Stream\nJOHN DOE,M,F1,Stream A\nANNA SMITH,F,F3,Stream B";
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "tt_pro_roster_template.csv");
+            link.setAttribute("download", "student_admission_template.csv");
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         }
 
         function downloadScoresTemplate() {
-            const targetForm = document.getElementById('score-template-form').value;
-            const targetSubjects = getSubjectsForForm(targetForm);
+            const chosenForm = document.getElementById('score-template-form').value;
+            const schema = (chosenForm === "F1") ? subjectsF1F2 : subjectsF3F4;
             
-            let header = "Student Name,Form,Stream";
-            targetSubjects.forEach(s => {
-                header += `,${s.name}_T1,${s.name}_T2,${s.name}_MID,${s.name}_ANNUAL`;
+            let headers = ["FullName"];
+            schema.forEach(sub => {
+                headers.push(`${sub.id}_t1`, `${sub.id}_t2`, `${sub.id}_mid`, `${sub.id}_ann`);
             });
-            header += "\n";
-            
-            let mockData = targetForm === 'F3' ? "JUMA KANYAMA,F3,Stream A" : "ANNA BENJAMIN,F1,Stream B";
-            targetSubjects.forEach(() => {
-                mockData += ",75,80,68,82";
-            });
-            mockData += "\n";
 
-            const encodedUri = encodeURI("data:text/csv;charset=utf-8," + header + mockData);
+            let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n";
+            
+            if(globalStudents.length > 0) {
+                globalStudents.forEach(s => {
+                    if((chosenForm === "F1" && (s.form === "F1" || s.form === "F2")) || 
+                       (chosenForm === "F3" && (s.form === "F3" || s.form === "F4"))) {
+                        csvContent += s.name + ",".repeat(headers.length - 1) + "\n";
+                    }
+                });
+            } else {
+                csvContent += "JUMA HAMISI," + "".repeat(headers.length - 1) + "\n";
+            }
+
+            const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `tt_pro_marks_template_${targetForm}.csv`);
+            link.setAttribute("download", `scores_template_${chosenForm}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         }
 
+        function handleBulkScoresUpload() {
+            const fileInput = document.getElementById('bulk-scores-file');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert("Please select a valid CSV scores file!");
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split("\n");
+                if(lines.length < 2) return;
+
+                const headers = lines[0].split(",").map(h => h.trim());
+                let updatedStudentsCount = 0;
+
+                for(let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    const cols = lines[i].split(",").map(c => c.trim());
+                    const studentName = cols[0].toUpperCase();
+
+                    let student = globalStudents.find(s => s.name === studentName);
+                    if(student) {
+                        if(!student.marks) student.marks = {};
+                        
+                        for(let j = 1; j < headers.length; j++) {
+                            const header = headers[j];
+                            const val = cols[j] || "";
+                            
+                            const lastUnderscore = header.lastIndexOf("_");
+                            if(lastUnderscore !== -1) {
+                                const subId = header.substring(0, lastUnderscore);
+                                const examType = header.substring(lastUnderscore + 1);
+
+                                if(!student.marks[subId]) {
+                                    student.marks[subId] = { t1: "", t2: "", mid: "", ann: "" };
+                                }
+                                student.marks[subId][examType] = val;
+                            }
+                        }
+                        updatedStudentsCount++;
+                    }
+                }
+
+                alert(`Successfully processed and loaded metric arrays for ${updatedStudentsCount} students!`);
+                autoSaveToCache();
+                if(selectedStudentId) selectStudent(selectedStudentId);
+                generateAllReportCardsHTML();
+            };
+            reader.readAsText(file);
+        }
+
         function handleBulkUpload() {
             const fileInput = document.getElementById('bulk-csv-file');
             if (!fileInput.files || fileInput.files.length === 0) {
-                alert("Please select a CSV roster schema file.");
+                alert("Please select a target file first!");
                 return;
             }
-
+            const file = fileInput.files[0];
             const reader = new FileReader();
             reader.onload = function(e) {
                 const text = e.target.result;
-                const lines = text.split('\n');
-                let enrolledCount = 0;
-
-                for (let i = 1; i < lines.length; i++) {
-                    if (!lines[i].trim()) continue;
-                    const cols = lines[i].split(',');
-                    if (cols.length < 4) continue;
-
-                    const fullName = cols[0].trim().toUpperCase();
-                    const gender = cols[1].trim().toUpperCase();
-                    const formLevel = cols[2].trim().toUpperCase();
-                    const stream = cols[3].trim();
-
-                    globalStudents.push({
-                        id: "STU_" + Date.now() + "_" + Math.floor(Math.random() * 10000),
-                        name: fullName,
-                        gender: gender,
-                        form: formLevel,
-                        stream: stream,
-                        marks: {}
-                    });
-                    enrolledCount++;
-                }
-
-                autoSaveToCache();
-                renderRosterTable();
-                alert(`Successfully processed and loaded ${enrolledCount} new students!`);
-            };
-            reader.readAsText(fileInput.files[0]);
-        }
-
-        function handleBulkScoresUpload() {
-            const fileInput = document.getElementById('bulk-scores-file');
-            const selectedSchema = document.getElementById('score-template-form').value;
-            const targetSubjects = getSubjectsForForm(selectedSchema);
-
-            if (!fileInput.files || fileInput.files.length === 0) {
-                alert("Please select a valid CSV marks dataset configuration.");
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const text = e.target.result;
-                const lines = text.split('\n');
-                if (lines.length < 2) return;
-
-                const headers = lines[0].split(',').map(h => h.trim().toUpperCase());
-                let matchCount = 0;
-
-                for (let i = 1; i < lines.length; i++) {
-                    if (!lines[i].trim()) continue;
-                    const cols = lines[i].split(',');
-                    if (cols.length < 3) continue;
-
-                    const name = cols[0].trim().toUpperCase();
-                    const form = cols[1].trim().toUpperCase();
-                    const stream = cols[2].trim();
-
-                    let student = globalStudents.find(s => s.name === name && s.form === form);
-                    if (!student) {
-                        student = {
-                            id: "STU_" + Date.now() + "_" + Math.floor(Math.random() * 10000),
-                            name: name,
-                            gender: "M",
-                            form: form,
-                            stream: stream,
-                            marks: {}
-                        };
-                        globalStudents.push(student);
-                    }
-
-                    targetSubjects.forEach((sub) => {
-                        if (!student.marks[sub.id]) student.marks[sub.id] = { t1: "", t2: "", mid: "", annual: "" };
-
-                        const t1Idx = headers.indexOf(`${sub.name}_T1`);
-                        const t2Idx = headers.indexOf(`${sub.name}_T2`);
-                        const midIdx = headers.indexOf(`${sub.name}_MID`);
-                        const annIdx = headers.indexOf(`${sub.name}_ANNUAL`);
-
-                        if (t1Idx !== -1 && cols[t1Idx]) student.marks[sub.id].t1 = parseFloat(cols[t1Idx]);
-                        if (t2Idx !== -1 && cols[t2Idx]) student.marks[sub.id].t2 = parseFloat(cols[t2Idx]);
-                        if (midIdx !== -1 && cols[midIdx]) student.marks[sub.id].mid = parseFloat(cols[midIdx]);
-                        if (annIdx !== -1 && cols[annIdx]) student.marks[sub.id].annual = parseFloat(cols[annIdx]);
-                    });
-                    matchCount++;
-                }
-
-                autoSaveToCache();
-                renderRosterTable();
-                if (selectedStudentId) selectStudent(selectedStudentId);
-                alert(`Successfully matched and updated marks matrix for ${matchCount} students!`);
-            };
-            reader.readAsText(fileInput.files[0]);
-        }
-
-        /* --- GRADING CALCULATIONS ENGINE (TANZANIA NECTA STANDARD) --- */
-        function calculateNECTAGrade(score) {
-            if (score === "" || score === undefined || isNaN(score)) return "-";
-            if (score >= 75) return "A";
-            if (score >= 65) return "B";
-            if (score >= 45) return "C";
-            if (score >= 30) return "D";
-            return "F";
-        }
-
-        function calculateNECTARemarks(grade) {
-            switch(grade) {
-                case "A": return "EXCELLENT";
-                case "B": return "VERY GOOD";
-                case "C": return "GOOD";
-                case "D": return "SATISFACTORY";
-                case "F": return "FAIL";
-                default: return "-";
-            }
-        }
-
-        /* --- REPORT CARD HTML ENGINE GENERATOR --- */
-        function generateStudentReportCardHTML(student) {
-            const term = document.getElementById('cfg-term').value;
-            const year = document.getElementById('cfg-year').value;
-            const closeDate = document.getElementById('cfg-close-date').value;
-            const openDate = document.getElementById('cfg-open-date').value;
-            const targetSubjects = getSubjectsForForm(student.form);
-
-            let tableRowsHTML = "";
-            let totalMarks = 0;
-            let totalSubjectsCount = 0;
-
-            targetSubjects.forEach((sub, index) => {
-                const m = student.marks[sub.id] || { t1: "", t2: "", mid: "", annual: "" };
+                const lines = text.split("\n");
+                let addedCount = 0;
                 
-                // Kulingana na Term I au Term II, chagua alama za kukokotoa wastani wa mwisho
-                let activeAssessmentScore = "";
-                if (term === "I") {
-                    if (m.t1 !== "" && m.mid !== "") {
-                        activeAssessmentScore = (parseFloat(m.t1) + parseFloat(m.mid)) / 2;
-                    } else if (m.mid !== "") {
-                        activeAssessmentScore = parseFloat(m.mid);
+                for(let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    const cols = lines[i].split(",");
+                    if (cols.length >= 4) {
+                        const name = cols[0].trim().toUpperCase();
+                        const gender = cols[1].trim().toUpperCase();
+                        const form = cols[2].trim().toUpperCase();
+                        const stream = cols[3].trim();
+                        
+                        if(name) {
+                            const newId = Date.now() + i;
+                            globalStudents.push({
+                                id: newId,
+                                name, gender, form, stream,
+                                marks: {}, checkedForPrint: true
+                            });
+                            if (addedCount === 0 && !selectedStudentId) selectedStudentId = newId;
+                            addedCount++;
+                        }
                     }
+                }
+                alert(`Successfully parsed and registered ${addedCount} students into current session!`);
+                autoSaveToCache();
+                renderRosterTable();
+                if(selectedStudentId) selectStudent(selectedStudentId);
+                generateAllReportCardsHTML();
+            };
+            reader.readAsText(file);
+        }
+
+        function updateGlobalSettings() {
+            autoSaveToCache();
+            generateAllReportCardsHTML();
+        }
+
+        function getSubjectSchemaForStudent(form) {
+            return (form === "F1" || form === "F2") ? subjectsF1F2 : subjectsF3F4;
+        }
+
+        function handleEnrollment(e) {
+            e.preventDefault();
+            const name = document.getElementById('stu-fullname').value.toUpperCase();
+            const gender = document.getElementById('stu-gender').value;
+            const form = document.getElementById('stu-form').value;
+            const stream = document.getElementById('stu-stream').value;
+
+            const newStudent = { id: Date.now(), name, gender, form, stream, marks: {}, checkedForPrint: true };
+            globalStudents.push(newStudent);
+            document.getElementById('enrollment-form').reset();
+            autoSaveToCache();
+            renderRosterTable();
+            selectStudent(newStudent.id);
+        }
+
+        /* --- REMOVE INDIVIDUAL REGISTERED RECORD FROM SESSION DATA --- */
+        function deleteStudent(id, event) {
+            if (event) event.stopPropagation(); // Stops row select click from triggering simultaneously
+            
+            const targetStudent = globalStudents.find(s => s.id === id);
+            if (!targetStudent) return;
+
+            if (confirm(`Are you sure you want to permanently delete records for ${targetStudent.name}?`)) {
+                globalStudents = globalStudents.filter(s => s.id !== id);
+                
+                // Safely update selected profile context if current student was removed
+                if (selectedStudentId === id) {
+                    if (globalStudents.length > 0) {
+                        selectedStudentId = globalStudents[0].id;
+                    } else {
+                        selectedStudentId = null;
+                    }
+                }
+
+                autoSaveToCache();
+                renderRosterTable();
+                
+                if (selectedStudentId) {
+                    selectStudent(selectedStudentId);
                 } else {
-                    if (m.t2 !== "" && m.annual !== "") {
-                        activeAssessmentScore = (parseFloat(m.t2) + parseFloat(m.annual)) / 2;
-                    } else if (m.annual !== "") {
-                        activeAssessmentScore = parseFloat(m.annual);
+                    document.getElementById('active-student-banner').innerText = "No student currently active. Select a row from the database master list above.";
+                    buildMarksInputs();
+                }
+                
+                generateAllReportCardsHTML();
+            }
+        }
+
+        function renderRosterTable() {
+            const tbody = document.getElementById('roster-tbody');
+            const search = document.getElementById('search-filter').value.toLowerCase();
+            const fFilter = document.getElementById('form-filter').value;
+            const sFilter = document.getElementById('stream-filter').value;
+
+            tbody.innerHTML = '';
+            let checkedCount = 0;
+
+            if (globalStudents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">No students currently active in local storage context.</td></tr>';
+                document.getElementById('selected-count-badge').innerText = `Selected: 0 student(s)`;
+                return;
+            }
+
+            globalStudents.forEach(stu => {
+                if (search && !stu.name.toLowerCase().includes(search)) return;
+                if (fFilter !== 'All' && stu.form !== fFilter) return;
+                if (sFilter !== 'All' && stu.stream !== sFilter) return;
+
+                if (stu.checkedForPrint) checkedCount++;
+
+                let tr = document.createElement('tr');
+                if (stu.id === selectedStudentId) tr.className = 'active-student';
+                
+                tr.onclick = (e) => {
+                    // Do not load profile row if clicking control checkboxes or removal buttons directly
+                    if(e.target.type !== 'checkbox' && !e.target.classList.contains('btn-delete')) {
+                        selectStudent(stu.id);
                     }
+                };
+                
+                tr.innerHTML = `
+                    <td style="text-align:center;">
+                        <input type="checkbox" ${stu.checkedForPrint ? 'checked' : ''} onchange="toggleStudentCheck(${stu.id}, this.checked)">
+                    </td>
+                    <td><strong>${stu.name}</strong></td>
+                    <td>${stu.gender}</td>
+                    <td style="color:var(--primary-blue); font-weight: 700;">${stu.form}</td>
+                    <td><span class="badge-stream">${stu.stream}</span></td>
+                    <td style="text-align:center;">
+                        <button type="button" class="btn-delete" onclick="deleteStudent(${stu.id}, event)">🗑️ Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('selected-count-badge').innerText = `Selected: ${checkedCount} student(s)`;
+        }
+
+        function toggleStudentCheck(id, isChecked) {
+            const student = globalStudents.find(s => s.id === id);
+            if(student) student.checkedForPrint = isChecked;
+            document.getElementById('selected-count-badge').innerText = `Selected: ${globalStudents.filter(s=>s.checkedForPrint).length} student(s)`;
+            autoSaveToCache();
+            generateAllReportCardsHTML();
+        }
+
+        function toggleSelectAll(masterBox) {
+            globalStudents.forEach(s => s.checkedForPrint = masterBox.checked);
+            autoSaveToCache();
+            renderRosterTable();
+            generateAllReportCardsHTML();
+        }
+
+        function selectStudent(id) {
+            selectedStudentId = id;
+            const student = globalStudents.find(s => s.id === id);
+            if (!student) return;
+
+            document.getElementById('active-student-banner').innerText = `Selected Active Profile: ${student.name} (${student.form} - ${student.stream})`;
+            buildMarksInputs();
+
+            const currentSchema = getSubjectSchemaForStudent(student.form);
+            currentSchema.forEach(sub => {
+                const sData = student.marks[sub.id] || { t1: "", t2: "", mid: "", ann: "" };
+                document.getElementById(`in-t1-${sub.id}`).value = sData.t1;
+                document.getElementById(`in-t2-${sub.id}`).value = sData.t2;
+                document.getElementById(`in-mid-${sub.id}`).value = sData.mid;
+                document.getElementById(`in-ann-${sub.id}`).value = sData.ann;
+            });
+
+            renderRosterTable();
+            generateAllReportCardsHTML();
+        }
+
+        function buildMarksInputs() {
+            const student = globalStudents.find(s => s.id === selectedStudentId);
+            const grid = document.getElementById('marks-entry-grid');
+            grid.innerHTML = '';
+
+            if(!student) {
+                grid.innerHTML = '<div style="color:var(--text-muted); font-size:13px; grid-column:1/-1;">Click on a student profile above to populate interactive scoring inputs.</div>';
+                return;
+            }
+
+            const currentSchema = getSubjectSchemaForStudent(student.form);
+
+            currentSchema.forEach(sub => {
+                let div = document.createElement('div');
+                div.className = 'subject-block';
+                div.innerHTML = `
+                    <label>${sub.name}</label>
+                    <div class="input-row">
+                        <div><span>T1 Marks</span><input type="text" id="in-t1-${sub.id}" oninput="saveMarks('${sub.id}')"></div>
+                        <div><span>T2 Marks</span><input type="text" id="in-t2-${sub.id}" oninput="saveMarks('${sub.id}')"></div>
+                    </div>
+                    <div class="input-row">
+                        <div><span>Midterm</span><input type="text" id="in-mid-${sub.id}" oninput="saveMarks('${sub.id}')"></div>
+                        <div><span>Annual</span><input type="text" id="in-ann-${sub.id}" oninput="saveMarks('${sub.id}')"></div>
+                    </div>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        function saveMarks(subId) {
+            const student = globalStudents.find(s => s.id === selectedStudentId);
+            if (!student) return;
+
+            if (!student.marks) student.marks = {};
+            
+            student.marks[subId] = {
+                t1: document.getElementById(`in-t1-${subId}`).value.trim(),
+                t2: document.getElementById(`in-t2-${subId}`).value.trim(),
+                mid: document.getElementById(`in-mid-${subId}`).value.trim(),
+                ann: document.getElementById(`in-ann-${subId}`).value.trim()
+            };
+            autoSaveToCache();
+            generateAllReportCardsHTML();
+        }
+
+        function getSubjectAverageValue(student, subId) {
+            const sData = student.marks[subId] || { t1: "", t2: "", mid: "", ann: "" };
+            let cAssessList = [];
+            if(sData.t1 !== "" && sData.t1 !== undefined) cAssessList.push(parseFloat(sData.t1) || 0);
+            if(sData.t2 !== "" && sData.t2 !== undefined) cAssessList.push(parseFloat(sData.t2) || 0);
+            if(sData.mid !== "" && sData.mid !== undefined) cAssessList.push(parseFloat(sData.mid) || 0);
+
+            if(cAssessList.length === 0 || sData.ann === "" || sData.ann === undefined) return null;
+            
+            let mazoezi = cAssessList.reduce((a, b) => a + b, 0) / cAssessList.length;
+            let mtihani = parseFloat(sData.ann) || 0;
+            return (mazoezi + mtihani) / 2;
+        }
+
+        function calculateAllSubjectRanks() {
+            const rankMap = {}; 
+            const formsList = ["F1", "F2", "F3", "F4"];
+
+            globalStudents.forEach(s => { rankMap[s.id] = {}; });
+
+            formsList.forEach(currentForm => {
+                const schema = (currentForm === "F1" || currentForm === "F2") ? subjectsF1F2 : subjectsF3F4;
+                const formStudents = globalStudents.filter(s => s.form === currentForm);
+
+                schema.forEach(sub => {
+                    let scoresList = formStudents.map(student => ({
+                        studentId: student.id,
+                        avg: getSubjectAverageValue(student, sub.id)
+                    })).filter(item => item.avg !== null);
+
+                    scoresList.sort((a, b) => b.avg - a.avg);
+
+                    let currentRank = 1;
+                    let totalParticipants = scoresList.length;
+
+                    for (let i = 0; i < scoresList.length; i++) {
+                        if (i > 0 && scoresList[i].avg < scoresList[i - 1].avg) {
+                            currentRank = i + 1; 
+                        }
+                        rankMap[scoresList[i].studentId][sub.id] = `${currentRank}/${totalParticipants}`;
+                    }
+                });
+            });
+
+            return rankMap;
+        }
+
+        function computeStudentPerformance(student) {
+            const currentSchema = getSubjectSchemaForStudent(student.form);
+            let subjectAverages = [];
+            let gradePoints = [];
+            let tableRowsHTML = '';
+
+            const subjectRanksDb = calculateAllSubjectRanks();
+
+            currentSchema.forEach(sub => {
+                const sData = student.marks[sub.id] || { t1: "", t2: "", mid: "", ann: "" };
+                let mazoezi = "-";
+                let mtihani = "-";
+                let jumla = "-";
+                let wastani = "-";
+                let daraja = "-";
+                let maoni = "-";
+                let pts = 5;
+
+                let cAssessList = [];
+                if(sData.t1 !== "" && sData.t1 !== undefined) cAssessList.push(parseFloat(sData.t1) || 0);
+                if(sData.t2 !== "" && sData.t2 !== undefined) cAssessList.push(parseFloat(sData.t2) || 0);
+                if(sData.mid !== "" && sData.mid !== undefined) cAssessList.push(parseFloat(sData.mid) || 0);
+
+                if(cAssessList.length > 0) mazoezi = cAssessList.reduce((a, b) => a + b, 0) / cAssessList.length;
+                if(sData.ann !== "" && sData.ann !== undefined) mtihani = parseFloat(sData.ann) || 0;
+
+                if(mazoezi !== "-" && mtihani !== "-") {
+                    wastani = (mazoezi + mtihani) / 2;
+                    jumla = mazoezi + mtihani;
+
+                    if (wastani >= 75) { daraja = "A"; maoni = "VIZURI SANA"; pts = 1; }
+                    else if (wastani >= 65) { daraja = "B"; maoni = "VIZURI"; pts = 2; }
+                    else if (wastani >= 45) { daraja = "C"; maoni = "WASTANI"; pts = 3; }
+                    else if (wastani >= 30) { daraja = "D"; maoni = "INARIDHISHA"; pts = 4; }
+                    else { daraja = "F"; maoni = "FELI"; pts = 5; }
+
+                    subjectAverages.push(wastani);
+                    gradePoints.push(pts);
                 }
 
-                let finalScoreDisplay = "-";
-                let grade = "-";
-                let remarks = "-";
-
-                if (activeAssessmentScore !== "") {
-                    finalScoreDisplay = Math.round(activeAssessmentScore);
-                    grade = calculateNECTAGrade(finalScoreDisplay);
-                    remarks = calculateNECTARemarks(grade);
-                    totalMarks += finalScoreDisplay;
-                    totalSubjectsCount++;
-                }
+                const computedSubjectRank = (subjectRanksDb[student.id] && subjectRanksDb[student.id][sub.id]) ? subjectRanksDb[student.id][sub.id] : "-";
 
                 tableRowsHTML += `
                     <tr>
-                        <td>${index + 1}</td>
                         <td class="subject-name">${sub.name}</td>
-                        <td>${m.t1 !== "" ? Math.round(m.t1) : "-"}</td>
-                        <td>${m.t2 !== "" ? Math.round(m.t2) : "-"}</td>
-                        <td>${m.mid !== "" ? Math.round(m.mid) : "-"}</td>
-                        <td>${m.annual !== "" ? Math.round(m.annual) : "-"}</td>
-                        <td style="font-weight:bold;">${finalScoreDisplay}</td>
-                        <td style="font-weight:bold;">${grade}</td>
-                        <td>${remarks}</td>
-                        <td></td>
+                        <td>${mazoezi !== "-" ? Math.round(mazoezi) : "-"}</td>
+                        <td>${mtihani !== "-" ? Math.round(mtihani) : "-"}</td>
+                        <td>${jumla !== "-" ? Math.round(jumla) : "-"}</td>
+                        <td>${wastani !== "-" ? wastani.toFixed(1) : "-"}</td>
+                        <td style="font-weight:700;">${daraja}</td>
+                        <td style="font-weight:700; background-color:#fafafa;">${computedSubjectRank}</td>
+                        <td>${maoni}</td>
                     </tr>
                 `;
             });
 
-            const averageScore = totalSubjectsCount > 0 ? Math.round(totalMarks / totalSubjectsCount) : 0;
-            const overallGrade = totalSubjectsCount > 0 ? calculateNECTAGrade(averageScore) : "-";
+            let lblJumla = "-", lblWastani = "-", lblDaraja = "-", lblPoints = "-", lblDivision = "-", divValue = 5;
+            let avgValue = 0;
+            let maoniMwalimu = "No records mapped", maoniMkuu = "No records mapped";
 
-            const logoHTML = uploadedLogoBase64 
-                ? `<img src="${uploadedLogoBase64}" class="logo-img" alt="School Logo">`
-                : `<div class="logo-placeholder">UPLOAD LOGO<br>IN ADMIN PANEL</div>`;
+            if (subjectAverages.length > 0) {
+                let totalOfAvgs = subjectAverages.reduce((a, b) => a + b, 0);
+                lblJumla = totalOfAvgs.toFixed(1);
+                avgValue = totalOfAvgs / subjectAverages.length;
+                lblWastani = avgValue.toFixed(1);
 
-            return `
-                <div class="report-card-page">
+                if (avgValue >= 75) lblDaraja = "A";
+                else if (avgValue >= 65) lblDaraja = "B";
+                else if (avgValue >= 45) lblDaraja = "C";
+                else if (avgValue >= 30) lblDaraja = "D";
+                else lblDaraja = "F";
+
+                gradePoints.sort((a, b) => a - b);
+                let best7Points = [...gradePoints];
+                while (best7Points.length < 7) best7Points.push(5);
+                let pointsSum = best7Points.slice(0, 7).reduce((a, b) => a + b, 0);
+                lblPoints = pointsSum;
+
+                if (pointsSum >= 7 && pointsSum <= 17) { lblDivision = "I"; divValue = 1; }
+                else if (pointsSum <= 21) { lblDivision = "II"; divValue = 2; }
+                else if (pointsSum <= 24) { lblDivision = "III"; divValue = 3; }
+                else if (pointsSum <= 33) { lblDivision = "IV"; divValue = 4; }
+                else { lblDivision = "0"; divValue = 5; }
+
+                if (lblDivision === "I") maoniMwalimu = "Hongera kwa matokeo mazuri na ongeza bidii zaidi";
+                else if (lblDivision === "II") maoniMwalimu = "Vizuri ongeza bidii zaidi upate division I";
+                else if (lblDivision === "III") maoniMwalimu = "Wastani soma kwa bidii zaidi upandishe ufaulu wako";
+                else if (lblDivision === "IV") maoniMwalimu = "Matokeo dhaifu ongeza juhudi katika masomo yako";
+                else if (lblDivision === "0") maoniMwalimu = "Feli ongeza bidii katika masomo ili uweze kufaulu katika mitihani yako";
+
+                if (lblDivision === "I") maoniMkuu = "Vizuri ongeza bidii";
+                else if (lblDivision === "II") maoniMkuu = "soma kwa juhudizaidi";
+                else if (lblDivision === "III") maoniMkuu = "ongeza bidii zaidi katika masomo";
+                else if (lblDivision === "IV" || lblDivision === "0") maoniMkuu = "Matokeo mabaya soma kwa bidii zaidi uweze kuongeza ufaulu wako";
+            }
+
+            return {
+                tableRowsHTML, lblJumla, lblWastani, lblDaraja, lblPoints, lblDivision,
+                divValue, pointsValue: parseFloat(lblPoints) || 99, avgValue, maoniMwalimu, maoniMkuu
+            };
+        }
+
+        function generateAllReportCardsHTML() {
+            const container = document.getElementById('print-output-container');
+            container.innerHTML = ''; 
+
+            if(globalStudents.length === 0) return;
+
+            const globalTerm = document.getElementById('cfg-term').value;
+            const globalYear = document.getElementById('cfg-year').value;
+            const globalCloseDate = document.getElementById('cfg-close-date').value;
+            const globalOpenDate = document.getElementById('cfg-open-date').value;
+
+            let studentCalculations = {};
+            globalStudents.forEach(student => {
+                studentCalculations[student.id] = computeStudentPerformance(student);
+            });
+
+            let formsList = ["F1", "F2", "F3", "F4"];
+            let ranksDb = {};
+
+            formsList.forEach(currentForm => {
+                let formStudents = globalStudents.filter(s => s.form === currentForm && studentCalculations[s.id].lblWastani !== "-");
+                
+                formStudents.sort((a, b) => {
+                    let resA = studentCalculations[a.id];
+                    let resB = studentCalculations[b.id];
+                    if (resA.divValue !== resB.divValue) return resA.divValue - resB.divValue;
+                    if (resA.pointsValue !== resB.pointsValue) return resA.pointsValue - resB.pointsValue;
+                    return resB.avgValue - resA.avgValue;
+                });
+
+                formStudents.forEach((stu, index) => {
+                    ranksDb[stu.id] = index + 1;
+                });
+            });
+
+            globalStudents.forEach(student => {
+                const res = studentCalculations[student.id];
+                const totalInClass = globalStudents.filter(s => s.form === student.form).length;
+                const currentRank = ranksDb[student.id] || "-";
+
+                let reportPageDiv = document.createElement('div');
+                reportPageDiv.id = `report-card-id-${student.id}`;
+                reportPageDiv.className = `report-card-page ${student.id === selectedStudentId ? '' : 'hidden-print'}`;
+                
+                let logoSectionHTML = uploadedLogoBase64 ? 
+                    `<img src="${uploadedLogoBase64}" class="logo-img" alt="Logo">` : 
+                    `<div class="logo-placeholder">SCHOOL LOGO PLACEHOLDER</div>`;
+
+                reportPageDiv.innerHTML = `
                     <div class="report-header">
-                        ${logoHTML}
-                        <h1 class="header-title">JAMHURI YA MUUNGANO WA TANZANIA</h1>
-                        <h1 class="header-title" style="font-size:15px; color:var(--primary-blue);">TT-PRO ULTIMATE secondary school</h1>
-                        <div class="report-title">STU_PROGRESSIVE REPORT CARD SHEET</div>
+                        ${logoSectionHTML}
+                        <p class="header-title">PRIME MINISTER'S OFFICE</p>
+                        <p class="header-title">REGIONAL ADMINISTRATION AND LOCAL GOVERNMENT</p>
+                        <p class="header-title">ARUSHA CITY COUNCIL</p>
+                        <p class="header-title" style="font-weight: 900; font-size: 18px;">OLMOTI SECONDARY SCHOOL</p>
+                        <p class="header-title">P.O. BOX 8249, ARUSHA</p>
+                        <p class="report-title">STUDENT PROGRESS ACADEMIC REPORT FOR PARENT/GUARDIAN</p>
                     </div>
 
                     <table class="meta-info">
                         <tr>
-                            <td style="width: 50%;">JINA LA MWANAFUNZI: <span class="dotted-line" style="width: 60%;">${student.name}</span></td>
-                            <td style="width: 50%;">JINSIA: <span class="dotted-line" style="width: 30%;">${student.gender}</span></td>
-                        </tr>
-                        <tr>
-                            <td>KIDATO: <span class="dotted-line" style="width: 40%;">${student.form}</span></td>
-                            <td>MKRONDO / STREAM: <span class="dotted-line" style="width: 40%;">${student.stream}</span></td>
-                        </tr>
-                        <tr>
-                            <td>MUHULA / TERM: <span class="dotted-line" style="width: 40%;">TERM ${term}</span></td>
-                            <td>MWAKA WA MASOMO: <span class="dotted-line" style="width: 40%;">${year}</span></td>
+                            <td style="width: 55%;">STUDENT NAME: <span class="dotted-line" style="width: 70%;">${student.name}</span></td>
+                            <td style="width: 15%;">FORM: <span class="dotted-line" style="width: 40%;">${student.form}</span></td>
+                            <td style="width: 15%;">TERM: <span class="dotted-line" style="width: 40%;">${globalTerm}</span></td>
+                            <td style="width: 15%;">YEAR: <span class="dotted-line" style="width: 45%;">${globalYear}</span></td>
                         </tr>
                     </table>
 
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th style="width: 30px;">NA.</th>
-                                <th style="text-align: left;">SOMO / SUBJECT</th>
-                                <th style="width: 50px;">TEST 1</th>
-                                <th style="width: 50px;">TEST 2</th>
-                                <th style="width: 50px;">MID</th>
-                                <th style="width: 50px;">ANNUAL</th>
-                                <th style="width: 60px;">WASTANI</th>
-                                <th style="width: 50px;">DARAJA</th>
-                                <th style="width: 100px;">MAONI</th>
-                                <th>SAINI YA MWALIMU</th>
+                                <th style="width: 30%;">SUBJECT</th>
+                                <th style="width: 11%;">CA</th>
+                                <th style="width: 11%;">EXAM</th>
+                                <th style="width: 11%;">TOTAL</th>
+                                <th style="width: 11%;">AVERAGE</th>
+                                <th style="width: 10%;">GRADE</th>
+                                <th style="width: 14%;">SUBJECT RANK</th>
+                                <th style="width: 22%;">REMARKS</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            ${tableRowsHTML}
-                        </tbody>
+                        <tbody>${res.tableRowsHTML}</tbody>
                     </table>
 
                     <div class="summary-row">
-                        <div>JUMLA YA ALAMA / TOTAL MARKS: <span class="dotted-line" style="padding:0 15px;">${totalMarks}</span></div>
-                        <div>WASTANI / AVERAGE SCORE: <span class="dotted-line" style="padding:0 15px;">${averageScore}</span></div>
-                        <div>DARAJA LA JUMLA / OVERALL GRADE: <span class="dotted-line" style="padding:0 15px;">${overallGrade}</span></div>
+                        <div>TOTAL: <span class="dotted-line" style="width: 65px; text-align: center;">${res.lblJumla}</span></div>
+                        <div>AVERAGE: <span class="dotted-line" style="width: 55px; text-align: center;">${res.lblWastani}</span></div>
+                        <div>GRADE: <span class="dotted-line" style="width: 35px; text-align: center;">${res.lblDaraja}</span></div>
+                        <div>POINTS: <span class="dotted-line" style="width: 35px; text-align: center;">${res.lblPoints}</span></div>
+                        <div>DIVISION: <span class="dotted-line" style="width: 50px; text-align: center;">${res.lblDivision}</span></div>
+                    </div>
+                    
+                    <div class="summary-row" style="margin-top: 5px; margin-bottom: 20px;">
+                        <div style="width: 100%;">FORM RANK POSITION: <span class="dotted-line" style="width: 50px; text-align: center;">${currentRank}</span> OUT OF: <span class="dotted-line" style="width: 50px; text-align: center;">${totalInClass}</span> (FORM-WIDE EVALUATION)</div>
                     </div>
 
                     <div class="behavior-section">
-                        <div class="section-heading">TATHMINI YA TABIA NA SUTI YA MAENDELEO / BEHAVIOR EVALUATION INDEX</div>
+                        <div class="section-heading">BEHAVIOR & CONDUCT EVALUATION MATRIX</div>
                         <div class="behavior-container">
                             <table class="behavior-table">
-                                <thead>
-                                    <tr><th>TABIA / CHARACTER TRAIT</th><th>DARAJA</th></tr>
-                                </thead>
+                                <thead><tr><th>PERFORMANCE TRACK</th><th>GRADE</th></tr></thead>
                                 <tbody>
-                                    <tr><td>UTII NA NIDHAMU (OBEDIENCE & DISCIPLINE)</td><td>A</td></tr>
-                                    <tr><td>BIDII YA KAZI (ASSIDUITY & HARDWORK)</td><td>A</td></tr>
-                                    <tr><td>USAFI WA MWILI/MAVAZI (HYGIENE & ATTIRE)</td><td>B</td></tr>
-                                    <tr><td>USHIRIKIANO (COOPERATION & TEAMWORK)</td><td>A</td></tr>
+                                    <tr><td>NATION BUILDING ACTIVITIES</td><td><span contenteditable="true">B</span></td></tr>
+                                    <tr><td>DILIGENCE AND KNOWLEDGE</td><td><span contenteditable="true">B</span></td></tr>
+                                    <tr><td>PUBLIC PROPERTY RESPECT</td><td><span contenteditable="true">B</span></td></tr>
+                                    <tr><td>COOPERATION & UNDERSTANDING</td><td><span contenteditable="true">B</span></td></tr>
+                                    <tr><td>RESPECTFULNESS</td><td><span contenteditable="true">B</span></td></tr>
                                 </tbody>
                             </table>
                             <table class="behavior-table">
-                                <thead>
-                                    <tr><th>VIWANGO VYA ALAMA / GRADING KEY</th><th>DARAJA</th></tr>
-                                </thead>
+                                <thead><tr><th>PERFORMANCE TRACK</th><th>GRADE</th></tr></thead>
                                 <tbody>
-                                    <tr><td>75 - 100 (EXCELLENT)</td><td>A</td></tr>
-                                    <tr><td>65 - 74 (VERY GOOD)</td><td>B</td></tr>
-                                    <tr><td>45 - 64 (GOOD)</td><td>C</td></tr>
-                                    <tr><td>30 - 44 (SATISFACTORY)</td><td>D</td></tr>
-                                    <tr><td>00 - 29 (FAIL)</td><td>F</td></tr>
+                                    <tr><td>LEADERSHIP SKILLS</td><td><span contenteditable="true">B</span></td></tr>
+                                    <tr><td>OBEDIENCE</td><td><span contenteditable="true">B</span></td></tr>
+                                    <tr><td>CLEANLINESS</td><td><span contenteditable="true">B</span></td></tr>
+                                    <tr><td>INTEGRITY & HONESTY</td><td><span contenteditable="true">B</span></td></tr>
+                                    <tr><td>CULTURE & SPORTS</td><td><span contenteditable="true">B</span></td></tr>
                                 </tbody>
                             </table>
                         </div>
+                        <div class="grading-legend">LEGEND: A= EXCELLENT, B= VERY GOOD, C= AVERAGE, D= SATISFACTORY, F= FAIL</div>
                     </div>
 
                     <div class="admin-section">
-                        <div>MAONI YA MWALIMU WA DARASA: <span class="dotted-line" style="width:70%;">Mwanafunzi ana bidii sana, aendelee kukaza mofasility.</span></div>
-                        <div class="signature-stamp-space">
+                        <div>SCHOOL CLOSING DATE: <span class="dotted-line" style="width: 100px;" contenteditable="true">${globalCloseDate}</span>. REOPENING DATE: <span class="dotted-line" style="width: 100px;" contenteditable="true">${globalOpenDate}</span>.</div>
+                        <div class="signature-stamp-space" style="margin-top: 10px;">
                             <div style="width: 70%;">
-                                MAONI YA MKUU WA SHULE: <span class="dotted-line" style="width:60%;">Anajitahidi, matokeo yake ni ya kuridhisha.</span><br>
-                                SHULE INAFUNGWA TAREHE (CLOSING DATE): <span class="dotted-line" style="width:30%;">${closeDate}</span><br>
-                                SHULE INAFUNGULIWA TAREHE (OPENING DATE): <span class="dotted-line" style="width:28%;">${openDate}</span>
+                                <div>CLASS TEACHER REMARKS: <span class="dotted-line" style="width: 60%; font-style: italic;" contenteditable="true">${res.maoniMwalimu}</span></div>
+                                <div style="margin-top: 5px;">CLASS TEACHER SIGNATURE: <span class="dotted-line" style="width: 40%;">.</span></div>
+                                <div>HEADMASTER REMARKS: <span class="dotted-line" style="width: 63%; font-style: italic;" contenteditable="true">${res.maoniMkuu}</span></div>
+                                <div style="margin-top: 5px;">HEADMASTER SIGNATURE: <span class="dotted-line" style="width: 40%;"></span></div>
                             </div>
                             <div class="stamp-box">
-                                TT-PRO ULTIMATE<br>
-                                * OFFICE STAMP *<br>
-                                OFFICIAL BLUE SEAL
+                                <span>OLMOTI SECONDARY</span>
+                                <span style="border-top:1px solid #0000ff; border-bottom:1px solid #0000ff; font-size:8px; padding:1px;">DATE: 05/06/2026</span>
+                                <span>P.O.BOX 8249</span>
                             </div>
                         </div>
                     </div>
 
                     <div class="parent-slip">
-                        <span class="scissors-icon">✂️</span>
-                        <div class="slip-title">SEHEMU YA KUREJESHA KUTOKA KWA MZAZI / PARENT ACKNOWLEDGEMENT SLIP</div>
-                        <p style="margin: 5px 0;">Mimi mzazi/mlezi wa <span class="dotted-line" style="width:40%;">${student.name}</span> nimepokea na kukagua maendeleo yake.</p>
-                        <div>MAONI YA MZAZI: <span class="dotted-line" style="width:78%;"></span></div>
-                        <div style="margin-top:10px;">SAINI YA MZAZI: <span class="dotted-line" style="width:30%;"></span> TAREHE: <span class="dotted-line" style="width:20%;"></span></div>
+                        <div class="scissors-icon">✂</div>
+                        <div class="slip-title">PARENT/GUARDIAN ACKNOWLEDGEMENT SLIP (RETURN UPON REOPENING)</div>
+                        <div style="line-height: 2;">
+                            PARENT/GUARDIAN COMMENTS ..................................................................<br>
+                            ...............................................................................................
+                        </div>
+                        <table style="width: 100%; margin-top: 15px; font-size: 12px;">
+                            <tr>
+                                <td>NAME:...............................</td>
+                                <td>DATE:.........</td>
+                                <td>SIGNATURE:.........</td>
+                            </tr>
+                        </table>
                     </div>
-                </div>
-            `;
+                `;
+                container.appendChild(reportPageDiv);
+            });
         }
 
-        /* --- PRINT ACTIONS MANAGER --- */
         function printSingleReport() {
-            const student = globalStudents.find(s => s.id === selectedStudentId);
-            if (!student) {
-                alert("Please select an active student from roster database list first.");
+            if(!selectedStudentId) {
+                alert("Please select an active student target profile.");
                 return;
             }
-
-            const container = document.getElementById('print-output-container');
-            container.innerHTML = generateStudentReportCardHTML(student);
-            
+            globalStudents.forEach(s => {
+                const el = document.getElementById(`report-card-id-${s.id}`);
+                if(el) {
+                    if(s.id === selectedStudentId) el.classList.remove('hidden-print');
+                    else el.classList.add('hidden-print');
+                }
+            });
             window.print();
         }
 
         function printBulkReports() {
-            if (selectedBatchIds.size === 0) {
-                alert("Please mark at least one student checkbox in the list grid for batch sequence allocation.");
-                return;
-            }
-
-            const container = document.getElementById('print-output-container');
-            container.innerHTML = "";
-
-            globalStudents.forEach(student => {
-                if (selectedBatchIds.has(student.id)) {
-                    container.innerHTML += generateStudentReportCardHTML(student);
+            let anyChecked = false;
+            globalStudents.forEach(s => {
+                const el = document.getElementById(`report-card-id-${s.id}`);
+                if(el) {
+                    if(s.checkedForPrint) {
+                        el.classList.remove('hidden-print');
+                        anyChecked = true;
+                    } else {
+                        el.classList.add('hidden-print');
+                    }
                 }
             });
 
+            if(!anyChecked) {
+                alert("Please tick at least one checkbox on the student roster matrix!");
+                return;
+            }
             window.print();
         }
+
+        window.onload = init;
     </script>
 </body>
 </html>
