@@ -3,1118 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TT-PRO | Student Admission & Bulk Report Card Manager</title>
+    <title>Skul-Sis - Bulk Tools</title>
     <style>
-        :root {
-            --primary-blue: #2563eb;
-            --dark-navy: #1e293b;
-            --border-color: #000000;
-            --bg-light: #f8fafc;
-            --panel-bg: #ffffff;
-            --accent-green: #10b981;
-            --accent-purple: #7c3aed;
-            --accent-red: #ef4444;
-            --text-dark: #0f172a;
-            --text-muted: #64748b;
-        }
-
-        body {
-            font-family: 'Courier New', Courier, monospace;
-            margin: 0;
-            padding: 0;
-            background-color: #e2e8f0;
-            color: var(--text-dark);
-        }
-
-        /* --- CONTROL PANEL NAVIGATION BAR --- */
-        .main-control-panel {
-            background-color: #0f172a;
-            padding: 12px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 3px solid var(--primary-blue);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        }
-
-        .panel-brand {
-            color: #ffffff;
-            font-weight: 700;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            letter-spacing: 0.5px;
-        }
-
-        .lang-selector {
-            background-color: #1e293b;
-            color: #ffffff;
-            border: 1px solid #475569;
-            padding: 4px 8px;
-            font-size: 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            outline: none;
-            font-weight: bold;
-        }
-
-        .lang-selector:focus {
-            border-color: var(--primary-blue);
-        }
-
-        .panel-links {
-            display: flex;
-            gap: 12px;
-        }
-
-        .panel-btn {
-            background-color: #334155;
-            color: #f8fafc;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            text-decoration: none;
-        }
-
-        .panel-btn:hover {
-            background-color: var(--primary-blue);
-            color: #ffffff;
-        }
-
-        .panel-btn.active {
-            background-color: var(--primary-blue);
-            font-weight: 700;
-            box-shadow: 0 0 8px rgba(37, 99, 235, 0.5);
-        }
-
-        /* --- ADMIN WORKSPACE LAYOUT --- */
-        #admin-container {
-            display: grid;
-            grid-template-columns: 350px 1fr;
-            gap: 20px;
-            padding: 20px;
-            max-width: 1600px;
-            margin: 0 auto;
-        }
-
-        .admin-header-bar {
-            grid-column: 1 / -1;
-            background-color: var(--dark-navy);
-            color: #ffffff;
-            padding: 15px 20px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        }
-
-        .admin-header-bar h1 {
-            margin: 0;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .admin-card {
-            background: var(--panel-bg);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin-bottom: 20px;
-        }
-
-        .admin-card h2 {
-            font-size: 13px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            margin-top: 0;
-            margin-bottom: 15px;
-            letter-spacing: 0.5px;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 8px;
-            font-weight: 700;
-        }
-
-        .form-control {
-            margin-bottom: 12px;
-        }
-
-        .form-control label {
-            display: block;
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--text-muted);
-            margin-bottom: 5px;
-            text-transform: uppercase;
-        }
-
-        .form-control input, .form-control select {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 14px;
-            color: var(--text-dark);
-            background-color: #ffffff;
-        }
-
-        .form-control input:focus, .form-control select:focus {
-            outline: none;
-            border-color: var(--primary-blue);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-        }
-
-        .btn-submit {
-            width: 100%;
-            background-color: var(--primary-blue);
-            color: #ffffff;
-            border: none;
-            padding: 10px;
-            border-radius: 6px;
-            font-weight: 700;
-            cursor: pointer;
-            font-size: 14px;
-            margin-bottom: 6px;
-            transition: background 0.2s ease;
-        }
-
-        .btn-submit:hover {
-            opacity: 0.95;
-        }
-
-        .btn-secondary {
-            width: 100%;
-            background-color: #64748b;
-            color: #ffffff;
-            border: none;
-            padding: 8px;
-            border-radius: 6px;
-            font-weight: 500;
-            cursor: pointer;
-            font-size: 12px;
-            text-align: center;
-            text-decoration: none;
-            display: block;
-            box-sizing: border-box;
-            margin-bottom: 6px;
-            transition: background 0.2s ease;
-        }
-
-        .btn-secondary:hover {
-            background-color: #475569;
-        }
-
-        /* --- INDIVIDUAL RECORD REMOVAL ACTION BUTTON --- */
-        .btn-delete {
-            background-color: var(--accent-red);
-            color: #ffffff;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 11px;
-            cursor: pointer;
-            transition: opacity 0.2s ease;
-        }
-
-        .btn-delete:hover {
-            opacity: 0.85;
-        }
-
-        .db-filters {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 15px;
-        }
-
-        .db-filters input, .db-filters select {
-            padding: 8px 12px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        .bulk-actions-bar {
-            background-color: #f1f5f9;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 13px;
-            font-weight: 500;
-        }
-
-        .roster-table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-
-        .roster-table th {
-            color: var(--text-muted);
-            padding: 10px;
-            border-bottom: 2px solid #e2e8f0;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 12px;
-        }
-
-        .roster-table td {
-            padding: 10px;
-            border-bottom: 1px solid #f1f5f9;
-            color: var(--text-dark);
-            vertical-align: middle;
-        }
-
-        .roster-table tr.active-student {
-            background-color: #eff6ff;
-            font-weight: 700;
-        }
-
-        .roster-table tr:hover {
-            background-color: #f8fafc;
-            cursor: pointer;
-        }
-
-        .badge-stream {
-            background-color: #dcfce7;
-            color: #15803d;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        /* --- MARKS EDITOR INTERACTIVE PANEL --- */
-        .marks-panel-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 12px;
-            margin-top: 15px;
-        }
-
-        .subject-block {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            padding: 12px;
-            border-radius: 6px;
-        }
-
-        .subject-block label {
-            font-weight: 700;
-            font-size: 12px;
-            display: block;
-            margin-bottom: 8px;
-            color: var(--text-dark);
-            border-bottom: 1px solid #cbd5e1;
-            padding-bottom: 4px;
-            text-transform: uppercase;
-        }
-
-        .input-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-            margin-bottom: 4px;
-        }
-
-        .input-row div {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .input-row span {
-            font-size: 10px;
-            color: var(--text-muted);
-            font-weight: 700;
-            text-transform: uppercase;
-            margin-bottom: 2px;
-        }
-
-        .input-row input {
-            padding: 6px;
-            border: 1px solid #cbd5e1;
-            border-radius: 4px;
-            font-size: 12px;
-            box-sizing: border-box;
-            text-align: center;
-        }
-
-        .workspace-split {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .print-btn-group {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 20px;
-            border-top: 1px solid #e2e8f0;
-            padding-top: 15px;
-        }
-
-        .btn-print-action {
-            color: #ffffff;
-            border: none;
-            padding: 12px 24px;
-            font-size: 14px;
-            font-weight: 700;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: transform 0.1s ease;
-        }
-
-        .btn-print-action:active {
-            transform: scale(0.98);
-        }
-
-        .btn-single { background-color: var(--accent-green); }
-        .btn-bulk { background-color: var(--accent-purple); }
-
-        /* --- REPORT CARD PRINT PREVIEW SHEET --- */
-        #print-output-container {
-            display: block;
-        }
-
-        .report-card-page {
-            background: #ffffff;
-            width: 210mm;
-            min-height: 297mm;
-            padding: 15mm 20mm;
-            margin: 30px auto;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
-            box-sizing: border-box;
-            position: relative;
-            page-break-after: always;
-        }
-
-        .report-header {
-            text-align: center;
-            position: relative;
-            margin-bottom: 20px;
-            min-height: 95px;
-        }
-
-        .logo-placeholder {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 90px;
-            height: 90px;
-            border: 1px dashed #64748b;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 9px;
-            font-weight: 700;
-            text-align: center;
-            color: var(--text-muted);
-        }
-
-        .logo-img {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 90px;
-            height: 90px;
-            object-fit: contain;
-        }
-
-        .header-title {
-            font-size: 14px;
-            font-weight: 700;
-            line-height: 1.4;
-            margin: 0;
-            text-transform: uppercase;
-            letter-spacing: 0.2px;
-        }
-
-        .report-title {
-            margin-top: 14px;
-            font-size: 13px;
-            font-weight: 700;
-            text-decoration: underline;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .meta-info {
-            width: 100%;
-            margin-top: 15px;
-            margin-bottom: 15px;
-            font-size: 13px;
-        }
-
-        .meta-info td {
-            padding: 5px 0;
-        }
-
-        .dotted-line {
-            border-bottom: 1px dotted var(--border-color);
-            display: inline-block;
-            font-weight: 700;
-            padding-left: 5px;
-        }
-
-        table.data-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-            margin-bottom: 12px;
-        }
-
-        table.data-table th, table.data-table td {
-            border: 1px solid var(--border-color);
-            padding: 7px 5px;
-            text-align: center;
-            text-transform: uppercase;
-        }
-
-        table.data-table th {
-            font-weight: 700;
-            background-color: #f2f2f2;
-        }
-
-        table.data-table td.subject-name {
-            text-align: left;
-            font-weight: 700;
-        }
-
-        .summary-row {
-            font-size: 13px;
-            font-weight: 700;
-            margin: 12px 0;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .behavior-section {
-            margin-top: 15px;
-        }
-
-        .section-heading {
-            font-size: 13px;
-            font-weight: 700;
-            text-transform: uppercase;
-            margin-bottom: 6px;
-            letter-spacing: 0.5px;
-        }
-
-        .behavior-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        table.behavior-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 11px;
-        }
-
-        table.behavior-table th, table.behavior-table td {
-            border: 1px solid var(--border-color);
-            padding: 5px;
-        }
-
-        table.behavior-table td:nth-child(1) { text-align: left; }
-        table.behavior-table td:nth-child(2) { text-align: center; font-weight: 700; width: 60px; }
-
-        .grading-legend {
-            font-size: 11px;
-            margin-top: 6px;
-            font-style: italic;
-        }
-
-        .admin-section {
-            margin-top: 15px;
-            font-size: 12px;
-            line-height: 1.8;
-        }
-
-        .signature-stamp-space {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-
-        .stamp-box {
-            border: 2px dashed #0000ff;
-            color: #0000ff;
-            border-radius: 50%;
-            width: 110px;
-            height: 110px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            font-size: 9px;
-            font-weight: 700;
-            transform: rotate(-5deg);
-            margin-top: -5px;
-            text-align: center;
-            line-height: 1.2;
-        }
-
-        .parent-slip {
-            margin-top: 25px;
-            border-top: 1px dashed var(--border-color);
-            position: relative;
-            padding-top: 15px;
-            font-size: 12px;
-        }
-
-        .scissors-icon {
-            position: absolute;
-            top: -11px;
-            right: 15px;
-            font-size: 16px;
-            background: #ffffff;
-            padding: 0 5px;
-        }
-
-        .slip-title {
-            text-align: center;
-            font-weight: 700;
-            margin-bottom: 12px;
-            text-transform: uppercase;
-        }
-
-        /* --- SCREEN VIEW VIEWPORT TOGGLE --- */
-        .hidden-view {
-            display: none !important;
-        }
-
-        /* --- PRODUCTION PRINT RULES --- */
-        @media print {
-            .main-control-panel, #admin-container {
-                display: none !important;
-            }
-            body {
-                background-color: #ffffff;
-                padding: 0;
-            }
-            .report-card-page {
-                box-shadow: none;
-                margin: 0 auto;
-                padding: 10mm 15mm;
-                width: 210mm;
-                height: 297mm;
-                page-break-after: always;
-                overflow: hidden;
-            }
-            .report-card-page.hidden-print {
-                display: none !important;
-            }
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; background: #f5f7fb; }
+        .card { background: white; padding: 24px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 24px; }
+        h2 { margin-top: 0; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
+        .btn { background: #2563eb; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; margin-right: 8px; }
+        .btn:hover { background: #1d4ed8; }
+        .btn-secondary { background: #64748b; }
+        .btn-secondary:hover { background: #475569; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; color: #334155; }
+        select, input[type="file"] { padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; width: 100%; max-width: 400px; display: block; }
+        .status-box { margin-top: 12px; padding: 12px; border-radius: 6px; display: none; font-size: 14px; }
+        .status-success { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; display: block; }
+        .status-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; display: block; }
+        .actions { margin-top: 15px; display: flex; gap: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="main-control-panel">
-        <div class="panel-brand">
-            🏫 <span data-key="nav_brand">TT-PRO MANAGEMENT SYSTEM</span>
-            <select class="lang-selector" id="lang-toggle" onchange="changeLanguage(this.value)">
-                <option value="en">English (EN)</option>
-                <option value="sw">Kiswahili (SW)</option>
+    <div class="card">
+        <h2>Bulk Student Enrolment</h2>
+        <p style="color: #64748b; font-size: 14px;">Upload a CSV file containing student registration details. Use the template button below to ensure correct formatting.</p>
+        
+        <div class="actions">
+            <button class="btn btn-secondary" onclick="downloadEnrolmentTemplate()">⬇️ Download Enrolment Template</button>
+        </div>
+        <br>
+        <div class="form-group">
+            <label for="enrolmentFile">Select CSV File</label>
+            <input type="file" id="enrolmentFile" accept=".csv">
+        </div>
+        <button class="btn" onclick="processBulkEnrolment()">Process Enrolment</button>
+        <div id="enrolmentStatus" class="status-box"></div>
+    </div>
+
+    <div class="card">
+        <h2>Bulk Academic Scores Import</h2>
+        <p style="color: #64748b; font-size: 14px;">Import terminal, midterm, and annual results. Select your level class class level archetype to export or parse matching columns.</p>
+        
+        <div class="form-group">
+            <label for="classLevel">Class Level Tier</label>
+            <select id="classLevel" onchange="toggleSubjectContext()">
+                <option value="f1_f2">Form 1 & Form 2 (Includes History & Maadili)</option>
+                <option value="f3_f4">Form 3 & Form 4 (Standard Secondary Schema)</option>
             </select>
         </div>
-        <div class="panel-links">
-            <a href="index.html" class="panel-btn" data-key="nav_dashboard">🎛️ Main Dashboard</a>
-            <a href="#admin-section" class="panel-btn active" onclick="switchView('admin')" data-key="nav_admin">👑 Admin Panel</a>
-            <a href="#students-section" class="panel-btn" onclick="switchView('students')" data-key="nav_roster">🧑‍🎓 Roster</a>
-            <a href="#teachers-section" class="panel-btn" onclick="switchView('teachers')" data-key="nav_teachers">👩‍🏫 Teachers</a>
-            <a href="#subjects-section" class="panel-btn" onclick="switchView('subjects')" data-key="nav_subjects">📚 Subjects</a>
+        
+        <div class="actions">
+            <button class="btn btn-secondary" onclick="downloadScoresTemplate()">⬇️ Download Scores Template</button>
         </div>
+        <br>
+        <div class="form-group">
+            <label for="scoresFile">Select CSV File</label>
+            <input type="file" id="scoresFile" accept=".csv">
+        </div>
+        <button class="btn" onclick="processBulkScores()">Process Scores</button>
+        <div id="scoresStatus" class="status-box"></div>
     </div>
-
-    <div id="admin-container">
-        <div class="admin-header-bar">
-            <h1 data-key="module_title">📊 Student Admission & Bulk Report Card Module</h1>
-            <button class="panel-btn" onclick="backToPanel()" data-key="btn_back">← Back to Panel</button>
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 15px;">
-            
-            <div class="admin-card" style="border: 1px solid var(--accent-purple);">
-                <h2 data-key="card_storage">💾 System Storage Sync</h2>
-                <button type="button" class="btn-submit" style="background-color: var(--accent-purple);" onclick="saveDataToComputer()" data-key="btn_save_comp">💾 Save Session Data to Computer</button>
-                <div class="form-control" style="margin-top: 10px;">
-                    <label data-key="lbl_reload_config">Reload Configuration File</label>
-                    <input type="file" id="import-config-file" accept=".json" onchange="loadDataFromComputer(this)" style="font-size: 12px;">
-                </div>
-            </div>
-
-            <div class="admin-card">
-                <h2 data-key="card_config">⚙️ Report Configuration</h2>
-                <div class="form-control">
-                    <label data-key="lbl_upload_logo">Upload School Logo</label>
-                    <input type="file" id="cfg-logo" accept="image/*" onchange="handleLogoUpload(this)">
-                </div>
-                <div class="form-control">
-                    <label data-key="lbl_term">Term</label>
-                    <select id="cfg-term" onchange="updateGlobalSettings()">
-                        <option value="I" data-key="opt_term_1">TERM I</option>
-                        <option value="II" data-key="opt_term_2" selected>TERM II</option>
-                    </select>
-                </div>
-                <div class="form-control">
-                    <label data-key="lbl_year">Academic Year</label>
-                    <input type="text" id="cfg-year" value="2026" oninput="updateGlobalSettings()">
-                </div>
-                <div class="form-control">
-                    <label data-key="lbl_close_date">School Closing Date</label>
-                    <input type="text" id="cfg-close-date" value="05/12/2026" oninput="updateGlobalSettings()">
-                </div>
-                <div class="form-control">
-                    <label data-key="lbl_open_date">School Opening Date</label>
-                    <input type="text" id="cfg-open-date" value="12/01/2027" oninput="updateGlobalSettings()">
-                </div>
-            </div>
-
-            <div class="admin-card">
-                <h2 data-key="card_enrollment">🧑‍🎓 New Enrollment</h2>
-                <form id="enrollment-form" onsubmit="handleEnrollment(event)">
-                    <div class="form-control">
-                        <label data-key="lbl_stu_name">Student Full Name</label>
-                        <input type="text" id="stu-fullname" placeholder="E.G., CHUMA KANYAMA" data-placeholder-key="placeholder_stu_name" required>
-                    </div>
-                    <div class="form-control">
-                        <label data-key="lbl_gender">Gender</label>
-                        <select id="stu-gender">
-                            <option value="F" data-key="opt_female">Female (F)</option>
-                            <option value="M" data-key="opt_male">Male (M)</option>
-                        </select>
-                    </div>
-                    <div class="form-control">
-                        <label data-key="lbl_form_level">Form Level</label>
-                        <select id="stu-form">
-                            <option value="F1">F1</option>
-                            <option value="F2">F2</option>
-                            <option value="F3" selected>F3</option>
-                            <option value="F4">F4</option>
-                        </select>
-                    </div>
-                    <div class="form-control">
-                        <label data-key="lbl_stream">Stream</label>
-                        <select id="stu-stream">
-                            <option value="Stream A">Stream A</option>
-                            <option value="Stream B">Stream B</option>
-                            <option value="Stream C">Stream C</option>
-                            <option value="Stream D">Stream D</option>
-                            <option value="Stream E">Stream E</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn-submit" data-key="btn_register">Register Student</button>
-                </form>
-                
-                <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 15px 0;">
-                
-                <div>
-                    <label style="display: block; font-size: 11px; font-weight: bold; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase;" data-key="lbl_bulk_csv">Bulk CSV Enrollment</label>
-                    <input type="file" id="bulk-csv-file" accept=".csv" style="font-size: 12px; margin-bottom: 8px; width:100%;">
-                    <button type="button" class="btn-submit" style="background-color: #0284c7;" onclick="handleBulkUpload()" data-key="btn_process_csv">Process CSV Admission</button>
-                    <a href="javascript:void(0)" class="btn-secondary" onclick="downloadCSVTemplate()" data-key="btn_dl_template">📥 Download Roster Template</a>
-                </div>
-            </div>
-
-            <div class="admin-card" style="border: 1px solid var(--primary-blue);">
-                <h2 data-key="card_bulk_scores">📈 Bulk Scores Upload</h2>
-                <div class="form-control">
-                    <label data-key="lbl_target_schema">Target Level Schema</label>
-                    <select id="score-template-form">
-                        <option value="F1" data-key="opt_f1_f2">Form 1 & 2</option>
-                        <option value="F3" data-key="opt_f3_f4" selected>Form 3 & 4</option>
-                    </select>
-                </div>
-                <button type="button" class="btn-secondary" style="background-color: #047857;" onclick="downloadScoresTemplate()" data-key="btn_dl_marks">📥 Download Marks Template</button>
-                
-                <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 12px 0;">
-                
-                <div class="form-control">
-                    <label data-key="lbl_select_marks_csv">Select Marks CSV Dataset</label>
-                    <input type="file" id="bulk-scores-file" accept=".csv" style="font-size: 12px; margin-bottom: 8px; width:100%;">
-                    <button type="button" class="btn-submit" style="background-color: var(--accent-purple);" onclick="handleBulkScoresUpload()" data-key="btn_import_scores">📤 Import All Scores</button>
-                </div>
-            </div>
-
-        </div>
-
-        <div class="workspace-split">
-            
-            <div class="admin-card">
-                <h2 data-key="card_roster_title">Active Student Database Roster</h2>
-                <div class="db-filters">
-                    <input type="text" id="search-filter" placeholder="🔍 Search student name..." data-placeholder-key="placeholder_search" oninput="renderRosterTable()" style="flex: 2;">
-                    <select id="form-filter" onchange="renderRosterTable()" style="flex: 1;">
-                        <option value="All" data-key="opt_all_forms">All Forms</option>
-                        <option value="F1">F1</option>
-                        <option value="F2">F2</option>
-                        <option value="F3">F3</option>
-                        <option value="F4">F4</option>
-                    </select>
-                    <select id="stream-filter" onchange="renderRosterTable()" style="flex: 1;">
-                        <option value="All" data-key="opt_all_streams">All Streams</option>
-                        <option value="Stream A">Stream A</option>
-                        <option value="Stream B">Stream B</option>
-                        <option value="Stream C">Stream C</option>
-                    </select>
-                </div>
-
-                <div class="bulk-actions-bar">
-                    <label><input type="checkbox" id="select-all-box" onchange="toggleSelectAll(this)"> <span data-key="lbl_select_all">Select All For Batch Printing</span></label>
-                    <span id="selected-count-badge">Selected: 0 student(s)</span>
-                </div>
-
-                <table class="roster-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 50px; text-align: center;" data-key="th_print">Print</th>
-                            <th data-key="th_fullname">Student Full Name</th>
-                            <th data-key="th_gender">Gender</th>
-                            <th data-key="th_form">Form</th>
-                            <th data-key="th_stream">Stream</th>
-                            <th style="width: 80px; text-align: center;" data-key="th_actions">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="roster-tbody"></tbody>
-                </table>
-            </div>
-
-            <div class="admin-card">
-                <h2 data-key="card_input_panel">Assessment Scores Input Panel (T1, T2, Mid, Annual)</h2>
-                <div id="active-student-banner" style="font-weight: bold; color: var(--primary-blue); margin-bottom: 12px; font-size: 14px;" data-key="banner_no_student">
-                    No student currently active. Select a row from the database master list above.
-                </div>
-                
-                <div class="marks-panel-grid" id="marks-entry-grid"></div>
-                
-                <div class="print-btn-group">
-                    <button class="btn-print-action btn-single" onclick="printSingleReport()" data-key="btn_print_single">
-                        🖨️ Print Active Single Report
-                    </button>
-                    <button class="btn-print-action btn-bulk" onclick="printBulkReports()" data-key="btn_print_bulk">
-                        📚 Batch Print Selected Reports
-                    </button>
-                </div>
-            </div>
-            
-        </div>
-    </div>
-
-    <div id="print-output-container"></div>
 
     <script>
-        let globalStudents = [];
-        let currentLanguage = 'en';
+        // Mock Global State Systems representing Skul-Sis data stores
+        let studentsDb = [
+            { fullname: "ALEXANDER MHAGAMA", gender: "M", form: "F3", stream: "Stream A", marks: {} },
+            { fullname: "BARAKA KISHIWA", gender: "M", form: "F3", stream: "Stream B", marks: {} }
+        ];
 
-        // High Definition Translation Dictionary
-        const translations = {
-            en: {
-                nav_brand: "TT-PRO MANAGEMENT SYSTEM",
-                nav_dashboard: "🎛️ Main Dashboard",
-                nav_admin: "👑 Admin Panel",
-                nav_roster: "🧑‍🎓 Roster",
-                nav_teachers: "👩‍🏫 Teachers",
-                nav_subjects: "📚 Subjects",
-                module_title: "📊 Student Admission & Bulk Report Card Module",
-                btn_back: "← Back to Panel",
-                card_storage: "💾 System Storage Sync",
-                btn_save_comp: "💾 Save Session Data to Computer",
-                lbl_reload_config: "Reload Configuration File",
-                card_config: "⚙️ Report Configuration",
-                lbl_upload_logo: "Upload School Logo",
-                lbl_term: "Term",
-                opt_term_1: "TERM I",
-                opt_term_2: "TERM II",
-                lbl_year: "Academic Year",
-                lbl_close_date: "School Closing Date",
-                lbl_open_date: "School Opening Date",
-                card_enrollment: "🧑‍🎓 New Enrollment",
-                lbl_stu_name: "Student Full Name",
-                placeholder_stu_name: "E.G., CHUMA KANYAMA",
-                lbl_gender: "Gender",
-                opt_female: "Female (F)",
-                opt_male: "Male (M)",
-                lbl_form_level: "Form Level",
-                lbl_stream: "Stream",
-                btn_register: "Register Student",
-                lbl_bulk_csv: "Bulk CSV Enrollment",
-                btn_process_csv: "Process CSV Admission",
-                btn_dl_template: "📥 Download Roster Template",
-                card_bulk_scores: "📈 Bulk Scores Upload",
-                lbl_target_schema: "Target Level Schema",
-                opt_f1_f2: "Form 1 & 2",
-                opt_f3_f4: "Form 3 & 4",
-                btn_dl_marks: "📥 Download Marks Template",
-                lbl_select_marks_csv: "Select Marks CSV Dataset",
-                btn_import_scores: "📤 Import All Scores",
-                card_roster_title: "Active Student Database Roster",
-                placeholder_search: "🔍 Search student name...",
-                opt_all_forms: "All Forms",
-                opt_all_streams: "All Streams",
-                lbl_select_all: "Select All For Batch Printing",
-                th_print: "Print",
-                th_fullname: "Student Full Name",
-                th_gender: "Gender",
-                th_form: "Form",
-                th_stream: "Stream",
-                th_actions: "Actions",
-                card_input_panel: "Assessment Scores Input Panel (T1, T2, Mid, Annual)",
-                banner_no_student: "No student currently active. Select a row from the database master list above.",
-                btn_print_single: "🖨️ Print Active Single Report",
-                btn_print_bulk: "📚 Batch Print Selected Reports",
-                badge_selected: "Selected: {count} student(s)"
-            },
-            sw: {
-                nav_brand: "MFUMO WA USIMAMIZI WA TT-PRO",
-                nav_dashboard: "🎛️ Dashibodi Kuu",
-                nav_admin: "👑 Jopo la Utawala",
-                nav_roster: "🧑‍🎓 Daftari",
-                nav_teachers: "👩‍🏫 Walimu",
-                nav_subjects: "📚 Masomo",
-                module_title: "📊 Moduli ya Udahili wa Wanafunzi & Ripoti za Pamoja",
-                btn_back: "← Rudi kwenye Jopo",
-                card_storage: "💾 Usawazishaji wa Hifadhi ya Mfumo",
-                btn_save_comp: "💾 Hifadhi Data ya Kipindi kwenye Kompyuta",
-                lbl_reload_config: "Pakia Upya Faili la Usanidi",
-                card_config: "⚙️ Usanidi wa Ripoti",
-                lbl_upload_logo: "Pakia Nembo ya Shule",
-                lbl_term: "Muhula",
-                opt_term_1: "MUHULA I",
-                opt_term_2: "MUHULA II",
-                lbl_year: "Mwaka wa Kiakademia",
-                lbl_close_date: "Tarehe ya Shule Kufungwa",
-                lbl_open_date: "Tarehe ya Shule Kufunguliwa",
-                card_enrollment: "🧑‍🎓 Udahili Mpya",
-                lbl_stu_name: "Majina Kamili ya Mwanafunzi",
-                placeholder_stu_name: "MFANO., CHUMA KANYAMA",
-                lbl_gender: "Jinsia",
-                opt_female: "Mke (F)",
-                opt_male: "Mume (M)",
-                lbl_form_level: "Kidato",
-                lbl_stream: "Mkondo",
-                btn_register: "Sajili Mwanafunzi",
-                lbl_bulk_csv: "Udahili wa Pamoja wa CSV",
-                btn_process_csv: "Chakata Udahili wa CSV",
-                btn_dl_template: "📥 Pakua Kiolezo cha Daftari",
-                card_bulk_scores: "📈 Kupakia Alama kwa Pamoja",
-                lbl_target_schema: "Muundo wa Ngazi Lengwa",
-                opt_f1_f2: "Kidato cha 1 & 2",
-                opt_f3_f4: "Kidato cha 3 & 4",
-                btn_dl_marks: "📥 Pakua Kiolezo cha Alama",
-                lbl_select_marks_csv: "Chagua Faili la Data ya Alama (CSV)",
-                btn_import_scores: "📤 Ingiza Alama Zote",
-                card_roster_title: "Daftari Kuu la Wanafunzi Waliopo",
-                placeholder_search: "🔍 Tafuta jina la mwanafunzi...",
-                opt_all_forms: "Vidato Vyote",
-                opt_all_streams: "Mikondo Yote",
-                lbl_select_all: "Chagua Wote kwa Ajili ya Kuchapa Pamoja",
-                th_print: "Chapa",
-                th_fullname: "Majina Kamili ya Mwanafunzi",
-                th_gender: "Jinsia",
-                th_form: "Kidato",
-                th_stream: "Mkondo",
-                th_actions: "Hatua",
-                card_input_panel: "Jopo la Kuingiza Alama za Tathmini (T1, T2, Mid, Annual)",
-                banner_no_student: "Hakuna mwanafunzi aliye hai kwa sasa. Chagua safu kwenye orodha kuu ya hapo juu.",
-                btn_print_single: "🖨️ Chapa Ripoti Moja ya Sasa",
-                btn_print_bulk: "📚 Chapa Ripoti Zilizochaguliwa kwa Pamoja",
-                badge_selected: "Zilizochaguliwa: Ripoti ya mwanafunzi {count}"
-            }
-        };
+        // --- CSV PARSING ENGINE UTILITY ---
+        function parseCSVText(text) {
+            const lines = text.split(/\r?\n/);
+            return lines
+                .map(line => {
+                    // Handles comma separation safely while cleaning up white spaces
+                    return line.split(',').map(cell => cell.trim());
+                })
+                .filter(row => row.length > 0 && row.some(cell => cell !== ""));
+        }
 
-        function changeLanguage(lang) {
-            currentLanguage = lang;
-            document.documentElement.lang = lang;
+        // --- 1. BULK ENROLMENT LOGIC ---
+        function downloadEnrolmentTemplate() {
+            const headers = ["fullname", "gender", "form", "stream"];
+            const sampleData = [
+                ["JOHN JUMA", "M", "F1", "Stream A"],
+                ["MARY AMANI", "F", "F2", "Stream B"]
+            ];
             
-            // Translate static elements using data-key strings
-            document.querySelectorAll('[data-key]').forEach(el => {
-                const key = el.getAttribute('data-key');
-                if (translations[lang][key]) {
-                    el.innerText = translations[lang][key];
-                }
-            });
-
-            // Translate elements holding dynamic placeholders
-            document.querySelectorAll('[data-placeholder-key]').forEach(el => {
-                const key = el.getAttribute('data-placeholder-key');
-                if (translations[lang][key]) {
-                    el.setAttribute('placeholder', translations[lang][key]);
-                }
-            });
-
-            // Refresh language counters or dynamic state arrays
-            updateSelectedBadgeCount();
-            autoSaveToCache();
+            let csvContent = "data:text/csv;charset=utf-8," 
+                + headers.join(",") + "\n"
+                + sampleData.map(e => e.join(",")).join("\n");
+                
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "bulk_enrolment_template.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
-        function updateSelectedBadgeCount() {
-            const checkedCount = document.querySelectorAll('.student-print-checkbox:checked').length;
-            const textTemplate = translations[currentLanguage]['badge_selected'] || "Selected: {count} student(s)";
-            document.getElementById('selected-count-badge').innerText = textTemplate.replace('{count}', checkedCount);
-        }
-
-        const subjectsF1F2 = [
-            { id: "his_maadili", name: "HISTORIA NA MAADILI" }, 
-            { id: "hist", name: "HISTORIA" }, 
-            { id: "geo", name: "GEOGRAPHY" },
-            { id: "kisw", name: "KISWAHILI" }, 
-            { id: "eng", name: "ENGLISH" }, 
-            { id: "phy", name: "PHYSICS" },
-            { id: "chem", name: "CHEMISTRY" }, 
-            { id: "bio", name: "BIOLOGY" }, 
-            { id: "math", name: "MATHEMATICS" },
-            { id: "bus_studies", name: "BUSINESS STUDIES" }, 
-            { id: "book_keeping", name: "BOOK KEEPING" }
-        ];
-
-        const subjectsF3F4 = [
-            { id: "civ", name: "CIVICS" }, 
-            { id: "hist", name: "HISTORY" }, 
-            { id: "geo", name: "GEOGRAPHY" },
-            { id: "kisw", name: "KISWAHILI" }, 
-            { id: "eng", name: "ENGLISH" }, 
-            { id: "phy", name: "PHYSICS" },
-            { id: "chem", name: "CHEMISTRY" }, 
-            { id: "bio", name: "BIOLOGY" }, 
-            { id: "math", name: "B/MATHS" },
-            { id: "nutr", name: "NUTRITION" }, 
-            { id: "lit", name: "LITERATURE" }
-        ];
-
-        let selectedStudentId = null;
-        let uploadedLogoBase64 = "";
-
-        function backToPanel() {
-            window.location.href = "index.html"; 
-        }
-
-        function switchView(viewName) {
-            if(viewName === 'teachers') alert("Navigating to Teacher Module...");
-            else if (viewName === 'subjects') alert("Navigating to Subject Configurator...");
-            else if (viewName === 'students') document.getElementById('search-filter').focus();
-        }
-
-        /* --- PERSISTENCE LOGIC --- */
-        function autoSaveToCache() {
-            const dataToSave = {
-                students: globalStudents,
-                logo: uploadedLogoBase64,
-                lang: currentLanguage,
-                config: {
-                    term: document.getElementById('cfg-term').value,
-                    year: document.getElementById('cfg-year').value,
-                    closeDate: document.getElementById('cfg-close-date').value,
-                    openDate: document.getElementById('cfg-open-date').value
-                }
-            };
-            localStorage.setItem('tt_pro_report_state', JSON.stringify(dataToSave));
-        }
-
-        function loadFromCache() {
-            const cachedData = localStorage.getItem('tt_pro_report_state');
-            if (cachedData) {
-                try {
-                    const parsed = JSON.parse(cachedData);
-                    if (parsed.students) globalStudents = parsed.students;
-                    if (parsed.logo) uploadedLogoBase64 = parsed.logo;
-                    if (parsed.lang) {
-                        document.getElementById('lang-toggle').value = parsed.lang;
-                        currentLanguage = parsed.lang;
-                    }
-                    if (parsed.config) {
-                        document.getElementById('cfg-term').value = parsed.config.term || "II";
-                        document.getElementById('cfg-year').value = parsed.config.year || "2026";
-                        document.getElementById('cfg-close-date').value = parsed.config.closeDate || "";
-                        document.getElementById('cfg-open-date').value = parsed.config.openDate || "";
-                    }
-                    if (globalStudents.length > 0) {
-                        selectedStudentId = globalStudents[0].id;
-                    }
-                    changeLanguage(currentLanguage);
-                } catch(e) {
-                    console.error("Cache buffer reading error: ", e);
-                }
+        function processBulkEnrolment() {
+            const fileInput = document.getElementById('enrolmentFile');
+            const statusBox = document.getElementById('enrolmentStatus');
+            
+            if (!fileInput.files.length) {
+                showStatus(statusBox, "Please select a valid CSV file first.", "error");
+                return;
             }
-        }
 
-        function saveDataToComputer() {
-            const dataToExport = {
-                students: globalStudents,
-                logo: uploadedLogoBase64,
-                lang: currentLanguage,
-                config: {
-                    term: document.getElementById('cfg-term').value,
-                    year: document.getElementById('cfg-year').value,
-                    closeDate: document.getElementById('cfg-close-date').value,
-                    openDate: document.getElementById('cfg-open-date').value
-                }
-            };
-            const jsonString = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToExport, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", jsonString);
-            downloadAnchor.setAttribute("download", `tt_pro_backup_${document.getElementById('cfg-year').value}_term${document.getElementById('cfg-term').value}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            document.body.removeChild(downloadAnchor);
-        }
-
-        function loadDataFromComputer(input) {
-            if (!input.files || input.files.length === 0) return;
-            const file = input.files[0];
+            const file = fileInput.files[0];
             const reader = new FileReader();
+
             reader.onload = function(e) {
                 try {
-                    const parsed = JSON.parse(e.target.result);
-                    if (parsed.students) globalStudents = parsed.students;
-                    if (parsed.logo) uploadedLogoBase64 = parsed.logo;
-                    if (parsed.lang) {
-                        document.getElementById('lang-toggle').value = parsed.lang;
-                        currentLanguage = parsed.lang;
-                    }
-                    if (parsed.config) {
-                        document.getElementById('cfg-term').value = parsed.config.term || "II";
-                        document.getElementById('cfg-year').value = parsed.config.year || "2026";
-                        document.getElementById('cfg-close-date').value = parsed.config.closeDate || "";
-                        document.getElementById('cfg-open-date').value = parsed.config.openDate || "";
-                    }
-                    if (globalStudents.length > 0) selectedStudentId = globalStudents[0].id;
-                    else selectedStudentId = null;
+                    const rows = parseCSVText(e.target.result);
+                    if (rows.length < 2) throw new Error("The CSV file file appears empty or lacks data rows.");
+
+                    const headers = rows[0].map(h => h.toLowerCase());
                     
-                    autoSaveToCache();
-                    changeLanguage(currentLanguage);
-                    renderRosterTable();
-                } catch(err) {
-                    alert("Invalid JSON config file framework structures.");
+                    // Column index maps
+                    const idxName = headers.indexOf('fullname');
+                    const idxGender = headers.indexOf('gender');
+                    const idxForm = headers.indexOf('form');
+                    const idxStream = headers.indexOf('stream');
+
+                    if (idxName === -1 || idxGender === -1 || idxForm === -1 || idxStream === -1) {
+                        throw new Error("Missing required column headers. Match exact lowercase keys: fullname, gender, form, stream.");
+                    }
+
+                    let addedCount = 0;
+                    let skipCount = 0;
+
+                    for (let i = 1; i < rows.length; i++) {
+                        const row = rows[i];
+                        if (row.length < headers.length) continue; // Skip incomplete records cleanly
+
+                        const fullname = row[idxName].toUpperCase();
+                        const gender = row[idxGender].toUpperCase();
+                        const form = row[idxForm].toUpperCase();
+                        const stream = row[idxStream];
+
+                        // Match checking to prevent breaking relational indexes
+                        if (!fullname || !['M', 'F'].includes(gender) || !form) {
+                            skipCount++;
+                            continue;
+                        }
+
+                        // Duplicate validation check
+                        const exists = studentsDb.some(s => s.fullname === fullname && s.form === form);
+                        if (!exists) {
+                            studentsDb.push({ fullname, gender, form, stream, marks: {} });
+                            addedCount++;
+                        } else {
+                            skipCount++;
+                        }
+                    }
+
+                    showStatus(statusBox, `Success! Successfully imported ${addedCount} new students. (Skipped/Duplicates: ${skipCount})`, "success");
+                    console.log("Current Students Roster Database:", studentsDb);
+                } catch (err) {
+                    showStatus(statusBox, err.message, "error");
                 }
             };
+
             reader.readAsText(file);
         }
 
-        // Initialize state on DOM load
-        window.addEventListener('DOMContentLoaded', () => {
-            loadFromCache();
-        });
+        // --- 2. BULK SCORES LOGIC ---
+        function getSubjectColumns(archetype) {
+            // Evaluates targeted structural layouts depending on user tier choice
+            if (archetype === 'f1_f2') {
+                return ['his_maadili', 'hist', 'civ', 'math', 'kisw', 'eng', 'bio', 'chem', 'phy', 'geo'];
+            } else {
+                return ['civ', 'hist', 'geo', 'kisw', 'eng', 'math', 'bio', 'chem', 'phy'];
+            }
+        }
+
+        function downloadScoresTemplate() {
+            const level = document.getElementById('classLevel').value;
+            const subjects = getSubjectColumns(level);
+            
+            let headers = ['fullname'];
+            subjects.forEach(sub => {
+                headers.push(`${sub}_t1`, `${sub}_t2`, `${sub}_mid`, `${sub}_annual`);
+            });
+
+            // Sample boilerplate data row
+            let sampleRow = ['ALEXANDER MHAGAMA'];
+            for(let i = 1; i < headers.length; i++) { sampleRow.push("75"); }
+
+            let csvContent = "data:text/csv;charset=utf-8," 
+                + headers.join(",") + "\n"
+                + sampleRow.join(",");
+                
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `bulk_scores_${level}_template.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function processBulkScores() {
+            const fileInput = document.getElementById('scoresFile');
+            const statusBox = document.getElementById('scoresStatus');
+            const level = document.getElementById('classLevel').value;
+            
+            if (!fileInput.files.length) {
+                showStatus(statusBox, "Please select your scores CSV spreadsheet record.", "error");
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                try {
+                    const rows = parseCSVText(e.target.result);
+                    if (rows.length < 2) throw new Error("The CSV content data array is empty.");
+
+                    const headers = rows[0].map(h => h.toLowerCase().trim());
+                    const idxName = headers.indexOf('fullname');
+
+                    if (idxName === -1) throw new Error("Critical identifier missing: 'fullname' key column header must be present.");
+
+                    let updatedRecords = 0;
+                    let missingStudents = 0;
+
+                    // Dynamically map every header string present down to target objects
+                    for (let i = 1; i < rows.length; i++) {
+                        const row = rows[i];
+                        if (row.length < 2) continue;
+
+                        const studentName = row[idxName].toUpperCase().trim();
+                        
+                        // Locate student record references inside system
+                        let studentMatch = studentsDb.find(s => s.fullname === studentName);
+
+                        if (!studentMatch) {
+                            missingStudents++;
+                            continue;
+                        }
+
+                        // Map found marks directly onto the student object fields
+                        headers.forEach((header, colIdx) => {
+                            if (colIdx === idxName) return; // Skip name cell column string
+                            
+                            const scoreValue = row[colIdx];
+                            if (scoreValue !== undefined && scoreValue !== "") {
+                                const parsedNum = parseFloat(scoreValue);
+                                // Ensure standard valid numbers are imported cleanly
+                                studentMatch.marks[header] = !isNaN(parsedNum) ? parsedNum : null;
+                            }
+                        });
+                        updatedRecords++;
+                    }
+
+                    showStatus(statusBox, `Scores Processing Complete. Assigned performance metrics for ${updatedRecords} entries. Roster exceptions unrecognized: ${missingStudents}`, "success");
+                    console.log("Updated Marks Matrix System State:", studentsDb);
+                } catch (err) {
+                    showStatus(statusBox, err.message, "error");
+                }
+            };
+
+            reader.readAsText(file);
+        }
+
+        // --- HELPER ALERT NOTIFIER INTERFACE ---
+        function showStatus(element, text, systemClass) {
+            element.textContent = text;
+            element.className = "status-box " + (systemClass === "success" ? "status-success" : "status-error");
+        }
+
+        function toggleSubjectContext() {
+            // Resets selected file caches to protect schema cross-corruption context safely
+            document.getElementById('scoresFile').value = "";
+            document.getElementById('scoresStatus').style.display = "none";
+        }
     </script>
 </body>
 </html>
