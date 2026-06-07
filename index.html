@@ -3,256 +3,1820 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TT-PRO ULTIMATE | A4 Single Page Report</title>
+    <title>TT-PRO | Student Admission & Bulk Report Card Manager</title>
     <style>
-        /* --- APPLICATION UI STYLES (Screen Only) --- */
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f1f5f9;
-            color: #1e293b;
+        :root {
+            --primary-blue: #2563eb;
+            --dark-navy: #1e293b;
+            --border-color: #000000;
+            --bg-light: #f8fafc;
+            --panel-bg: #ffffff;
+            --accent-green: #10b981;
+            --accent-purple: #7c3aed;
+            --accent-red: #ef4444;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
         }
 
-        .control-panel {
-            max-width: 800px;
-            margin: 0 auto 20px auto;
-            background: #ffffff;
-            padding: 15px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 0;
+            background-color: #e2e8f0;
+            color: var(--text-dark);
+        }
+
+        /* --- CONTROL PANEL NAVIGATION BAR --- */
+        .main-control-panel {
+            background-color: #0f172a;
+            padding: 12px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 3px solid var(--primary-blue);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
-        .print-btn {
-            background-color: #2563eb;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            font-size: 14px;
-            font-weight: 600;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .print-btn:hover {
-            background-color: #1d4ed8;
-        }
-
-        /* --- REPORT LAYOUT STYLES --- */
-        .report-outer-wrapper {
-            background: #ffffff;
-            width: 210mm;
-            min-height: 297mm;
-            margin: 0 auto;
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-            box-sizing: border-box;
-            padding: 15mm;
-            position: relative;
-        }
-
-        .report-container {
-            width: 100%;
-            height: 100%;
+        .panel-brand {
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 16px;
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .panel-links {
+            display: flex;
+            gap: 12px;
+        }
+
+        .panel-btn {
+            background-color: #334155;
+            color: #f8fafc;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .panel-btn:hover {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+        }
+
+        .panel-btn.active {
+            background-color: var(--primary-blue);
+            font-weight: 700;
+            box-shadow: 0 0 8px rgba(37, 99, 235, 0.5);
+        }
+
+        /* --- ADMIN WORKSPACE LAYOUT --- */
+        #admin-container {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+            padding: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .admin-header-bar {
+            grid-column: 1 / -1;
+            background-color: var(--dark-navy);
+            color: #ffffff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            display: flex;
             justify-content: space-between;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
-        /* Report Structure Elements */
-        .report-header {
-            border-bottom: 2px solid #000000;
-            padding-bottom: 10px;
+        .admin-header-bar h1 {
+            margin: 0;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .admin-card {
+            background: var(--panel-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin-bottom: 20px;
+        }
+
+        .admin-card h2 {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-top: 0;
             margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .report-header h1 {
-            margin: 0 0 5px 0;
-            font-size: 22px;
-            letter-spacing: 1px;
-        }
-
-        .report-body {
-            flex-grow: 1;
-        }
-
-        /* High-density Data Matrix Table */
-        .report-table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-            font-size: 12px;
-            margin-bottom: 15px;
-        }
-
-        .report-table th, .report-table td {
-            border: 1px solid #000000;
-            padding: 6px 8px;
-            text-align: left;
-            word-wrap: break-word;
-        }
-
-        .report-table th {
-            background-color: #f8fafc;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 8px;
             font-weight: 700;
         }
 
-        .report-footer {
-            border-top: 1px dashed #64748b;
-            padding-top: 10px;
-            font-size: 11px;
-            color: #475569;
-            display: flex;
-            justify-content: space-between;
+        .form-control {
+            margin-bottom: 12px;
         }
 
-        /* --- CRITICAL PRINT MEDIA CONFIGURATION --- */
+        .form-control label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .form-control input, .form-control select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+            color: var(--text-dark);
+            background-color: #ffffff;
+        }
+
+        .form-control input:focus, .form-control select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        .btn-submit {
+            width: 100%;
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 6px;
+            transition: background 0.2s ease;
+        }
+
+        .btn-submit:hover {
+            opacity: 0.95;
+        }
+
+        .btn-secondary {
+            width: 100%;
+            background-color: #64748b;
+            color: #ffffff;
+            border: none;
+            padding: 8px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 12px;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+            box-sizing: border-box;
+            margin-bottom: 6px;
+            transition: background 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background-color: #475569;
+        }
+
+        .db-filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .db-filters input, .db-filters select {
+            padding: 8px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .bulk-actions-bar {
+            background-color: #f1f5f9;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .roster-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .roster-table th {
+            color: var(--text-muted);
+            padding: 10px;
+            border-bottom: 2px solid #e2e8f0;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        .roster-table td {
+            padding: 10px;
+            border-bottom: 1px solid #f1f5f9;
+            color: var(--text-dark);
+        }
+
+        .roster-table tr.active-student {
+            background-color: #eff6ff;
+            font-weight: 700;
+        }
+
+        .roster-table tr:hover {
+            background-color: #f8fafc;
+            cursor: pointer;
+        }
+
+        .badge-stream {
+            background-color: #dcfce7;
+            color: #15803d;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        /* --- ACTION BUTTONS FOR ROSTER --- */
+        .btn-action-small {
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 4px;
+            color: #fff;
+        }
+        .btn-edit { background-color: #f59e0b; }
+        .btn-edit:hover { background-color: #d97706; }
+        .btn-delete { background-color: var(--accent-red); }
+        .btn-delete:hover { background-color: #dc2626; }
+
+        /* --- MARKS EDITOR INTERACTIVE PANEL --- */
+        .marks-panel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .subject-block {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .subject-block label {
+            font-weight: 700;
+            font-size: 12px;
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+
+        .input-row div {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-row span {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .input-row input {
+            padding: 6px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            font-size: 12px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .workspace-split {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .print-btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 15px;
+        }
+
+        .btn-print-action {
+            color: #ffffff;
+            border: none;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.1s ease;
+        }
+
+        .btn-print-action:active {
+            transform: scale(0.98);
+        }
+
+        .btn-single { background-color: var(--accent-green); }
+        .btn-bulk { background-color: var(--accent-purple); }
+
+        /* --- REPORT CARD PRINT PREVIEW SHEET --- */
+        #print-output-container {
+            display: block;
+        }
+
+        .report-card-page {
+            background: #ffffff;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 15mm 20mm;
+            margin: 30px auto;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+            box-sizing: border-box;
+            position: relative;
+            page-break-after: always;
+        }
+
+        .report-header {
+            text-align: center;
+            position: relative;
+            margin-bottom: 20px;
+            min-height: 95px;
+        }
+
+        .logo-placeholder {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 90px;
+            height: 90px;
+            border: 1px dashed #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-weight: 700;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .logo-img {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 90px;
+            height: 90px;
+            object-fit: contain;
+        }
+
+        .header-title {
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1.4;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.2px;
+        }
+
+        .report-title {
+            margin-top: 14px;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: underline;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .meta-info {
+            width: 100%;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+
+        .meta-info td {
+            padding: 5px 0;
+        }
+
+        .dotted-line {
+            border-bottom: 1px dotted var(--border-color);
+            display: inline-block;
+            font-weight: 700;
+            padding-left: 5px;
+        }
+
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+
+        table.data-table th, table.data-table td {
+            border: 1px solid var(--border-color);
+            padding: 7px 5px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        table.data-table th {
+            font-weight: 700;
+            background-color: #f2f2f2;
+        }
+
+        table.data-table td.subject-name {
+            text-align: left;
+            font-weight: 700;
+        }
+
+        .summary-row {
+            font-size: 13px;
+            font-weight: 700;
+            margin: 12px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .behavior-section {
+            margin-top: 15px;
+        }
+
+        .section-heading {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .behavior-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        table.behavior-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        table.behavior-table th, table.behavior-table td {
+            border: 1px solid var(--border-color);
+            padding: 5px;
+        }
+
+        table.behavior-table td:nth-child(1) { text-align: left; }
+        table.behavior-table td:nth-child(2) { text-align: center; font-weight: 700; width: 60px; }
+
+        .grading-legend {
+            font-size: 11px;
+            margin-top: 6px;
+            font-style: italic;
+        }
+
+        .admin-section {
+            margin-top: 15px;
+            font-size: 12px;
+            line-height: 1.8;
+        }
+
+        .signature-stamp-space {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .stamp-box {
+            border: 2px dashed #0000ff;
+            color: #0000ff;
+            border-radius: 50%;
+            width: 110px;
+            height: 110px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 9px;
+            font-weight: 700;
+            transform: rotate(-5deg);
+            margin-top: -5px;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .parent-slip {
+            margin-top: 25px;
+            border-top: 1px dashed var(--border-color);
+            position: relative;
+            padding-top: 15px;
+            font-size: 12px;
+        }
+
+        .scissors-icon {
+            position: absolute;
+            top: -11px;
+            right: 15px;
+            font-size: 16px;
+            background: #ffffff;
+            padding: 0 5px;
+        }
+
+        .slip-title {
+            text-align: center;
+            font-weight: 700;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        /* --- SCREEN VIEW VIEWPORT TOGGLE --- */
+        .hidden-view {
+            display: none !important;
+        }
+
+        /* --- PRODUCTION PRINT RULES --- */
         @media print {
-            @page {
-                size: A4 portrait;
-                margin: 0; /* Zero out systemic browser margins */
+            .main-control-panel, #admin-container {
+                display: none !important;
             }
-
-            html, body {
-                background: #ffffff;
-                margin: 0;
+            body {
+                background-color: #ffffff;
                 padding: 0;
-                width: 210mm;
-                height: 297mm;
-                overflow: hidden; /* Lock viewport initialization */
             }
-
-            .control-panel, .no-print {
-                display: none !important; /* Strips browser headers and action panels */
-            }
-
-            .report-outer-wrapper {
-                width: 210mm;
-                height: 297mm;
-                padding: 12mm; /* Controlled localized paper margins */
+            .report-card-page {
                 box-shadow: none;
-                margin: 0;
-                page-break-inside: avoid;
-                break-inside: avoid;
+                margin: 0 auto;
+                padding: 10mm 15mm;
+                width: 210mm;
+                height: 297mm;
+                page-break-after: always;
+                overflow: hidden;
             }
-
-            /* Prevent elements from pulling uneven page splits */
-            table, tr, img, .report-card-block {
-                page-break-inside: avoid;
-                break-inside: avoid;
-            }
-
-            /* Ensures colors render exactly as specified */
-            * {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
+            .report-card-page.hidden-print {
+                display: none !important;
             }
         }
     </style>
 </head>
 <body>
 
-    <div class="control-panel">
-        <div>
-            <h3 style="margin:0;">Report Preview Engine</h3>
-            <p style="margin:5px 0 0 0; font-size:13px; color:#64748b;">Forcing dynamic tables to fit precisely on one A4 sheet.</p>
+    <!-- MAIN CONTROL PANEL NAVIGATION BAR -->
+    <div class="main-control-panel">
+        <div class="panel-brand">
+            🏫 <span>TT-PRO MANAGEMENT SYSTEM</span>
         </div>
-        <button class="print-btn" onclick="executeSinglePagePrint()">Print / Export A4 PDF</button>
+        <div class="panel-links">
+            <a href="index.html" class="panel-btn">🎛️ Main Dashboard</a>
+            <a href="#admin-section" class="panel-btn active" onclick="switchView('admin')">👑 Admin Panel</a>
+            <a href="#students-section" class="panel-btn" onclick="switchView('students')">🧑‍🎓 Roster</a>
+            <a href="#teachers-section" class="panel-btn" onclick="switchView('teachers')">👩‍🏫 Teachers</a>
+            <a href="#subjects-section" class="panel-btn" onclick="switchView('subjects')">📚 Subjects</a>
+        </div>
     </div>
 
-    <div class="report-outer-wrapper">
-        <div class="report-container" id="printable-report-content">
-            
-            <header class="report-header">
-                <h1>TT-PRO ULTIMATE MANAGEMENT REPORT</h1>
-                <p style="margin:0; font-size:13px;">Official Academic Term Performance Ledger</p>
-            </header>
+    <!-- ADMINISTRATIVE WORKSPACE -->
+    <div id="admin-container">
+        <div class="admin-header-bar">
+            <h1>📊 Student Admission & Bulk Report Card Module</h1>
+            <button class="panel-btn" onclick="backToPanel()">← Back to Panel</button>
+        </div>
 
-            <main class="report-body">
-                <table class="report-table">
+        <!-- LEFT SIDEBAR: CONFIGURATIONS & ADMISSION -->
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+            
+            <!-- BACKUP & DATA PERSISTENCE CONTROLS -->
+            <div class="admin-card" style="border: 1px solid var(--accent-purple);">
+                <h2>💾 System Storage Sync</h2>
+                <button type="button" class="btn-submit" style="background-color: var(--accent-purple);" onclick="saveDataToComputer()">💾 Save Session Data to Computer</button>
+                <div class="form-control" style="margin-top: 10px;">
+                    <label>Reload Configuration File</label>
+                    <input type="file" id="import-config-file" accept=".json" onchange="loadDataFromComputer(this)" style="font-size: 12px;">
+                </div>
+            </div>
+
+            <!-- GLOBAL REPORT SETTINGS PANEL -->
+            <div class="admin-card">
+                <h2>⚙️ Report Configuration</h2>
+                <div class="form-control">
+                    <label>Report Language / Lugha ya Ripoti</label>
+                    <select id="cfg-lang" onchange="updateGlobalSettings()">
+                        <option value="EN">English (EN)</option>
+                        <option value="SW" selected>Kiswahili (SW)</option>
+                    </select>
+                </div>
+                <div class="form-control">
+                    <label>Upload School Logo</label>
+                    <input type="file" id="cfg-logo" accept="image/*" onchange="handleLogoUpload(this)">
+                </div>
+                <div class="form-control">
+                    <label>Term / Muhula</label>
+                    <select id="cfg-term" onchange="updateGlobalSettings()">
+                        <option value="I" selected>TERM I / MUHULA I</option>
+                        <option value="II">TERM II / MUHULA II</option>
+                    </select>
+                </div>
+                <div class="form-control">
+                    <label>Academic Year / Mwaka</label>
+                    <input type="text" id="cfg-year" value="2026" oninput="updateGlobalSettings()">
+                </div>
+                <div class="form-control">
+                    <label>School Closing Date / Shule Kufungwa</label>
+                    <input type="text" id="cfg-close-date" value="05/06/2026" oninput="updateGlobalSettings()">
+                </div>
+                <div class="form-control">
+                    <label>School Opening Date / Shule Kufunguliwa</label>
+                    <input type="text" id="cfg-open-date" value="06/07/2026" oninput="updateGlobalSettings()">
+                </div>
+            </div>
+
+            <!-- ENROLLMENT CARD WITH BULK UPLOAD -->
+            <div class="admin-card">
+                <h2 id="enrollment-card-title">🧑‍🎓 New Enrollment</h2>
+                <form id="enrollment-form" onsubmit="handleEnrollment(event)">
+                    <input type="hidden" id="stu-edit-id" value="">
+                    <div class="form-control">
+                        <label>Student Full Name</label>
+                        <input type="text" id="stu-fullname" placeholder="E.G., CHUMA KANYAMA" required>
+                    </div>
+                    <div class="form-control">
+                        <label>Gender</label>
+                        <select id="stu-gender">
+                            <option value="F">Female (F)</option>
+                            <option value="M">Male (M)</option>
+                        </select>
+                    </div>
+                    <div class="form-control">
+                        <label>Form Level</label>
+                        <select id="stu-form">
+                            <option value="F1">F1</option>
+                            <option value="F2">F2</option>
+                            <option value="F3" selected>F3</option>
+                            <option value="F4">F4</option>
+                        </select>
+                    </div>
+                    <div class="form-control">
+                        <label>Stream</label>
+                        <select id="stu-stream">
+                            <option value="Stream A">Stream A</option>
+                            <option value="Stream B">Stream B</option>
+                            <option value="Stream C">Stream C</option>
+                            <option value="Stream D">Stream C</option>
+                            <option value="Stream E">Stream C</option>
+                        </select>
+                    </div>
+                    <button type="submit" id="btn-enroll-submit" class="btn-submit">Register Student</button>
+                    <button type="button" id="btn-enroll-cancel" class="btn-secondary" style="display:none; background-color:#ef4444;" onclick="cancelEditMode()">Cancel Edit</button>
+                </form>
+                
+                <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 15px 0;">
+                
+                <div>
+                    <label style="display: block; font-size: 11px; font-weight: bold; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase;">Bulk CSV Enrollment</label>
+                    <input type="file" id="bulk-csv-file" accept=".csv" style="font-size: 12px; margin-bottom: 8px; width:100%;">
+                    <button type="button" class="btn-submit" style="background-color: #0284c7;" onclick="handleBulkUpload()">Process CSV Admission</button>
+                    <a href="javascript:void(0)" class="btn-secondary" onclick="downloadCSVTemplate()">📥 Download Roster Template</a>
+                </div>
+            </div>
+
+            <!-- SCORES BULK DATA INTERACTION UTILITY -->
+            <div class="admin-card" style="border: 1px solid var(--primary-blue);">
+                <h2>📈 Bulk Scores Upload</h2>
+                <div class="form-control">
+                    <label>Target Level Schema</label>
+                    <select id="score-template-form">
+                        <option value="F1">Form 1 & 2</option>
+                        <option value="F3" selected>Form 3 & 4</option>
+                    </select>
+                </div>
+                <button type="button" class="btn-secondary" style="background-color: #047857;" onclick="downloadScoresTemplate()">📥 Download Marks Template</button>
+                
+                <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 12px 0;">
+                
+                <div class="form-control">
+                    <label>Select Marks CSV Dataset</label>
+                    <input type="file" id="bulk-scores-file" accept=".csv" style="font-size: 12px; margin-bottom: 8px; width:100%;">
+                    <button type="button" class="btn-submit" style="background-color: var(--accent-purple);" onclick="handleBulkScoresUpload()">📤 Import All Scores</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT WORKSPACE SECTION -->
+        <div class="workspace-split">
+            
+            <!-- MASTER ROSTER GRID -->
+            <div class="admin-card">
+                <h2>Active Student Database Roster</h2>
+                <div class="db-filters">
+                    <input type="text" id="search-filter" placeholder="🔍 Search student name..." oninput="renderRosterTable()" style="flex: 2;">
+                    <select id="form-filter" onchange="renderRosterTable()" style="flex: 1;">
+                        <option value="All">All Forms</option>
+                        <option value="F1">F1</option>
+                        <option value="F2">F2</option>
+                        <option value="F3">F3</option>
+                        <option value="F4">F4</option>
+                    </select>
+                    <select id="stream-filter" onchange="renderRosterTable()" style="flex: 1;">
+                        <option value="All">All Streams</option>
+                        <option value="Stream A">Stream A</option>
+                        <option value="Stream B">Stream B</option>
+                        <option value="Stream C">Stream C</option>
+                        <option value="Stream D">Stream C</option>
+                        <option value="Stream E">Stream C</option>
+                    </select>
+                    <select id="roster-range" onchange="renderRosterTable()" style="flex:1;">
+                        <option value="25">Show 25</option>
+                        <option value="50">Show 50</option>
+                        <option value="100">Show 100</option>
+                        <option value="All" selected>Show All</option>
+                    </select>
+                </div>
+
+                <div class="bulk-actions-bar">
+                    <label><input type="checkbox" id="select-all-box" onchange="toggleSelectAll(this)"> Select All For Batch Printing</label>
+                    <span id="selected-count-badge">Selected: 0 student(s)</span>
+                </div>
+
+                <table class="roster-table">
                     <thead>
                         <tr>
-                            <th style="width: 15%;">Index No</th>
-                            <th style="width: 45%;">Full Name</th>
-                            <th style="width: 15%;">Gender</th>
-                            <th style="width: 15%;">Average</th>
-                            <th style="width: 10%;">Division</th>
+                            <th style="width: 50px; text-align: center;">Print</th>
+                            <th>Student Full Name</th>
+                            <th>Gender</th>
+                            <th>Form</th>
+                            <th>Stream</th>
+                            <th style="width: 150px; text-align: center;">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr><td>001</td><td>NEEMA STEVEN NDAULE</td><td>F</td><td>61.0</td><td>I</td></tr>
-                        <tr><td>002</td><td>ABIGAEL CHARLES</td><td>F</td><td>21.0</td><td>IV</td></tr>
-                        <tr><td>003</td><td>ABIGAELI SAMSON MOLLEL</td><td>F</td><td>42.5</td><td>III</td></tr>
-                        <tr><td>004</td><td>AGNES KENNEDY ADOLPH</td><td>F</td><td>15.0</td><td>F</td></tr>
-                        <tr><td>005</td><td>AISHA HALIFANI MAULIDI</td><td>F</td><td>32.0</td><td>IV</td></tr>
-                        <tr><td>006</td><td>AMINA MOHAMED HAMIS</td><td>F</td><td>51.0</td><td>II</td></tr>
-                        <tr><td>007</td><td>ANGEL DOUGLAS MUNUO</td><td>F</td><td>38.0</td><td>IV</td></tr>
-                        <tr><td>008</td><td>ANGEL EPHAHIMU LOSEKI</td><td>F</td><td>25.0</td><td>F</td></tr>
-                        <tr><td>009</td><td>ANGELA EMMANUEL PHILIPO</td><td>F</td><td>43.0</td><td>III</td></tr>
-                        <tr><td>010</td><td>ANNA MICHAEL LUKUMAY</td><td>F</td><td>55.5</td><td>II</td></tr>
-                        <tr><td>011</td><td>YUSRA KASSIM ATHUMANI</td><td>F</td><td>30.5</td><td>IV</td></tr>
-                        <tr><td>012</td><td>YUSRA SAIDI JUMA</td><td>F</td><td>31.5</td><td>IV</td></tr>
-                        <tr><td>013</td><td>YUSUFU JUMANNE RAMADHAN</td><td>M</td><td>INC</td><td>INC</td></tr>
-                        <tr><td>014</td><td>YUSUPH AMIRI HATIBU</td><td>M</td><td>47.5</td><td>IV</td></tr>
-                        <tr><td>015</td><td>YUSUPH YAHAYA ALLY</td><td>M</td><td>34.0</td><td>IV</td></tr>
-                        </tbody>
+                    <tbody id="roster-tbody"></tbody>
                 </table>
+            </div>
 
-                <div style="margin-top: 15px; padding: 10px; border: 1px solid #000; font-size:12px;">
-                    <strong>Remarks & Academic Assessment Criteria:</strong><br>
-                    This report represents the comprehensive metric extraction compiled automatically through the portal database matrix engine. Any corrections should be directed to the administrator panel prior to signature locking.
+            <!-- DETAIL MARKS INTERACTIVE GRIDS -->
+            <div class="admin-card">
+                <h2>Assessment Scores Input Panel (T1, T2, Mid, Annual)</h2>
+                <div id="active-student-banner" style="font-weight: bold; color: var(--primary-blue); margin-bottom: 12px; font-size: 14px;">
+                    No student currently active. Select a row from the database master list above.
                 </div>
-            </main>
-
-            <footer class="report-footer">
-                <span>Generated via TT-PRO SYSTEM</span>
-                <span>Page 1 of 1</span>
-                <span>Date: June 2026</span>
-            </footer>
-
+                
+                <div class="marks-panel-grid" id="marks-entry-grid"></div>
+                
+                <div class="print-btn-group">
+                    <button class="btn-print-action btn-single" onclick="printSingleReport()">
+                        🖨️ Print Active Single Report
+                    </button>
+                    <button class="btn-print-action btn-bulk" onclick="printBulkReports()">
+                        📚 Batch Print Selected Reports
+                    </button>
+                </div>
+            </div>
+            
         </div>
     </div>
 
+    <!-- MAIN EXPORT LIVE PREVIEW CONTAINER -->
+    <div id="print-output-container"></div>
+
     <script>
-        function autoScaleReportToA4Portrait() {
-            const container = document.getElementById('printable-report-content');
-            if (!container) return;
+        let globalStudents = [];
 
-            // Reset scale transformations to compute raw DOM height footprint
-            container.style.transform = "scale(1)";
-            container.style.transformOrigin = "top center";
+        // Dictionary definitions for translation module
+        const dictionary = {
+            EN: {
+                govtTitle: "PRIME MINISTER'S OFFICE - ",
+                officeTitle: "REGIONAL ADMINISTRATION AND LOCAL GOVERNMENT",
+                councilTitle: "ARUSHA CITY COUNCIL",
+                schoolTitle: "OLMOTI SECONDARY SCHOOL",
+                reportTitle: "STUDENT PROGRESS ACADEMIC REPORT FOR PARENT/GUARDIAN",
+                lblStudentName: "STUDENT NAME",
+                lblForm: "FORM",
+                lblTerm: "TERM",
+                lblYear: "YEAR",
+                thSubject: "SUBJECT",
+                thCa: "CA",
+                thExam: "EXAM",
+                thTotal: "TOTAL",
+                thAverage: "AVERAGE",
+                thGrade: "GRADE",
+                thSubRank: "SUBJECT RANK",
+                thRemarks: "REMARKS",
+                lblTotal: "TOTAL",
+                lblAverage: "AVERAGE",
+                lblGrade: "GRADE",
+                lblPoints: "POINTS",
+                lblDivision: "DIVISION",
+                lblRankPos: "FORM RANK POSITION",
+                lblOutOf: "OUT OF",
+                lblEvaluation: "FORM-WIDE EVALUATION",
+                lblBehaviorTitle: "BEHAVIOR & CONDUCT EVALUATION MATRIX",
+                thTrack: "PERFORMANCE TRACK",
+                lblLegend: "LEGEND: A= EXCELLENT, B= VERY GOOD, C= AVERAGE, D= SATISFACTORY, F= FAIL",
+                lblClosing: "SCHOOL CLOSING DATE",
+                lblOpening: "REOPENING DATE",
+                lblTeacherRemarks: "CLASS TEACHER REMARKS",
+                lblTeacherSig: "CLASS TEACHER SIGNATURE",
+                lblHeadRemarks: "HEADMASTER REMARKS",
+                lblHeadSig: "HEADMASTER SIGNATURE",
+                lblSlipTitle: "PARENT/GUARDIAN ACKNOWLEDGEMENT SLIP (RETURN UPON REOPENING)",
+                lblSlipComments: "PARENT/GUARDIAN COMMENTS",
+                lblSlipName: "NAME",
+                lblSlipDate: "DATE",
+                lblSlipSig: "SIGNATURE",
+                commentA: "Excellent performance, keep up the high standard!",
+                commentB: "Very good score, put in more effort to attain Division I.",
+                commentC: "Average results, read strategically to boost your scores.",
+                commentD: "Satisfactory but weak performance, increase study hours.",
+                commentF: "Failed performance, intensive remediation required urgently.",
+                headA: "Superb outcome, maintain this trajectory.",
+                headB: "Good effort, unlock your full potential next term.",
+                headC: "Average output, needs to focus intensely on weak subjects.",
+                headD_F: "Poor results, academic discipline must be improved.",
+                track1: "NATION BUILDING ACTIVITIES",
+                track2: "DILIGENCE AND KNOWLEDGE",
+                track3: "PUBLIC PROPERTY RESPECT",
+                track4: "COOPERATION & UNDERSTANDING",
+                track5: "RESPECTFULNESS",
+                track6: "LEADERSHIP SKILLS",
+                track7: "OBEDIENCE",
+                track8: "CLEANLINESS",
+                track9: "INTEGRITY & HONESTY",
+                track10: "CULTURE & SPORTS"
+            },
+            SW: {
+                govtTitle: "OFISI YA WAZIRI MKUU",
+                officeTitle: "TAWALA ZA MIKOA NA SERIKALI ZA MITAA",
+                councilTitle: "HALMASHAURI YA JIJI LA ARUSHA",
+                schoolTitle: "SHULE YA SEKONDARI OLMOTI",
+              addressTitle: "S.L.P 8249, ARUSHA",
+                reportTitle: "TAARIFA YA MAENDELEO YA MWANAFUNZI KWA MZAZI/MLEZI",
+                lblStudentName: "JINA LA MWANAFUNZI",
+                lblForm: "KIDATO",
+                lblTerm: "MUHULA",
+                lblYear: "MWAKA",
+                thSubject: "SOMO",
+                thCa: "MAZOEZI",
+                thExam: "MTIHANI",
+                thTotal: "JUMLA",
+                thAverage: "WASTANI",
+                thGrade: "DARAJA",
+                thSubRank: "NAFASI",
+                thRemarks: "MAONI YA MWALIMU",
+                lblTotal: "JUMLA",
+                lblAverage: "WASTANI",
+                lblGrade: "DARAJA",
+                lblPoints: "POINTS",
+                lblDivision: "DIVISION",
+                lblRankPos: "AMEKUWA WA",
+                lblOutOf: "KATI YA",
+                lblEvaluation: "WANAFUNZI WOTE",
+                lblBehaviorTitle: "TABIA / KAZI / MWENENDO WA MWANAFUNZI",
+                thTrack: "UTENDAJI WA KAZI",
+                lblLegend: "MAELEZO: A= VIZURI SANA, B= VIZURI, C= WASTANI, D= INARIDHISHA, F= FELI",
+                lblClosing: "SHULE IMEFUNGWA TAREHE",
+                lblOpening: "ITAFUNGULIWA TAREHE",
+                lblTeacherRemarks: "MAONI YA MWALIMU WA DARASA",
+                lblTeacherSig: "SAINI YA MWALIMU WA DARASA",
+                lblHeadRemarks: "MAONI YA MKUU WA SHULE",
+                lblHeadSig: "SAINI YA MKUU WA SHULE",
+                lblSlipTitle: "KIPANDE HIKI KIJAZWE NA MZAZI NA KUREJESHWA SIKU YA KUFUNGULIWA SHULE",
+                lblSlipComments: "MAONI YA MZAZI/MLEZI",
+                lblSlipName: "JINA",
+                lblSlipDate: "TAREHE",
+                lblSlipSig: "SAINI",
+                // --- UPDATED CLASS TEACHER COMMENTS ---
+                commentA: "Matokeo mazuri ongeza bidii zaidi",
+                commentB: "Soma kwa bidii zaidi uongeze ufaulu wako",
+                commentC: "Ongeza jitihada kwenye masomo upate division I au II",
+                commentD: "Matokeo yako sio mazuri soma kwa bidii upandishe ufaulu wako",
+                commentF: "Matokeo mabaya",
+                // --- UPDATED HEAD OF SCHOOL COMMENT ---
+                headA: "Hongera kwa kumaliza muhula wa kwanza, unatakiwa kusoma kwa bidii ili kuongeza ufaulu wako",
+                headB: "Hongera kwa kumaliza muhula wa kwanza, unatakiwa kusoma kwa bidii ili kuongeza ufaulu wako",
+                headC: "Hongera kwa kumaliza muhula wa kwanza, unatakiwa kusoma kwa bidii ili kuongeza ufaulu wako",
+                headD_F: "Hongera kwa kumaliza muhula wa kwanza, unatakiwa kusoma kwa bidii ili kuongeza ufaulu wako",
+                track1: "SHUGHULI ZA KUJENGA TAIFA",
+                track2: "BIDII NA MAARIFA",
+                track3: "MWAMINIFU WA MALI YA UMMA",
+                track4: "UELEWANO NA USHIRIKIANO",
+                track5: "HESHIMA",
+                track6: "UWEZO WA UONGOZI",
+                track7: "UTIIFU",
+                track8: "USAFI",
+                track9: "UAMINIFU",
+                track10: "UTAMADUNI NA MICHEZO"
+            }
+        };
 
-            // At 96 DPI standard configuration, an A4 page target height is roughly 1123px.
-            // Accounting for outer wrapper padding allocations, we target a boundary of ~1040px.
-            const maximumAllowedPixelHeight = 1040;
-            
-            let rawContentHeight = container.scrollHeight;
-            let currentScaleRatio = 1.0;
+        const subjectsF1F2 = [
+            { id: "his_maadili", name: "HISTORIA NA MAADILI" }, 
+            { id: "hist", name: "HISTORIA" }, 
+            { id: "geo", name: "GEOGRAPHY" },
+            { id: "kisw", name: "KISWAHILI" }, 
+            { id: "eng", name: "ENGLISH" }, 
+            { id: "phy", name: "PHYSICS" },
+            { id: "chem", name: "CHEMISTRY" }, 
+            { id: "bio", name: "BIOLOGY" }, 
+            { id: "math", name: "MATHEMATICS" },
+            { id: "bus_studies", name: "BUSINESS STUDIES" }, 
+            { id: "book_keeping", name: "BOOK KEEPING" }
+        ];
 
-            // Loop checking if content exceeds page boundary height constraints.
-            // Iteratively drops scaling factor down to an absolute safety limit threshold of 0.60.
-            while (rawContentHeight > maximumAllowedPixelHeight && currentScaleRatio > 0.60) {
-                currentScaleRatio -= 0.02; // Downscale by steps of 2%
-                container.style.transform = `scale(${currentScaleRatio})`;
-                
-                // Recalculate dynamic tracking heights relative to scale ratio shifts
-                rawContentHeight = container.scrollHeight * currentScaleRatio;
+        const subjectsF3F4 = [
+            { id: "civ", name: "CIVICS" }, 
+            { id: "hist", name: "HISTORY" }, 
+            { id: "geo", name: "GEOGRAPHY" },
+            { id: "kisw", name: "KISWAHILI" }, 
+            { id: "eng", name: "ENGLISH" }, 
+            { id: "phy", name: "PHYSICS" },
+            { id: "chem", name: "CHEMISTRY" }, 
+            { id: "bio", name: "BIOLOGY" }, 
+            { id: "math", name: "B/MATHS" },
+            { id: "nutr", name: "NUTRITION" }, 
+            { id: "lit", name: "LITERATURE" }
+        ];
+
+        let selectedStudentId = null;
+        let uploadedLogoBase64 = "";
+
+        function backToPanel() {
+            window.location.href = "index.html"; 
+        }
+
+        function switchView(viewName) {
+            if(viewName === 'teachers') alert("Navigating to Teacher Module...");
+            else if (viewName === 'subjects') alert("Navigating to Subject Configurator...");
+            else if (viewName === 'students') document.getElementById('search-filter').focus();
+        }
+
+        /* --- PERSISTENCE LOGIC --- */
+        function autoSaveToCache() {
+            const dataToSave = {
+                students: globalStudents,
+                logo: uploadedLogoBase64,
+                config: {
+                    lang: document.getElementById('cfg-lang').value,
+                    term: document.getElementById('cfg-term').value,
+                    year: document.getElementById('cfg-year').value,
+                    closeDate: document.getElementById('cfg-close-date').value,
+                    openDate: document.getElementById('cfg-open-date').value
+                }
+            };
+            localStorage.setItem('tt_pro_report_state', JSON.stringify(dataToSave));
+        }
+
+        function loadFromCache() {
+            const cachedData = localStorage.getItem('tt_pro_report_state');
+            if (cachedData) {
+                try {
+                    const parsed = JSON.parse(cachedData);
+                    if (parsed.students) globalStudents = parsed.students;
+                    if (parsed.logo) uploadedLogoBase64 = parsed.logo;
+                    if (parsed.config) {
+                        document.getElementById('cfg-lang').value = parsed.config.lang || "SW";
+                        document.getElementById('cfg-term').value = parsed.config.term || "I";
+                        document.getElementById('cfg-year').value = parsed.config.year || "2026";
+                        document.getElementById('cfg-close-date').value = parsed.config.closeDate || "";
+                        document.getElementById('cfg-open-date').value = parsed.config.openDate || "";
+                    }
+                    if (globalStudents.length > 0) {
+                        selectedStudentId = globalStudents[0].id;
+                    }
+                } catch(e) {
+                    console.error("Cache buffer reading error: ", e);
+                }
             }
         }
 
-        function executeSinglePagePrint() {
-            // Step 1: Run calculations and compress layout inside A4 boundaries
-            autoScaleReportToA4Portrait();
-
-            // Step 2: Allow browser cycle time to recompute bounding layout footprints
-            setTimeout(() => {
-                window.print();
-            }, 200);
+        function saveDataToComputer() {
+            const dataToExport = {
+                students: globalStudents,
+                logo: uploadedLogoBase64,
+                config: {
+                    lang: document.getElementById('cfg-lang').value,
+                    term: document.getElementById('cfg-term').value,
+                    year: document.getElementById('cfg-year').value,
+                    closeDate: document.getElementById('cfg-close-date').value,
+                    openDate: document.getElementById('cfg-open-date').value
+                }
+            };
+            const jsonString = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToExport, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", jsonString);
+            downloadAnchor.setAttribute("download", `tt_pro_backup_${document.getElementById('cfg-year').value}_term${document.getElementById('cfg-term').value}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.removeChild(downloadAnchor);
         }
+
+        function loadDataFromComputer(input) {
+            if (!input.files || input.files.length === 0) return;
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed.students) globalStudents = parsed.students;
+                    if (parsed.logo) uploadedLogoBase64 = parsed.logo;
+                    if (parsed.config) {
+                        document.getElementById('cfg-lang').value = parsed.config.lang || "SW";
+                        document.getElementById('cfg-term').value = parsed.config.term || "I";
+                        document.getElementById('cfg-year').value = parsed.config.year || "2026";
+                        document.getElementById('cfg-close-date').value = parsed.config.closeDate || "";
+                        document.getElementById('cfg-open-date').value = parsed.config.openDate || "";
+                    }
+                    if (globalStudents.length > 0) selectedStudentId = globalStudents[0].id;
+                    
+                    autoSaveToCache();
+                    renderRosterTable();
+                    if (selectedStudentId) selectStudent(selectedStudentId);
+                    generateAllReportCardsHTML();
+                    alert("System parameters and records restored successfully!");
+                } catch(err) {
+                    alert("Invalid JSON workspace file structure. Could not map settings layout.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function init() {
+            loadFromCache();
+            renderRosterTable();
+            buildMarksInputs();
+            if (selectedStudentId) selectStudent(selectedStudentId);
+            generateAllReportCardsHTML();
+        }
+
+        function handleLogoUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedLogoBase64 = e.target.result;
+                    autoSaveToCache();
+                    generateAllReportCardsHTML();
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function downloadCSVTemplate() {
+            const csvContent = "data:text/csv;charset=utf-8,FullName,Gender,Form,Stream\nJOHN DOE,M,F1,Stream A\nANNA SMITH,F,F3,Stream B";
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "student_admission_template.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function downloadScoresTemplate() {
+            const chosenForm = document.getElementById('score-template-form').value;
+            const schema = (chosenForm === "F1") ? subjectsF1F2 : subjectsF3F4;
+            
+            let headers = ["FullName"];
+            schema.forEach(sub => {
+                headers.push(`${sub.id}_t1`, `${sub.id}_t2`, `${sub.id}_mid`, `${sub.id}_ann`);
+            });
+
+            let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n";
+            
+            if(globalStudents.length > 0) {
+                globalStudents.forEach(s => {
+                    if((chosenForm === "F1" && (s.form === "F1" || s.form === "F2")) || 
+                       (chosenForm === "F3" && (s.form === "F3" || s.form === "F4"))) {
+                        csvContent += s.name + ",".repeat(headers.length - 1) + "\n";
+                    }
+                });
+            } else {
+                csvContent += "JUMA HAMISI," + "".repeat(headers.length - 1) + "\n";
+            }
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `scores_template_${chosenForm}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function handleBulkScoresUpload() {
+            const fileInput = document.getElementById('bulk-scores-file');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert("Please select a valid CSV scores file!");
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split("\n");
+                if(lines.length < 2) return;
+
+                const headers = lines[0].split(",").map(h => h.trim());
+                let updatedStudentsCount = 0;
+
+                for(let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    const cols = lines[i].split(",").map(c => c.trim());
+                    const studentName = cols[0].toUpperCase();
+
+                    let student = globalStudents.find(s => s.name === studentName);
+                    if(student) {
+                        if(!student.marks) student.marks = {};
+                        
+                        for(let j = 1; j < headers.length; j++) {
+                            const header = headers[j];
+                            const val = cols[j] || "";
+                            
+                            const lastUnderscore = header.lastIndexOf("_");
+                            if(lastUnderscore !== -1) {
+                                const subId = header.substring(0, lastUnderscore);
+                                const examType = header.substring(lastUnderscore + 1);
+
+                                if(!student.marks[subId]) {
+                                    student.marks[subId] = { t1: "", t2: "", mid: "", ann: "" };
+                                }
+                                student.marks[subId][examType] = val;
+                            }
+                        }
+                        updatedStudentsCount++;
+                    }
+                }
+
+                alert(`Successfully processed and loaded metric arrays for ${updatedStudentsCount} students!`);
+                autoSaveToCache();
+                if(selectedStudentId) selectStudent(selectedStudentId);
+                generateAllReportCardsHTML();
+            };
+            reader.readAsText(file);
+        }
+
+        function handleBulkUpload() {
+            const fileInput = document.getElementById('bulk-csv-file');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert("Please select a target file first!");
+                return;
+            }
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split("\n");
+                let addedCount = 0;
+                
+                for(let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    const cols = lines[i].split(",");
+                    if (cols.length >= 4) {
+                        const name = cols[0].trim().toUpperCase();
+                        const gender = cols[1].trim().toUpperCase();
+                        const form = cols[2].trim().toUpperCase();
+                        const stream = cols[3].trim();
+                        
+                        if(name) {
+                            globalStudents.push({
+                                id: Date.now() + i,
+                                name, gender, form, stream,
+                                marks: {}, checkedForPrint: true
+                            });
+                            if (addedCount === 0) selectedStudentId = Date.now() + i;
+                            addedCount++;
+                        }
+                    }
+                }
+                alert(`Successfully parsed and registered ${addedCount} students into current session!`);
+                autoSaveToCache();
+                renderRosterTable();
+                if(selectedStudentId) selectStudent(selectedStudentId);
+                generateAllReportCardsHTML();
+            };
+            reader.readAsText(file);
+        }
+
+        function updateGlobalSettings() {
+            autoSaveToCache();
+            generateAllReportCardsHTML();
+        }
+
+        function getSubjectSchemaForStudent(form) {
+            return (form === "F1" || form === "F2") ? subjectsF1F2 : subjectsF3F4;
+        }
+
+        function handleEnrollment(event) {
+            event.preventDefault();
+            const editId = document.getElementById('stu-edit-id').value;
+            const name = document.getElementById('stu-fullname').value.toUpperCase();
+            const gender = document.getElementById('stu-gender').value;
+            const form = document.getElementById('stu-form').value;
+            const stream = document.getElementById('stu-stream').value;
+
+            if (editId) {
+                const student = globalStudents.find(s => s.id == editId);
+                if (student) {
+                    student.name = name;
+                    student.gender = gender;
+                    student.form = form;
+                    student.stream = stream;
+                    alert("Student information updated successfully!");
+                }
+                cancelEditMode();
+            } else {
+                const newStudent = { id: Date.now(), name, gender, form, stream, marks: {}, checkedForPrint: true };
+                globalStudents.push(newStudent);
+                alert("Student registered successfully!");
+            }
+
+            document.getElementById('enrollment-form').reset();
+            autoSaveToCache();
+            renderRosterTable();
+            if (selectedStudentId) selectStudent(selectedStudentId);
+            generateAllReportCardsHTML();
+        }
+
+        function startEditStudent(id, event) {
+            if(event) event.stopPropagation(); 
+            const student = globalStudents.find(s => s.id == id);
+            if (!student) return;
+
+            document.getElementById('stu-edit-id').value = student.id;
+            document.getElementById('stu-fullname').value = student.name;
+            document.getElementById('stu-gender').value = student.gender;
+            document.getElementById('stu-form').value = student.form;
+            document.getElementById('stu-stream').value = student.stream;
+
+            document.getElementById('enrollment-card-title').innerText = "✏️ Edit Student Information";
+            document.getElementById('btn-enroll-submit').innerText = "Update Record";
+            document.getElementById('btn-enroll-cancel').style.display = "block";
+            
+            document.getElementById('stu-fullname').focus();
+        }
+
+        function cancelEditMode() {
+            document.getElementById('stu-edit-id').value = "";
+            document.getElementById('enrollment-form').reset();
+            document.getElementById('enrollment-card-title').innerText = "🧑‍🎓 New Enrollment";
+            document.getElementById('btn-enroll-submit').innerText = "Register Student";
+            document.getElementById('btn-enroll-cancel').style.display = "none";
+        }
+
+        function deleteStudent(id, event) {
+            if(event) event.stopPropagation(); 
+            const student = globalStudents.find(s => s.id == id);
+            if (!student) return;
+
+            const confirmDelete = confirm(`Are you absolutely sure you want to permanently delete "${student.name}"?`);
+            if (confirmDelete) {
+                globalStudents = globalStudents.filter(s => s.id != id);
+                if (selectedStudentId == id) {
+                    selectedStudentId = globalStudents.length > 0 ? globalStudents[0].id : null;
+                }
+                autoSaveToCache();
+                renderRosterTable();
+                if (selectedStudentId) selectStudent(selectedStudentId);
+                else buildMarksInputs();
+                generateAllReportCardsHTML();
+                alert("Student record removed.");
+            }
+        }
+
+        function renderRosterTable() {
+            const tbody = document.getElementById('roster-tbody');
+            const search = document.getElementById('search-filter').value.toLowerCase();
+            const fFilter = document.getElementById('form-filter').value;
+            const sFilter = document.getElementById('stream-filter').value;
+            const rangeFilter = document.getElementById('roster-range')?.value || 'All';
+
+            tbody.innerHTML = '';
+            let checkedCount = 0;
+
+            let filteredStudents = globalStudents.filter(stu => {
+                if (search && !stu.name.toLowerCase().includes(search)) return false;
+                if (fFilter !== 'All' && stu.form !== fFilter) return false;
+                if (sFilter !== 'All' && stu.stream !== sFilter) return false;
+                return true;
+            });
+
+            if (rangeFilter !== 'All') {
+                filteredStudents = filteredStudents.slice(0, parseInt(rangeFilter));
+            }
+
+            if (filteredStudents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">No students found.</td></tr>';
+                document.getElementById('selected-count-badge').innerText = 'Selected: 0 student(s)';
+                return;
+            }
+
+            filteredStudents.forEach(stu => {
+                if (stu.checkedForPrint) checkedCount++;
+
+                let tr = document.createElement('tr');
+                if (stu.id === selectedStudentId) tr.className = 'active-student';
+
+                tr.onclick = (e) => {
+                    if(e.target.type !== 'checkbox' && !e.target.classList.contains('btn-action-small')) selectStudent(stu.id);
+                };
+
+                tr.innerHTML = `
+                    <td style="text-align:center;">
+                        <input type="checkbox" ${stu.checkedForPrint ? 'checked' : ''} onchange="toggleStudentCheck(${stu.id}, this.checked)">
+                    </td>
+                    <td><strong>${stu.name}</strong></td>
+                    <td>${stu.gender}</td>
+                    <td style="color:var(--primary-blue); font-weight:700;">${stu.form}</td>
+                    <td><span class="badge-stream">${stu.stream}</span></td>
+                    <td style="text-align:center;">
+                        <button class="btn-action-small btn-edit" onclick="startEditStudent(${stu.id}, event)">Edit ✏️</button>
+                        <button class="btn-action-small btn-delete" onclick="deleteStudent(${stu.id}, event)">Delete ❌</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('selected-count-badge').innerText =
+                `Selected: ${globalStudents.filter(s => s.checkedForPrint).length} student(s)`;
+        }
+
+        function toggleStudentCheck(id, isChecked) {
+            const student = globalStudents.find(s => s.id === id);
+            if(student) student.checkedForPrint = isChecked;
+            document.getElementById('selected-count-badge').innerText = `Selected: ${globalStudents.filter(s=>s.checkedForPrint).length} student(s)`;
+            autoSaveToCache();
+            generateAllReportCardsHTML();
+        }
+
+        function toggleSelectAll(masterBox) {
+            globalStudents.forEach(s => s.checkedForPrint = masterBox.checked);
+            autoSaveToCache();
+            renderRosterTable();
+            generateAllReportCardsHTML();
+        }
+
+        function selectStudent(id) {
+            selectedStudentId = id;
+            const student = globalStudents.find(s => s.id === id);
+            if (!student) return;
+
+            document.getElementById('active-student-banner').innerText = `Selected Active Profile: ${student.name} (${student.form} - ${student.stream})`;
+            buildMarksInputs();
+
+            const currentSchema = getSubjectSchemaForStudent(student.form);
+            currentSchema.forEach(sub => {
+                const sData = student.marks[sub.id] || { t1: "", t2: "", mid: "", ann: "" };
+                document.getElementById(`in-t1-${sub.id}`).value = sData.t1;
+                document.getElementById(`in-t2-${sub.id}`).value = sData.t2;
+                document.getElementById(`in-mid-${sub.id}`).value = sData.mid;
+                document.getElementById(`in-ann-${sub.id}`).value = sData.ann;
+            });
+
+            renderRosterTable();
+            generateAllReportCardsHTML();
+        }
+
+        function buildMarksInputs() {
+            const student = globalStudents.find(s => s.id === selectedStudentId);
+            const grid = document.getElementById('marks-entry-grid');
+            grid.innerHTML = '';
+
+            if(!student) {
+                grid.innerHTML = '<div style="color:var(--text-muted); font-size:13px; grid-column:1/-1;">Click on a student profile above to populate interactive scoring inputs.</div>';
+                return;
+            }
+
+            const currentSchema = getSubjectSchemaForStudent(student.form);
+
+            currentSchema.forEach(sub => {
+                let div = document.createElement('div');
+                div.className = 'subject-block';
+                div.innerHTML = `
+                    <label>${sub.name}</label>
+                    <div class="input-row">
+                        <div><span>T1 Marks</span><input type="text" id="in-t1-${sub.id}" oninput="saveMarks('${sub.id}')"></div>
+                        <div><span>T2 Marks</span><input type="text" id="in-t2-${sub.id}" oninput="saveMarks('${sub.id}')"></div>
+                    </div>
+                    <div class="input-row">
+                        <div><span>Midterm</span><input type="text" id="in-mid-${sub.id}" oninput="saveMarks('${sub.id}')"></div>
+                        <div><span>Annual</span><input type="text" id="in-ann-${sub.id}" oninput="saveMarks('${sub.id}')"></div>
+                    </div>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        function saveMarks(subId) {
+            const student = globalStudents.find(s => s.id === selectedStudentId);
+            if (!student) return;
+
+            if (!student.marks) student.marks = {};
+            
+            student.marks[subId] = {
+                t1: document.getElementById(`in-t1-${subId}`).value.trim(),
+                t2: document.getElementById(`in-t2-${subId}`).value.trim(),
+                mid: document.getElementById(`in-mid-${subId}`).value.trim(),
+                ann: document.getElementById(`in-ann-${subId}`).value.trim()
+            };
+            autoSaveToCache();
+            generateAllReportCardsHTML();
+        }
+
+        function getSubjectAverageValue(student, subId) {
+            const sData = student.marks[subId] || { t1: "", t2: "", mid: "", ann: "" };
+            let cAssessList = [];
+            if(sData.t1 !== "" && sData.t1 !== undefined) cAssessList.push(parseFloat(sData.t1) || 0);
+            if(sData.t2 !== "" && sData.t2 !== undefined) cAssessList.push(parseFloat(sData.t2) || 0);
+            if(sData.mid !== "" && sData.mid !== undefined) cAssessList.push(parseFloat(sData.mid) || 0);
+
+            if(cAssessList.length === 0 || sData.ann === "" || sData.ann === undefined) return null;
+            
+            let mazoezi = cAssessList.reduce((a, b) => a + b, 0) / cAssessList.length;
+            let mtihani = parseFloat(sData.ann) || 0;
+            return (mazoezi + mtihani) / 2;
+        }
+
+        function calculateAllSubjectRanks() {
+            const rankMap = {}; 
+            const formsList = ["F1", "F2", "F3", "F4"];
+
+            globalStudents.forEach(s => { rankMap[s.id] = {}; });
+
+            formsList.forEach(currentForm => {
+                const schema = (currentForm === "F1" || currentForm === "F2") ? subjectsF1F2 : subjectsF3F4;
+                const formStudents = globalStudents.filter(s => s.form === currentForm);
+
+                schema.forEach(sub => {
+                    let scoresList = formStudents.map(student => ({
+                        studentId: student.id,
+                        avg: getSubjectAverageValue(student, sub.id)
+                    })).filter(item => item.avg !== null);
+
+                    scoresList.sort((a, b) => b.avg - a.avg);
+
+                    let currentRank = 1;
+                    let totalParticipants = scoresList.length;
+
+                    for (let i = 0; i < scoresList.length; i++) {
+                        if (i > 0 && scoresList[i].avg < scoresList[i - 1].avg) {
+                            currentRank = i + 1; 
+                        }
+                        rankMap[scoresList[i].studentId][sub.id] = `${currentRank}/${totalParticipants}`;
+                    }
+                });
+            });
+
+            return rankMap;
+        }
+
+        function computeStudentPerformance(student, lang) {
+            const currentSchema = getSubjectSchemaForStudent(student.form);
+            let subjectAverages = [];
+            let gradePoints = [];
+            let tableRowsHTML = '';
+
+            const subjectRanksDb = calculateAllSubjectRanks();
+            const labels = dictionary[lang];
+
+            currentSchema.forEach(sub => {
+                const sData = student.marks[sub.id] || { t1: "", t2: "", mid: "", ann: "" };
+                let mazoezi = "-";
+                let mtihani = "-";
+                let jumla = "-";
+                let wastani = "-";
+                let daraja = "-";
+                let maoni = "-";
+                let pts = 5;
+
+                let cAssessList = [];
+                if(sData.t1 !== "" && sData.t1 !== undefined) cAssessList.push(parseFloat(sData.t1) || 0);
+                if(sData.t2 !== "" && sData.t2 !== undefined) cAssessList.push(parseFloat(sData.t2) || 0);
+                if(sData.mid !== "" && sData.mid !== undefined) cAssessList.push(parseFloat(sData.mid) || 0);
+
+                if(cAssessList.length > 0) mazoezi = cAssessList.reduce((a, b) => a + b, 0) / cAssessList.length;
+                if(sData.ann !== "" && sData.ann !== undefined) mtihani = parseFloat(sData.ann) || 0;
+
+                if(mazoezi !== "-" && mtihani !== "-") {
+                    wastani = (mazoezi + mtihani) / 2;
+                    jumla = mazoezi + mtihani;
+
+                    if (wastani >= 75) { daraja = "A"; maoni = lang === "SW" ? "VIZURI SANA" : "EXCELLENT"; pts = 1; }
+                    else if (wastani >= 65) { daraja = "B"; maoni = lang === "SW" ? "VIZURI" : "VERY GOOD"; pts = 2; }
+                    else if (wastani >= 45) { daraja = "C"; maoni = lang === "SW" ? "WASTANI" : "AVERAGE"; pts = 3; }
+                    else if (wastani >= 30) { daraja = "D"; maoni = lang === "SW" ? "INARIDHISHA" : "SATISFACTORY"; pts = 4; }
+                    else { daraja = "F"; maoni = lang === "SW" ? "FELI" : "FAIL"; pts = 5; }
+
+                    subjectAverages.push(wastani);
+                    gradePoints.push(pts);
+                }
+
+                const computedSubjectRank = (subjectRanksDb[student.id] && subjectRanksDb[student.id][sub.id]) ? subjectRanksDb[student.id][sub.id] : "-";
+
+                tableRowsHTML += `
+                    <tr>
+                        <td class="subject-name">${sub.name}</td>
+                        <td>${mazoezi !== "-" ? Math.round(mazoezi) : "-"}</td>
+                        <td>${mtihani !== "-" ? Math.round(mtihani) : "-"}</td>
+                        <td>${jumla !== "-" ? Math.round(jumla) : "-"}</td>
+                        <td>${wastani !== "-" ? wastani.toFixed(1) : "-"}</td>
+                        <td style="font-weight:700;">${daraja}</td>
+                        <td style="font-weight:700; background-color:#fafafa;">${computedSubjectRank}</td>
+                        <td>${maoni}</td>
+                    </tr>
+                `;
+            });
+
+            let lblJumla = "-", lblWastani = "-", lblDaraja = "-", lblPoints = "-", lblDivision = "-", divValue = 5;
+            let avgValue = 0;
+            let maoniMwalimu = "No records mapped", maoniMkuu = "No records mapped";
+
+            if (subjectAverages.length > 0) {
+                let totalOfAvgs = subjectAverages.reduce((a, b) => a + b, 0);
+                lblJumla = totalOfAvgs.toFixed(1);
+                avgValue = totalOfAvgs / subjectAverages.length;
+                lblWastani = avgValue.toFixed(1);
+
+                if (avgValue >= 75) lblDaraja = "A";
+                else if (avgValue >= 65) lblDaraja = "B";
+                else if (avgValue >= 45) lblDaraja = "C";
+                else if (avgValue >= 30) lblDaraja = "D";
+                else lblDaraja = "F";
+
+                gradePoints.sort((a, b) => a - b);
+                let best7Points = [...gradePoints];
+                while (best7Points.length < 7) best7Points.push(5);
+                let pointsSum = best7Points.slice(0, 7).reduce((a, b) => a + b, 0);
+                lblPoints = pointsSum;
+
+                if (pointsSum >= 7 && pointsSum <= 17) { lblDivision = "I"; divValue = 1; }
+                else if (pointsSum <= 21) { lblDivision = "II"; divValue = 2; }
+                else if (pointsSum <= 24) { lblDivision = "III"; divValue = 3; }
+                else if (pointsSum <= 33) { lblDivision = "IV"; divValue = 4; }
+                else { lblDivision = "0"; divValue = 5; }
+
+                if (lblDivision === "I") { maoniMwalimu = labels.commentA; maoniMkuu = labels.headA; }
+                else if (lblDivision === "II") { maoniMwalimu = labels.commentB; maoniMkuu = labels.headB; }
+                else if (lblDivision === "III") { maoniMwalimu = labels.commentC; maoniMkuu = labels.headC; }
+                else if (lblDivision === "IV") { maoniMwalimu = labels.commentD; maoniMkuu = labels.headD_F; }
+                else if (lblDivision === "0") { maoniMwalimu = labels.commentF; maoniMkuu = labels.headD_F; }
+            }
+
+            return {
+                tableRowsHTML, lblJumla, lblWastani, lblDaraja, lblPoints, lblDivision,
+                divValue, pointsValue: parseFloat(lblPoints) || 99, avgValue, maoniMwalimu, maoniMkuu
+            };
+        }
+
+        function generateAllReportCardsHTML() {
+            const container = document.getElementById('print-output-container');
+            container.innerHTML = ''; 
+
+            if(globalStudents.length === 0) return;
+
+            const globalLang = document.getElementById('cfg-lang').value;
+            const globalTerm = document.getElementById('cfg-term').value;
+            const globalYear = document.getElementById('cfg-year').value;
+            const globalCloseDate = document.getElementById('cfg-close-date').value;
+            const globalOpenDate = document.getElementById('cfg-open-date').value;
+
+            const labels = dictionary[globalLang];
+
+            let studentCalculations = {};
+            globalStudents.forEach(student => {
+                studentCalculations[student.id] = computeStudentPerformance(student, globalLang);
+            });
+
+            let formsList = ["F1", "F2", "F3", "F4"];
+            let ranksDb = {};
+
+            formsList.forEach(currentForm => {
+                let formStudents = globalStudents.filter(s => s.form === currentForm && studentCalculations[s.id].lblWastani !== "-");
+                
+                formStudents.sort((a, b) => {
+                    let resA = studentCalculations[a.id];
+                    let resB = studentCalculations[b.id];
+                    if (resA.divValue !== resB.divValue) return resA.divValue - resB.divValue;
+                    if (resA.pointsValue !== resB.pointsValue) return resA.pointsValue - resB.pointsValue;
+                    return resB.avgValue - resA.avgValue;
+                });
+
+                formStudents.forEach((stu, index) => {
+                    ranksDb[stu.id] = index + 1;
+                });
+            });
+
+            globalStudents.forEach(student => {
+                const res = studentCalculations[student.id];
+                const totalInClass = globalStudents.filter(s => s.form === student.form).length;
+                const currentRank = ranksDb[student.id] || "-";
+
+                let reportPageDiv = document.createElement('div');
+                reportPageDiv.id = `report-card-id-${student.id}`;
+                reportPageDiv.className = `report-card-page ${student.id === selectedStudentId ? '' : 'hidden-print'}`;
+                
+                let logoSectionHTML = uploadedLogoBase64 ? 
+                    `<img src="${uploadedLogoBase64}" class="logo-img" alt="Logo">` : 
+                    `<div class="logo-placeholder">SCHOOL LOGO PLACEHOLDER</div>`;
+
+                reportPageDiv.innerHTML = `
+                    <div class="report-header">
+                        ${logoSectionHTML}
+                        <p class="header-title">${labels.govtTitle}</p>
+                        <p class="header-title">${labels.officeTitle}</p>
+                        <p class="header-title">${labels.councilTitle}</p>
+                        <p class="header-title" style="font-weight: 900; font-size: 18px;">${labels.schoolTitle}</p>
+                        <p class="header-title">P.O. BOX 8249, ARUSHA</p>
+                        <p class="report-title">${labels.reportTitle}</p>
+                    </div>
+
+                    <table class="meta-info">
+                        <tr>
+                            <td style="width: 55%;">${labels.lblStudentName}: <span class="dotted-line" style="width: 65%;">${student.name}</span></td>
+                            <td style="width: 15%;">${labels.lblForm}: <span class="dotted-line" style="width: 40%;">${student.form}</span></td>
+                            <td style="width: 15%;">${labels.lblTerm}: <span class="dotted-line" style="width: 40%;">${globalTerm}</span></td>
+                            <td style="width: 15%;">${labels.lblYear}: <span class="dotted-line" style="width: 45%;">${globalYear}</span></td>
+                        </tr>
+                    </table>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 30%;">${labels.thSubject}</th>
+                                <th style="width: 11%;">${labels.thCa}</th>
+                                <th style="width: 11%;">${labels.thExam}</th>
+                                <th style="width: 11%;">${labels.thTotal}</th>
+                                <th style="width: 11%;">${labels.thAverage}</th>
+                                <th style="width: 10%;">${labels.thGrade}</th>
+                                <th style="width: 14%;">${labels.thSubRank}</th>
+                                <th style="width: 22%;">${labels.thRemarks}</th>
+                            </tr>
+                        </thead>
+                        <tbody>${res.tableRowsHTML}</tbody>
+                    </table>
+
+                    <div class="summary-row">
+                        <div>${labels.lblTotal}: <span class="dotted-line" style="width: 65px; text-align: center;">${res.lblJumla}</span></div>
+                        <div>${labels.lblAverage}: <span class="dotted-line" style="width: 55px; text-align: center;">${res.lblWastani}</span></div>
+                        <div>${labels.lblGrade}: <span class="dotted-line" style="width: 35px; text-align: center;">${res.lblDaraja}</span></div>
+                        <div>${labels.lblPoints}: <span class="dotted-line" style="width: 35px; text-align: center;">${res.lblPoints}</span></div>
+                        <div>${labels.lblDivision}: <span class="dotted-line" style="width: 50px; text-align: center;">${res.lblDivision}</span></div>
+                    </div>
+                    
+                    <div class="summary-row" style="margin-top: 5px; margin-bottom: 20px;">
+                        <div style="width: 100%;">${labels.lblRankPos}: <span class="dotted-line" style="width: 50px; text-align: center;">${currentRank}</span> ${labels.lblOutOf}: <span class="dotted-line" style="width: 50px; text-align: center;">${totalInClass}</span> (${labels.lblEvaluation})</div>
+                    </div>
+
+                    <div class="behavior-section">
+                        <div class="section-heading">${labels.lblBehaviorTitle}</div>
+                        <div class="behavior-container">
+                            <table class="behavior-table">
+                                <thead><tr><th>${labels.thTrack}</th><th>${labels.lblGrade}</th></tr></thead>
+                                <tbody>
+                                    <tr><td>${labels.track1}</td><td><span contenteditable="true">B</span></td></tr>
+                                    <tr><td>${labels.track2}</td><td><span contenteditable="true">B</span></td></tr>
+                                    <tr><td>${labels.track3}</td><td><span contenteditable="true">B</span></td></tr>
+                                    <tr><td>${labels.track4}</td><td><span contenteditable="true">B</span></td></tr>
+                                    <tr><td>${labels.track5}</td><td><span contenteditable="true">B</span></td></tr>
+                                </tbody>
+                            </table>
+                            <table class="behavior-table">
+                                <thead><tr><th>${labels.thTrack}</th><th>${labels.lblGrade}</th></tr></thead>
+                                <tbody>
+                                    <tr><td>${labels.track6}</td><td><span contenteditable="true">B</span></td></tr>
+                                    <tr><td>${labels.track7}</td><td><span contenteditable="true">B</span></td></tr>
+                                    <tr><td>${labels.track8}</td><td><span contenteditable="true">B</span></td></tr>
+                                    <tr><td>${labels.track9}</td><td><span contenteditable="true">B</span></td></tr>
+                                    <tr><td>${labels.track10}</td><td><span contenteditable="true">B</span></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="grading-legend">${labels.lblLegend}</div>
+                    </div>
+
+                    <div class="admin-section">
+                        <div>${labels.lblClosing}: <span class="dotted-line" style="width: 100px;" contenteditable="true">${globalCloseDate}</span>. ${labels.lblOpening}: <span class="dotted-line" style="width: 100px;" contenteditable="true">${globalOpenDate}</span>.</div>
+                        <div class="signature-stamp-space" style="margin-top: 10px;">
+                            <div style="width: 70%;">
+                                <div>${labels.lblTeacherRemarks}: <span class="dotted-line" style="width: 60%; font-style: italic;" contenteditable="true">${res.maoniMwalimu}</span></div>
+                                <div style="margin-top: 5px;">${labels.lblTeacherSig}: <span class="dotted-line" style="width: 40%;">.</span></div>
+                                <div>${labels.lblHeadRemarks}: <span class="dotted-line" style="width: 63%; font-style: italic;" contenteditable="true">${res.maoniMkuu}</span></div>
+                                <div style="margin-top: 5px;">${labels.lblHeadSig}: <span class="dotted-line" style="width: 40%;"></span></div>
+                            </div>
+                            <div class="stamp-box">
+                                <span>OLMOTI SECONDARY</span>
+                                <span style="border-top:1px solid #0000ff; border-bottom:1px solid #0000ff; font-size:8px; padding:1px;">DATE: 08/06/2026</span>
+                                <span>P.O.BOX 8249</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="parent-slip">
+                        <div class="scissors-icon">✂---</div>
+                        <div class="slip-title">${labels.lblSlipTitle}</div>
+                        <div style="line-height: 2;">
+                            ${labels.lblSlipComments} ..................................................................<br>
+                            ...............................................................................................
+                        </div>
+                        <table style="width: 100%; margin-top: 15px; font-size: 12px;">
+                            <tr>
+                                <td>${labels.lblSlipName}:...............................</td>
+                                <td>${labels.lblSlipDate}:.........</td>
+                                <td>${labels.lblSlipSig}:.........</td>
+                            </tr>
+                        </table>
+                    </div>
+                `;
+                container.appendChild(reportPageDiv);
+            });
+        }
+
+        function printSingleReport() {
+            if(!selectedStudentId) {
+                alert("Please select an active student target profile.");
+                return;
+            }
+            globalStudents.forEach(s => {
+                const el = document.getElementById(`report-card-id-${s.id}`);
+                if(el) {
+                    if(s.id === selectedStudentId) el.classList.remove('hidden-print');
+                    else el.classList.add('hidden-print');
+                }
+            });
+            window.print();
+        }
+
+        function printBulkReports() {
+            let anyChecked = false;
+            globalStudents.forEach(s => {
+                const el = document.getElementById(`report-card-id-${s.id}`);
+                if(el) {
+                    if(s.checkedForPrint) {
+                        el.classList.remove('hidden-print');
+                        anyChecked = true;
+                    } else {
+                        el.classList.add('hidden-print');
+                    }
+                }
+            });
+
+            if(!anyChecked) {
+                alert("Please tick at least one checkbox on the student roster matrix!");
+                return;
+            }
+            window.print();
+        }
+
+        window.onload = init;
     </script>
 </body>
 </html>
