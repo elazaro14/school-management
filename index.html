@@ -1497,10 +1497,20 @@
                 const formStudents = globalStudents.filter(s => s.form === currentForm);
 
                 schema.forEach(sub => {
-                    let scoresList = formStudents.map(student => ({
-                        studentId: student.id,
-                        avg: getSubjectAverageValue(student, sub.id)
-                    })).filter(item => item.avg !== null);
+                   let scoresList = formStudents
+    .map(student => {
+        const sData = student.marks?.[sub.id] || {};
+        const hasScore =
+            sData.t1 !== "" || sData.t2 !== "" ||
+            sData.mid !== "" || sData.ann !== "";
+
+        return {
+            studentId: student.id,
+            avg: getSubjectAverageValue(student, sub.id),
+            hasScore
+        };
+    })
+    .filter(item => item.hasScore && item.avg !== null);
 
                     scoresList.sort((a, b) => b.avg - a.avg);
 
