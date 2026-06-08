@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TT-PRO | Student Admission & Bulk Report Card Manager</title>
 <style>
-/* --- existing styles preserved --- */
+/* --- keep all your existing styles here (unchanged) --- */
 </style>
 </head>
 <body>
@@ -24,13 +24,22 @@
 
 <!-- ADMINISTRATIVE WORKSPACE -->
 <div id="admin-container">
-  <!-- left sidebar preserved -->
-  <!-- right workspace -->
+  <div class="admin-header-bar">
+    <h1>📊 Student Admission & Bulk Report Card Module</h1>
+    <button class="panel-btn" onclick="backToPanel()">← Back to Panel</button>
+  </div>
+
+  <!-- LEFT SIDEBAR preserved (config, enrollment, bulk upload, etc.) -->
+
+  <!-- RIGHT WORKSPACE SECTION -->
   <div class="workspace-split">
+    <!-- MASTER ROSTER GRID -->
     <div class="admin-card">
       <h2>Active Student Database Roster</h2>
+
       <div class="db-filters">
-        <input type="text" id="search-filter" placeholder="🔍 Search student name..." oninput="renderRosterTable()" style="flex: 2;">
+        <input type="text" id="search-filter" placeholder="🔍 Search student name..." 
+               oninput="renderRosterTable()" style="flex: 2;">
         <select id="form-filter" onchange="renderRosterTable()" style="flex: 1;">
           <option value="All">All Forms</option>
           <option value="F1">F1</option>
@@ -55,7 +64,8 @@
       </div>
 
       <div class="bulk-actions-bar">
-        <label><input type="checkbox" id="select-all-box" onchange="toggleSelectAll(this)"> Select All For Batch Printing</label>
+        <label><input type="checkbox" id="select-all-box" onchange="toggleSelectAll(this)"> 
+          Select All For Batch Printing</label>
         <span id="selected-count-badge">Selected: 0 student(s)</span>
         <div style="margin-left:auto; display:flex; gap:8px;">
           <button class="btn-secondary" onclick="printClassReports('F1')">Print F1 Reports</button>
@@ -79,11 +89,16 @@
         <tbody id="roster-tbody"></tbody>
       </table>
     </div>
+
+    <!-- DETAIL MARKS INTERACTIVE GRIDS preserved -->
   </div>
 </div>
 
+<!-- MAIN EXPORT LIVE PREVIEW CONTAINER -->
+<div id="print-output-container"></div>
+
 <script>
-let globalStudents = []; // existing student array
+let globalStudents = []; // your student dataset
 
 function renderRosterTable() {
   const tbody = document.getElementById("roster-tbody");
@@ -129,9 +144,10 @@ function printClassReports(formLevel) {
   generateReportsForStudents(classStudents);
 }
 
-// placeholder for your existing report generation
+// Hook into your existing report generation logic
 function generateReportsForStudents(students) {
   console.log("Generating reports for:", students);
+  // integrate with generateAllReportCardsHTML or your print logic
 }
 </script>
 </body>
